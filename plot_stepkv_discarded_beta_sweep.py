@@ -32,22 +32,80 @@ except ImportError as exc:  # pragma: no cover
     ) from exc
 
 
-DEFAULT_GLOB = "results/stepkv_discarded_token_analysis/*_beta_sweep.json"
+DEFAULT_SEARCH_DIRS = [
+    "results/stepkv_drop_token_analysis",
+    "results/stepkv_discarded_token_analysis",
+]
+
+
+def _fix_duplicate_repo_prefix(path: str) -> str:
+    dup = f"{os.sep}autodl-tmp{os.sep}kvmem{os.sep}autodl-tmp{os.sep}kvmem{os.sep}"
+    if dup in path:
+        path = path.replace(dup, f"{os.sep}autodl-tmp{os.sep}kvmem{os.sep}", 1)
+    dup2 = "autodl-tmp/kvmem/autodl-tmp/kvmem/"
+    if dup2 in path.replace("\\", "/"):
+        path = path.replace("autodl-tmp/kvmem/autodl-tmp/kvmem/", "autodl-tmp/kvmem/", 1)
+    return path
 
 
 def _resolve_json_path(path: str) -> str:
-    if os.path.isfile(path):
-        return path
-    if not path.endswith(".json") and os.path.isfile(path + ".json"):
-        return path + ".json"
+    path = _fix_duplicate_repo_prefix(os.path.expanduser(path.strip()))
+    candidates = [path]
+    if not os.path.isabs(path):
+        candidates.append(os.path.join(os.getcwd(), path))
+    if not path.endswith(".json"):
+        candidates.append(path + ".json")
+        if not os.path.isabs(path):
+            candidates.append(os.path.join(os.getcwd(), path + ".json"))
+
+    seen = set()
+    for cand in candidates:
+        cand = os.path.abspath(cand)
+        if cand in seen:
+            continue
+        seen.add(cand)
+        if os.path.isfile(cand):
+            return cand
+
     matches = sorted(glob.glob(path))
     if len(matches) == 1:
-        return matches[0]
+        return os.path.abspath(matches[0])
     if len(matches) > 1:
         raise FileNotFoundError(
             f"Multiple JSON files match {path!r}; pass the exact file path."
         )
-    return path
+    return os.path.abspath(path)
+
+
+def _json_has_beta_runs(path: str) -> bool:
+    try:
+        load_beta_sweep_payload(path)
+        return True
+    except (ValueError, json.JSONDecodeError, OSError):
+        return False
+
+
+def discover_input_json(search_dirs: List[str]) -> str:
+    candidates: List[str] = []
+    for directory in search_dirs:
+        if not os.path.isdir(directory):
+            continue
+        candidates.extend(sorted(glob.glob(os.path.join(directory, "*_beta_sweep.json"))))
+        summary = os.path.join(directory, "summary.json")
+        if os.path.isfile(summary):
+            candidates.append(summary)
+        candidates.extend(sorted(glob.glob(os.path.join(directory, "*_summary.json"))))
+
+    valid = [p for p in candidates if _json_has_beta_runs(p)]
+    if not valid:
+        tried = ", ".join(search_dirs)
+        raise FileNotFoundError(
+            f"No JSON with analyses.beta_sweep / beta_runs found under: {tried}. "
+            "Look for *_beta_sweep.json or a summary.json from analyze_stepkv_discarded_tokens.py."
+        )
+    # Prefer dedicated beta_sweep json over combined summary.
+    beta_only = [p for p in valid if p.endswith("_beta_sweep.json")]
+    return (beta_only or valid)[-1]
 
 
 def _max_plotted_decode_index(beta_runs: Dict[str, Dict[str, Any]]) -> int:
@@ -173,7 +231,15 @@ def main() -> None:
         "--input_json",
         type=str,
         default=None,
-        help=f"Path to *_beta_sweep.json (default: newest match of {DEFAULT_GLOB})",
+        help="Path to *_beta_sweep.json or summary.json with analyses.beta_sweep",
+    )
+    parser.add_argument(
+        "--search_dir",
+        action="append",
+        default=None,
+        help="Directory to auto-search when --input_json is omitted "
+             "(default: results/stepkv_drop_token_analysis and "
+             "results/stepkv_discarded_token_analysis).",
     )
     parser.add_argument(
         "--output_png",
@@ -189,18 +255,17 @@ def main() -> None:
     args = parser.parse_args()
 
     if args.input_json:
-        input_json = _resolve_json_path(os.path.abspath(args.input_json))
-    else:
-        matches = sorted(glob.glob(DEFAULT_GLOB))
-        if not matches:
+        input_json = _resolve_json_path(args.input_json)
+        if not os.path.isfile(input_json):
             raise FileNotFoundError(
-                f"No beta sweep JSON found. Pass --input_json or put files under {DEFAULT_GLOB}"
+                f"JSON not found: {input_json}\n"
+                "Tip: run from repo root (~/autodl-tmp/kvmem) and use e.g.\n"
+                "  --input_json results/stepkv_drop_token_analysis/summary.json"
             )
-        input_json = matches[-1]
-        print(f"[INFO] Auto-selected newest JSON: {input_json}")
-
-    if not os.path.isfile(input_json):
-        raise FileNotFoundError(f"JSON not found: {input_json}")
+    else:
+        search_dirs = args.search_dir or DEFAULT_SEARCH_DIRS
+        input_json = discover_input_json(search_dirs)
+        print(f"[INFO] Auto-selected JSON: {input_json}")
 
     beta_runs, meta = load_beta_sweep_payload(input_json)
     print(f"[INFO] Loaded betas={sorted(beta_runs.keys(), key=float, reverse=True)}")
