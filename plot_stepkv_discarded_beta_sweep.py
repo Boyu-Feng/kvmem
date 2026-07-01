@@ -156,7 +156,7 @@ def plot_discarded_beta_sweep(
     ticksize: float = 14,
     title_size: float = 18,
     marker_size: float = 22,
-    show_title: bool = True,
+    show_title: bool = False,
 ) -> None:
     betas = sorted(beta_runs.keys(), key=lambda x: float(x), reverse=True)
     plot_x_max = _max_plotted_decode_index(beta_runs)
@@ -251,7 +251,7 @@ def main() -> None:
     parser.add_argument("--ticksize", type=float, default=14, help="Tick label font size.")
     parser.add_argument("--title_size", type=float, default=18, help="Title font size.")
     parser.add_argument("--marker_size", type=float, default=22, help="Scatter marker size.")
-    parser.add_argument("--no_title", action="store_true", help="Hide plot title.")
+    parser.add_argument("--show_title", action="store_true", help="Show plot title.")
     args = parser.parse_args()
 
     if args.input_json:
@@ -284,7 +284,7 @@ def main() -> None:
         ticksize=args.ticksize,
         title_size=args.title_size,
         marker_size=args.marker_size,
-        show_title=not args.no_title,
+        show_title=args.show_title,
     )
 
 
