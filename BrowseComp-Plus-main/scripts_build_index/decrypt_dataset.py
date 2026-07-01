@@ -2,6 +2,7 @@ import argparse
 import base64
 import hashlib
 import json
+import os
 
 from datasets import load_dataset
 
@@ -67,6 +68,9 @@ def parse_args():
 
 def main():
     args = parse_args()
+    out_dir = os.path.dirname(os.path.abspath(args.output))
+    if out_dir:
+        os.makedirs(out_dir, exist_ok=True)
 
     dataset = load_dataset("Tevatron/browsecomp-plus", split="test")
     source_iter = (json.dumps(record, ensure_ascii=False) for record in dataset)
