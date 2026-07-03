@@ -552,16 +552,14 @@ def plot_radar_single(
     outer = round(radial_max, 2)
     if outer > 1.0 and outer not in tick_vals:
         tick_vals.append(outer)
-    # Radial dashed circles (no numeric labels).
-    ax.set_rgrids(
-        tick_vals,
-        labels=[""] * len(tick_vals),
-        linestyle=":",
-        color="#CCCCCC",
-        linewidth=0.8,
-    )
-    # Angular dashed spokes.
-    ax.grid(True, axis="x", linestyle=":", color="#CCCCCC", linewidth=0.8)
+    # Concentric circles at tick positions; hide numeric labels only.
+    ax.set_yticks(tick_vals)
+    ax.set_yticklabels([""] * len(tick_vals))
+    ax.grid(True, linestyle=":", color="#CCCCCC", linewidth=0.8)
+    for line in ax.yaxis.get_gridlines():
+        line.set_linestyle(":")
+        line.set_color("#CCCCCC")
+        line.set_linewidth(0.8)
     ax.tick_params(axis="y", labelleft=False, labelright=False)
     ax.spines["polar"].set_color("#AAAAAA")
 
