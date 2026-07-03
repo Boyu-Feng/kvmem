@@ -22,10 +22,16 @@ Example:
 from __future__ import annotations
 
 import argparse
+import gc
 import glob
 import json
 import os
+import re
 from typing import Any, Dict, List, Optional, Sequence, Tuple
+
+import matplotlib
+
+matplotlib.use("Agg")
 
 from analyze_run_kv_metrics import (
     MethodRunStats,
@@ -202,6 +208,48 @@ def _first_float(*candidates: Any) -> Optional[float]:
     return None
 
 
+def load_result_summary_only(path: str) -> Dict[str, Any]:
+    """
+    Load only JSON['summary'] and skip the huge results[] array (avoids OOM).
+    Experiment outputs write summary before results, so streaming the head suffices.
+    """
+    size_mb = os.path.getsize(path) / (1024.0 * 1024)
+    small_file_mb = 8.0
+    max_head_scan_mb = 48.0
+
+    if size_mb <= small_file_mb:
+        with open(path, "r", encoding="utf-8") as f:
+            data = json.load(f)
+        summary = data.get("summary", {}) if isinstance(data.get("summary"), dict) else {}
+        del data
+        return {"summary": summary, "results": []}
+
+    decoder = json.JSONDecoder()
+    buffer = ""
+    with open(path, "r", encoding="utf-8") as f:
+        while len(buffer) < int(max_head_scan_mb * 1024 * 1024):
+            piece = f.read(1024 * 1024)
+            if not piece:
+                break
+            buffer += piece
+            match = re.search(r'"summary"\s*:\s*\{', buffer)
+            if not match:
+                continue
+            start = match.end() - 1
+            try:
+                summary, _end = decoder.raw_decode(buffer, start)
+            except json.JSONDecodeError:
+                continue
+            if isinstance(summary, dict):
+                print(f"[INFO] Summary-only load ({size_mb:.1f} MB): {os.path.basename(path)}")
+                return {"summary": summary, "results": []}
+
+    raise RuntimeError(
+        f"Could not stream summary from {path} ({size_mb:.1f} MB). "
+        "Check that the file contains a top-level 'summary' object."
+    )
+
+
 def _stats_from_summary_and_results(
     data: Dict[str, Any],
     sample_times: List[float],
@@ -290,7 +338,6 @@ def _load_one_stats(
     from analyze_run_kv_metrics import (
         _per_sample_final_kv,
         _per_sample_peak_kv,
-        load_result_json,
     )
 
     json_path = _resolve_first_subdir(run_dir, subdir_candidates, stem, dataset_suffix, ratio_tag)
@@ -298,23 +345,26 @@ def _load_one_stats(
         print(f"[WARN] Missing: {' / '.join(subdir_candidates)}/{stem}_{dataset_suffix}*.json")
         return None
 
-    data = load_result_json(json_path)
+    data = load_result_summary_only(json_path)
     summary = data.get("summary", {})
     results = data.get("results", [])
 
     sample_times: List[float] = []
     peak_kvs: List[int] = []
     final_kvs: List[int] = []
-    for r in results:
-        if not isinstance(r, dict):
-            continue
-        st = r.get("sample_time")
-        if isinstance(st, (int, float)) and st > 0:
-            sample_times.append(float(st))
-        peak_kvs.append(_per_sample_peak_kv(r))
-        final_kvs.append(_per_sample_final_kv(r))
+    if results:
+        for r in results:
+            if not isinstance(r, dict):
+                continue
+            st = r.get("sample_time")
+            if isinstance(st, (int, float)) and st > 0:
+                sample_times.append(float(st))
+            peak_kvs.append(_per_sample_peak_kv(r))
+            final_kvs.append(_per_sample_final_kv(r))
 
     stats = _stats_from_summary_and_results(data, sample_times, peak_kvs, final_kvs)
+    del data
+    gc.collect()
     ratio_label = ratio_tag if ratio_tag else "full"
     row = MethodRunStats(
         key=f"{display_label}_{ratio_label}",
