@@ -171,9 +171,11 @@ def load_result_json(path: str) -> Dict[str, Any]:
 def analyze_one_run(
     run_dir: str,
     dataset_suffix: str,
+    method_configs: Optional[List[Tuple[str, str, Optional[str], str]]] = None,
 ) -> List[MethodRunStats]:
     rows: List[MethodRunStats] = []
-    for subdir, stem, ratio_tag, method_name in METHOD_CONFIGS:
+    configs = method_configs or METHOD_CONFIGS
+    for subdir, stem, ratio_tag, method_name in configs:
         json_path = resolve_result_json(run_dir, subdir, stem, dataset_suffix, ratio_tag)
         if not json_path:
             print(f"[WARN] Missing result: {subdir}/{stem}_{dataset_suffix}*.json")
