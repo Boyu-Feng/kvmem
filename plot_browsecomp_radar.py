@@ -83,13 +83,13 @@ BROWSECOMP_METRICS_SERIES: List[Tuple[str, str, List[str], str]] = [
     ),
 ]
 
-AXIS_SPECS: List[Tuple[str, str, str, bool]] = [
-    ("em", "EM", "em", True),
-    ("f1", "F1", "f1", True),
-    ("avg_sample_time_s", "Avg Time", "avg_sample_time_s", False),
-    ("max_sample_time_s", "Max Time", "max_sample_time_s", False),
-    ("avg_cache", "Avg Cache", "avg_cache", False),
-    ("max_cache", "Max Cache", "max_cache", False),
+AXIS_SPECS: List[Tuple[str, str, str]] = [
+    ("em", "EM", "em"),
+    ("f1", "F1", "f1"),
+    ("avg_sample_time_s", "Avg Time", "avg_sample_time_s"),
+    ("max_sample_time_s", "Max Time", "max_sample_time_s"),
+    ("avg_cache", "Avg Cache", "avg_cache"),
+    ("max_cache", "Max Cache", "max_cache"),
 ]
 
 SERIES_COLORS = {
@@ -369,17 +369,13 @@ def _row_cache_stats(row: MethodRunStats, cache_metric: str) -> Tuple[Optional[f
 def _normalize_vs_fullkv(
     method_val: Optional[float],
     fullkv_val: Optional[float],
-    higher_is_better: bool,
 ) -> Optional[float]:
+    """Always method / FullKV so FullKV = 1.0 (largest baseline on each axis)."""
     if method_val is None or fullkv_val is None:
         return None
-    if higher_is_better:
-        if fullkv_val == 0:
-            return 1.0 if method_val == 0 else 0.0
-        return float(method_val) / float(fullkv_val)
-    if method_val == 0:
-        return None
-    return float(fullkv_val) / float(method_val)
+    if fullkv_val == 0:
+        return 1.0 if method_val == 0 else None
+    return float(method_val) / float(fullkv_val)
 
 
 def _display_label(row: MethodRunStats) -> str:
@@ -418,11 +414,10 @@ def _build_normalized_series(
         }
 
         norm: Dict[str, Optional[float]] = {}
-        for key, _, field, higher_is_better in AXIS_SPECS:
+        for key, _, field in AXIS_SPECS:
             norm[key] = _normalize_vs_fullkv(
                 raw.get(field),
                 baseline_raw.get(field),
-                higher_is_better,
             )
 
         if any(v is None for v in norm.values()):
@@ -486,36 +481,35 @@ def plot_radar_single(
     all_norm_vals = [
         float(v) for spec in series_list for v in spec["normalized"].values()
     ]
-    radial_max = max(1.05, max(all_norm_vals) * 1.10 if all_norm_vals else 1.2)
+    radial_max = max(1.05, max(all_norm_vals) * 1.05 if all_norm_vals else 1.05)
     ax.set_ylim(0, radial_max)
-    tick_vals = [0.5, 1.0]
-    if radial_max >= 1.45:
-        tick_vals.append(1.5)
-    if radial_max >= 1.95:
-        tick_vals.append(2.0)
+    tick_vals = [0.25, 0.5, 0.75, 1.0]
+    if radial_max > 1.05:
+        tick_vals.append(round(radial_max, 2))
     ax.set_yticks(tick_vals)
     ax.set_yticklabels([f"{t:.1f}" for t in tick_vals], fontsize=ticksize - 1, color="#666666")
     ax.grid(color="#CCCCCC", linestyle=":", linewidth=0.8)
     ax.spines["polar"].set_color("#AAAAAA")
 
-    # FullKV reference ring at 1.0
+    # FullKV baseline ring at 1.0
     ax.plot(
         angles_closed,
         [1.0] * (n_axes + 1),
-        color="#444444",
-        linewidth=1.2,
-        linestyle=":",
-        zorder=1,
+        color="#009E73",
+        linewidth=2.6,
+        linestyle="-",
+        zorder=2,
         label="_nolegend_",
     )
 
     for spec in series_list:
         label = spec["label"]
-        vals = [float(spec["normalized"][key]) for key, _, _, _ in AXIS_SPECS]
+        vals = [float(spec["normalized"][key]) for key, _, _ in AXIS_SPECS]
         vals_closed = vals + vals[:1]
         color = SERIES_COLORS.get(label, "#333333")
         lw = 2.6 if label == "FullKV" else 2.0
         zorder = 3 if label == "FullKV" else 2
+        fill_a = 0.12 if label == "FullKV" else fill_alpha
 
         ax.plot(
             angles_closed,
@@ -525,7 +519,7 @@ def plot_radar_single(
             label=label,
             zorder=zorder,
         )
-        ax.fill(angles_closed, vals_closed, color=color, alpha=fill_alpha, zorder=1)
+        ax.fill(angles_closed, vals_closed, color=color, alpha=fill_a, zorder=1)
 
     ax.legend(
         loc="upper right",
