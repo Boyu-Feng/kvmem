@@ -548,12 +548,21 @@ def plot_radar_single(
     ]
     radial_max = max(1.05, max(all_norm_vals) * 1.05 if all_norm_vals else 1.05)
     ax.set_ylim(0, radial_max)
-    tick_vals = [0.25, 0.5, 0.75, 1.0]
-    if radial_max > 1.05:
-        tick_vals.append(round(radial_max, 2))
-    ax.set_yticks(tick_vals)
-    ax.set_yticklabels([])
-    ax.grid(color="#CCCCCC", linestyle=":", linewidth=0.8)
+    tick_vals = [t for t in (0.25, 0.5, 0.75, 1.0) if t <= radial_max + 1e-9]
+    outer = round(radial_max, 2)
+    if outer > 1.0 and outer not in tick_vals:
+        tick_vals.append(outer)
+    # Radial dashed circles (no numeric labels).
+    ax.set_rgrids(
+        tick_vals,
+        labels=[""] * len(tick_vals),
+        linestyle=":",
+        color="#CCCCCC",
+        linewidth=0.8,
+    )
+    # Angular dashed spokes.
+    ax.grid(True, axis="x", linestyle=":", color="#CCCCCC", linewidth=0.8)
+    ax.tick_params(axis="y", labelleft=False, labelright=False)
     ax.spines["polar"].set_color("#AAAAAA")
 
     for spec in series_list:
