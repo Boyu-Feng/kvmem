@@ -6,19 +6,28 @@ Plots FullKV + StepKV@50% + StepKV@20% on one radar with six axes:
   EM, F1, Avg Time, Max Time, Avg Cache, Max Cache
 All normalized to FullKV = 1.0 (larger = better on every axis).
 
-Expected layout:
-  {run_dir}/fullkv/react_kv_none_browsecomp*.json
-  {run_dir}/stepkv_r50/react_kv_step_aware_h2o_browsecomp_r50.json
-  {run_dir}/stepkv_r20/react_kv_step_aware_h2o_browsecomp_r20.json
+Expected layout (either works):
 
-Example:
+  A) metrics markdown (from record_experiment_metrics.py):
+     {run_dir}/metrics_react_kv_none.md
+     {run_dir}/metrics_react_kv_step_aware_h2o_r50.md   # or _r05
+     {run_dir}/metrics_react_kv_step_aware_h2o_r20.md   # or _r02
+
+  B) result JSON:
+     {run_dir}/fullkv/react_kv_none_browsecomp*.json
+     {run_dir}/stepkv_r50/react_kv_step_aware_h2o_browsecomp_r50.json
+     {run_dir}/stepkv_r20/react_kv_step_aware_h2o_browsecomp_r20.json
+
+Example (metrics md):
   python plot_browsecomp_radar.py \\
-    --run_dir results/browsecomp_v2
+    --run_dir results/browsecomp_v2/stepkv_r50 \\
+    --source metrics
 """
 
 from __future__ import annotations
 
 import argparse
+import glob
 import json
 import os
 from typing import Any, Dict, List, Optional, Sequence, Tuple
@@ -28,6 +37,7 @@ from analyze_run_kv_metrics import (
     detect_dataset_suffix,
     resolve_result_json,
 )
+from record_experiment_metrics import parse_metrics_markdown
 
 try:
     import matplotlib.pyplot as plt
@@ -48,6 +58,31 @@ BROWSECOMP_STEPKV_SERIES: List[Tuple[List[str], str, Optional[str], str]] = [
     (["stepkv_r20", "stepaware_r20"], "react_kv_step_aware_h2o", "r20", "StepKV (20%)"),
 ]
 
+# metrics_*.md filename candidates (shell may write r05/r02 or r50/r20)
+BROWSECOMP_METRICS_SERIES: List[Tuple[str, str, List[str], str]] = [
+    ("FullKV", "full", ["metrics_react_kv_none.md"], "FullKV"),
+    (
+        "StepKV (50%)",
+        "r50",
+        [
+            "metrics_react_kv_step_aware_h2o_r50.md",
+            "metrics_react_kv_step_aware_h2o_r05.md",
+            "metrics_react_kv_step_aware_h2o_r5.md",
+        ],
+        "StepKV",
+    ),
+    (
+        "StepKV (20%)",
+        "r20",
+        [
+            "metrics_react_kv_step_aware_h2o_r20.md",
+            "metrics_react_kv_step_aware_h2o_r02.md",
+            "metrics_react_kv_step_aware_h2o_r2.md",
+        ],
+        "StepKV",
+    ),
+]
+
 AXIS_SPECS: List[Tuple[str, str, str, bool]] = [
     ("em", "EM", "em", True),
     ("f1", "F1", "f1", True),
@@ -66,6 +101,86 @@ SERIES_COLORS = {
 SERIES_ORDER = {"FullKV": 0, "StepKV (50%)": 1, "StepKV (20%)": 2}
 
 
+def _resolve_metrics_file(run_dir: str, filename: str) -> Optional[str]:
+    """Find metrics md under run_dir (flat or nested subdirs)."""
+    direct = os.path.join(run_dir, filename)
+    if os.path.isfile(direct):
+        return direct
+
+    subdir_hints = {
+        "metrics_react_kv_none.md": ["fullkv", "."],
+        "metrics_react_kv_step_aware_h2o_r50.md": ["stepkv_r50", "stepaware_r50", "."],
+        "metrics_react_kv_step_aware_h2o_r05.md": ["stepkv_r50", "stepaware_r50", "."],
+        "metrics_react_kv_step_aware_h2o_r5.md": ["stepkv_r50", "stepaware_r50", "."],
+        "metrics_react_kv_step_aware_h2o_r20.md": ["stepkv_r20", "stepaware_r20", "."],
+        "metrics_react_kv_step_aware_h2o_r02.md": ["stepkv_r20", "stepaware_r20", "."],
+        "metrics_react_kv_step_aware_h2o_r2.md": ["stepkv_r20", "stepaware_r20", "."],
+    }
+    for sub in subdir_hints.get(filename, ["."]):
+        if sub == ".":
+            continue
+        candidate = os.path.join(run_dir, sub, filename)
+        if os.path.isfile(candidate):
+            return candidate
+
+    matches = sorted(glob.glob(os.path.join(run_dir, "**", filename), recursive=True))
+    if matches:
+        return matches[0]
+    return None
+
+
+def _as_float(v: Any) -> Optional[float]:
+    if isinstance(v, (int, float)):
+        return float(v)
+    if isinstance(v, str):
+        try:
+            return float(v)
+        except ValueError:
+            return None
+    return None
+
+
+def _stats_from_metrics_md(path: str, method_name: str, ratio: str, display_label: str) -> MethodRunStats:
+    parsed = parse_metrics_markdown(path)
+    avg_peak = _as_float(parsed.get("avg_step_decode_cache_len"))
+    max_peak = _as_float(parsed.get("max_step_decode_cache_len"))
+    avg_final = _as_float(parsed.get("avg_final_decode_cache_len"))
+    max_final = _as_float(parsed.get("max_final_decode_cache_len"))
+    return MethodRunStats(
+        key=f"{display_label}_{ratio}",
+        method=method_name,
+        ratio=ratio,
+        subdir=os.path.dirname(path) or ".",
+        result_json=path,
+        n_samples=int(parsed.get("n_samples", 0) or 0),
+        em=_as_float(parsed.get("EM")),
+        f1=_as_float(parsed.get("F1")),
+        avg_sample_time_s=_as_float(parsed.get("avg_sample_time_seconds")),
+        max_sample_time_s=_as_float(parsed.get("max_sample_time_seconds")),
+        avg_peak_kv_tokens=avg_peak,
+        max_peak_kv_tokens=max_peak,
+        avg_final_kv_tokens=avg_final,
+        max_final_kv_tokens=max_final,
+    )
+
+
+def load_browsecomp_stepkv_rows_from_metrics(run_dir: str) -> List[MethodRunStats]:
+    rows: List[MethodRunStats] = []
+    for display_label, ratio, filenames, method_name in BROWSECOMP_METRICS_SERIES:
+        found_path = None
+        for name in filenames:
+            found_path = _resolve_metrics_file(run_dir, name)
+            if found_path:
+                break
+        if not found_path:
+            print(f"[WARN] Missing metrics md (tried): {', '.join(filenames)}")
+            continue
+        row = _stats_from_metrics_md(found_path, method_name, ratio, display_label)
+        print(f"[OK] {display_label}: n={row.n_samples} md={found_path}")
+        rows.append(row)
+    return rows
+
+
 def _resolve_first_subdir(
     run_dir: str,
     subdir_candidates: Sequence[str],
@@ -82,6 +197,90 @@ def _resolve_first_subdir(
     return None
 
 
+def _first_float(*candidates: Any) -> Optional[float]:
+    for c in candidates:
+        v = _as_float(c)
+        if v is not None and v >= 0:
+            return v
+    return None
+
+
+def _stats_from_summary_and_results(
+    data: Dict[str, Any],
+    sample_times: List[float],
+    peak_kvs: List[int],
+    final_kvs: List[int],
+) -> Dict[str, Optional[float]]:
+    """Merge per-sample aggregates with summary / timing_stats fallbacks."""
+    from analyze_run_kv_metrics import (
+        _max,
+        _max_int,
+        _mean,
+        compute_derived_stats,
+    )
+
+    summary = data.get("summary", {}) if isinstance(data.get("summary"), dict) else {}
+    derived = compute_derived_stats(data)
+    timing = summary.get("timing_stats") if isinstance(summary.get("timing_stats"), dict) else {}
+
+    avg_time = _first_float(
+        _mean(sample_times),
+        derived.get("avg_sample_time_seconds"),
+        summary.get("avg_sample_time_seconds"),
+        summary.get("avg_time_per_sample"),
+    )
+    max_time = _first_float(
+        _max(sample_times),
+        derived.get("max_sample_time_seconds"),
+        summary.get("max_sample_time_seconds"),
+    )
+    if max_time is None:
+        max_time = avg_time
+
+    avg_peak = _first_float(
+        _mean([float(v) for v in peak_kvs if v > 0]) if any(v > 0 for v in peak_kvs) else None,
+        derived.get("avg_step_decode_cache_len"),
+        timing.get("avg_kv_cache_length"),
+        summary.get("avg_step_decode_cache_len"),
+        derived.get("avg_final_decode_cache_len"),
+        summary.get("avg_final_decode_cache_len"),
+    )
+    max_peak = _first_float(
+        float(_max_int([v for v in peak_kvs if v > 0])) if any(v > 0 for v in peak_kvs) else None,
+        derived.get("max_step_decode_cache_len"),
+        timing.get("max_kv_cache_length"),
+        summary.get("max_step_decode_cache_len"),
+        derived.get("max_final_decode_cache_len"),
+        summary.get("max_final_decode_cache_len"),
+    )
+    if max_peak is None:
+        max_peak = avg_peak
+
+    avg_final = _first_float(
+        _mean([float(v) for v in final_kvs if v > 0]) if any(v > 0 for v in final_kvs) else None,
+        derived.get("avg_final_decode_cache_len"),
+        summary.get("avg_final_decode_cache_len"),
+        avg_peak,
+    )
+    max_final = _first_float(
+        float(_max_int([v for v in final_kvs if v > 0])) if any(v > 0 for v in final_kvs) else None,
+        derived.get("max_final_decode_cache_len"),
+        summary.get("max_final_decode_cache_len"),
+        max_peak,
+    )
+
+    return {
+        "em": _as_float(summary.get("exact_match")),
+        "f1": _as_float(summary.get("f1_score")),
+        "avg_sample_time_s": avg_time,
+        "max_sample_time_s": max_time,
+        "avg_peak_kv_tokens": avg_peak,
+        "max_peak_kv_tokens": max_peak,
+        "avg_final_kv_tokens": avg_final,
+        "max_final_kv_tokens": max_final,
+    }
+
+
 def _load_one_stats(
     run_dir: str,
     dataset_suffix: str,
@@ -92,13 +291,8 @@ def _load_one_stats(
     display_label: str,
 ) -> Optional[MethodRunStats]:
     from analyze_run_kv_metrics import (
-        _as_float,
-        _max,
-        _max_int,
-        _mean,
         _per_sample_final_kv,
         _per_sample_peak_kv,
-        compute_derived_stats,
         load_result_json,
     )
 
@@ -110,7 +304,6 @@ def _load_one_stats(
     data = load_result_json(json_path)
     summary = data.get("summary", {})
     results = data.get("results", [])
-    derived = compute_derived_stats(data)
 
     sample_times: List[float] = []
     peak_kvs: List[int] = []
@@ -124,6 +317,7 @@ def _load_one_stats(
         peak_kvs.append(_per_sample_peak_kv(r))
         final_kvs.append(_per_sample_final_kv(r))
 
+    stats = _stats_from_summary_and_results(data, sample_times, peak_kvs, final_kvs)
     ratio_label = ratio_tag if ratio_tag else "full"
     row = MethodRunStats(
         key=f"{display_label}_{ratio_label}",
@@ -132,16 +326,19 @@ def _load_one_stats(
         subdir=subdir_candidates[0],
         result_json=json_path,
         n_samples=int(summary.get("total_samples", len(results)) or len(results)),
-        em=_as_float(summary.get("exact_match")),
-        f1=_as_float(summary.get("f1_score")),
-        avg_sample_time_s=_mean(sample_times) or _as_float(derived.get("avg_sample_time_seconds")),
-        max_sample_time_s=_max(sample_times) or _as_float(derived.get("max_sample_time_seconds")),
-        avg_peak_kv_tokens=_mean(peak_kvs) or _as_float(derived.get("avg_step_decode_cache_len")),
-        max_peak_kv_tokens=float(_max_int(peak_kvs)) if peak_kvs else _as_float(derived.get("max_step_decode_cache_len")),
-        avg_final_kv_tokens=_mean(final_kvs) or _as_float(derived.get("avg_final_decode_cache_len")),
-        max_final_kv_tokens=float(_max_int(final_kvs)) if final_kvs else _as_float(derived.get("max_final_decode_cache_len")),
+        em=stats["em"],
+        f1=stats["f1"],
+        avg_sample_time_s=stats["avg_sample_time_s"],
+        max_sample_time_s=stats["max_sample_time_s"],
+        avg_peak_kv_tokens=stats["avg_peak_kv_tokens"],
+        max_peak_kv_tokens=stats["max_peak_kv_tokens"],
+        avg_final_kv_tokens=stats["avg_final_kv_tokens"],
+        max_final_kv_tokens=stats["max_final_kv_tokens"],
     )
-    print(f"[OK] {display_label}: n={row.n_samples} json={json_path}")
+    print(
+        f"[OK] {display_label}: n={row.n_samples} json={json_path} "
+        f"EM={row.em} F1={row.f1} avg_t={row.avg_sample_time_s} avg_cache={row.avg_peak_kv_tokens}"
+    )
     return row
 
 
@@ -176,10 +373,12 @@ def _normalize_vs_fullkv(
 ) -> Optional[float]:
     if method_val is None or fullkv_val is None:
         return None
-    if fullkv_val <= 0 or method_val <= 0:
-        return None
     if higher_is_better:
+        if fullkv_val == 0:
+            return 1.0 if method_val == 0 else 0.0
         return float(method_val) / float(fullkv_val)
+    if method_val == 0:
+        return None
     return float(fullkv_val) / float(method_val)
 
 
@@ -227,7 +426,12 @@ def _build_normalized_series(
             )
 
         if any(v is None for v in norm.values()):
-            print(f"[WARN] Skip incomplete series: {label}")
+            missing = [
+                axis_key
+                for axis_key, v in norm.items()
+                if v is None
+            ]
+            print(f"[WARN] Skip incomplete series: {label} missing={missing} raw={raw}")
             continue
 
         out.append(
@@ -377,6 +581,12 @@ def main() -> None:
         help="Figure filename prefix (default: {output_dir}/browsecomp_stepkv_radar).",
     )
     parser.add_argument(
+        "--source",
+        choices=("auto", "metrics", "json"),
+        default="auto",
+        help="Input type: metrics=metrics_*.md, json=result JSON, auto=try metrics then json.",
+    )
+    parser.add_argument(
         "--cache_metric",
         choices=("peak", "final"),
         default="peak",
@@ -409,7 +619,16 @@ def main() -> None:
     os.makedirs(output_dir, exist_ok=True)
     output_prefix = args.output_prefix or os.path.join(output_dir, "browsecomp_stepkv_radar")
 
-    rows = load_browsecomp_stepkv_rows(run_dir, dataset_suffix)
+    rows: List[MethodRunStats] = []
+    if args.source in ("auto", "metrics"):
+        rows = load_browsecomp_stepkv_rows_from_metrics(run_dir)
+    if args.source == "json" or (args.source == "auto" and len(rows) < 2):
+        if args.source == "auto" and rows:
+            print("[INFO] Fewer than 2 metrics files found; also trying result JSON...")
+        json_rows = load_browsecomp_stepkv_rows(run_dir, dataset_suffix)
+        if args.source == "json" or len(json_rows) > len(rows):
+            rows = json_rows
+
     baseline = next((r for r in rows if r.method == "FullKV"), None)
     if baseline is None:
         raise RuntimeError("FullKV baseline (fullkv/react_kv_none) is required.")

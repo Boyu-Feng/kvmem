@@ -3,6 +3,7 @@
 import argparse
 import json
 import os
+import re
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 
@@ -76,6 +77,65 @@ def compute_derived_stats(data: Dict[str, Any]) -> Dict[str, Any]:
         stats["max_sample_time_seconds"] = summary.get("max_sample_time_seconds")
 
     return stats
+
+
+def parse_metrics_markdown(path: str) -> Dict[str, Any]:
+    """Parse metrics_*.md written by write_experiment_metrics()."""
+    with open(path, "r", encoding="utf-8") as f:
+        text = f.read()
+
+    out: Dict[str, Any] = {"source_path": path}
+    for line in text.splitlines():
+        m = re.match(r"^-\s+([A-Za-z0-9_]+):\s*(.+?)\s*$", line.strip())
+        if not m:
+            continue
+        key, raw = m.group(1), m.group(2).strip()
+        if raw in ("N/A", "—", "-", ""):
+            continue
+        try:
+            if re.fullmatch(r"-?\d+", raw):
+                out[key] = int(raw)
+            elif re.fullmatch(r"-?\d+\.\d+", raw):
+                out[key] = float(raw)
+            else:
+                out[key] = raw
+        except ValueError:
+            out[key] = raw
+
+    json_match = re.search(
+        r"## Full Summary JSON\s*```json\s*(.*?)\s*```",
+        text,
+        flags=re.DOTALL,
+    )
+    if json_match:
+        try:
+            out["summary"] = json.loads(json_match.group(1))
+        except json.JSONDecodeError:
+            pass
+
+    summary = out.get("summary") if isinstance(out.get("summary"), dict) else {}
+    if out.get("EM") is None and summary.get("exact_match") is not None:
+        out["EM"] = summary.get("exact_match")
+    if out.get("F1") is None and summary.get("f1_score") is not None:
+        out["F1"] = summary.get("f1_score")
+    if out.get("avg_sample_time_seconds") is None and summary.get("avg_sample_time_seconds") is not None:
+        out["avg_sample_time_seconds"] = summary.get("avg_sample_time_seconds")
+    if out.get("max_sample_time_seconds") is None and summary.get("max_sample_time_seconds") is not None:
+        out["max_sample_time_seconds"] = summary.get("max_sample_time_seconds")
+    if out.get("avg_step_decode_cache_len") is None and summary.get("avg_step_decode_cache_len") is not None:
+        out["avg_step_decode_cache_len"] = summary.get("avg_step_decode_cache_len")
+    if out.get("max_step_decode_cache_len") is None and summary.get("max_step_decode_cache_len") is not None:
+        out["max_step_decode_cache_len"] = summary.get("max_step_decode_cache_len")
+    if out.get("avg_final_decode_cache_len") is None and summary.get("avg_final_decode_cache_len") is not None:
+        out["avg_final_decode_cache_len"] = summary.get("avg_final_decode_cache_len")
+    if out.get("max_final_decode_cache_len") is None and summary.get("max_final_decode_cache_len") is not None:
+        out["max_final_decode_cache_len"] = summary.get("max_final_decode_cache_len")
+    if out.get("n_samples") is None:
+        n = summary.get("total_samples", summary.get("n_samples"))
+        if n is not None:
+            out["n_samples"] = n
+
+    return out
 
 
 def build_metrics_lines(
