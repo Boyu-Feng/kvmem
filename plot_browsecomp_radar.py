@@ -2,26 +2,17 @@
 """
 BrowseComp StepKV radar chart vs FullKV baseline (single figure).
 
-Plots FullKV + StepKV@50% + StepKV@20% on one radar with six axes:
-  EM, F1, Avg Time, Max Time, Avg Cache, Max Cache
-All normalized to FullKV = 1.0 (larger = better on every axis).
+Plots FullKV + StepKV@50% + StepKV@20% on one radar (six axes).
+Normalization: value / FullKV on every axis → FullKV = 1.0 (outermost polygon).
 
-Expected layout (either works):
+Expected JSON layout:
+  {run_dir}/fullkv/react_kv_none_browsecomp*.json
+  {run_dir}/stepkv_r50/react_kv_step_aware_h2o_browsecomp_r50.json
+  {run_dir}/stepkv_r20/react_kv_step_aware_h2o_browsecomp_r20.json
 
-  A) metrics markdown (from record_experiment_metrics.py):
-     {run_dir}/metrics_react_kv_none.md
-     {run_dir}/metrics_react_kv_step_aware_h2o_r50.md   # or _r05
-     {run_dir}/metrics_react_kv_step_aware_h2o_r20.md   # or _r02
-
-  B) result JSON:
-     {run_dir}/fullkv/react_kv_none_browsecomp*.json
-     {run_dir}/stepkv_r50/react_kv_step_aware_h2o_browsecomp_r50.json
-     {run_dir}/stepkv_r20/react_kv_step_aware_h2o_browsecomp_r20.json
-
-Example (metrics md):
+Example:
   python plot_browsecomp_radar.py \\
-    --run_dir results/browsecomp_v2/stepkv_r50 \\
-    --source metrics
+    --run_dir /root/autodl-tmp/kvmem/results/browsecomp_v2
 """
 
 from __future__ import annotations
@@ -369,13 +360,17 @@ def _row_cache_stats(row: MethodRunStats, cache_metric: str) -> Tuple[Optional[f
 def _normalize_vs_fullkv(
     method_val: Optional[float],
     fullkv_val: Optional[float],
+    *,
+    is_baseline: bool = False,
 ) -> Optional[float]:
-    """Always method / FullKV so FullKV = 1.0 (largest baseline on each axis)."""
+    """method / FullKV; FullKV row is always 1.0; StepKV capped at 1.0 (inside FullKV)."""
+    if is_baseline:
+        return 1.0
     if method_val is None or fullkv_val is None:
         return None
     if fullkv_val == 0:
-        return 1.0 if method_val == 0 else None
-    return float(method_val) / float(fullkv_val)
+        return 0.0 if method_val == 0 else 1.0
+    return min(float(method_val) / float(fullkv_val), 1.0)
 
 
 def _display_label(row: MethodRunStats) -> str:
@@ -414,10 +409,12 @@ def _build_normalized_series(
         }
 
         norm: Dict[str, Optional[float]] = {}
+        is_baseline = row.method == "FullKV"
         for key, _, field in AXIS_SPECS:
             norm[key] = _normalize_vs_fullkv(
                 raw.get(field),
                 baseline_raw.get(field),
+                is_baseline=is_baseline,
             )
 
         if any(v is None for v in norm.values()):
@@ -576,9 +573,9 @@ def main() -> None:
     )
     parser.add_argument(
         "--source",
-        choices=("auto", "metrics", "json"),
-        default="auto",
-        help="Input type: metrics=metrics_*.md, json=result JSON, auto=try metrics then json.",
+        choices=("json", "metrics", "auto"),
+        default="json",
+        help="Input: json=result JSON (default), metrics=metrics_*.md, auto=metrics then json.",
     )
     parser.add_argument(
         "--cache_metric",
@@ -614,14 +611,15 @@ def main() -> None:
     output_prefix = args.output_prefix or os.path.join(output_dir, "browsecomp_stepkv_radar")
 
     rows: List[MethodRunStats] = []
-    if args.source in ("auto", "metrics"):
+    if args.source == "json":
+        rows = load_browsecomp_stepkv_rows(run_dir, dataset_suffix)
+    elif args.source == "metrics":
         rows = load_browsecomp_stepkv_rows_from_metrics(run_dir)
-    if args.source == "json" or (args.source == "auto" and len(rows) < 2):
-        if args.source == "auto" and rows:
-            print("[INFO] Fewer than 2 metrics files found; also trying result JSON...")
-        json_rows = load_browsecomp_stepkv_rows(run_dir, dataset_suffix)
-        if args.source == "json" or len(json_rows) > len(rows):
-            rows = json_rows
+    else:
+        rows = load_browsecomp_stepkv_rows_from_metrics(run_dir)
+        if len(rows) < 3:
+            print("[INFO] metrics incomplete; falling back to result JSON...")
+            rows = load_browsecomp_stepkv_rows(run_dir, dataset_suffix)
 
     baseline = next((r for r in rows if r.method == "FullKV"), None)
     if baseline is None:
@@ -649,7 +647,7 @@ def main() -> None:
             "max_cache": baseline_max,
         },
         "normalization": {
-            "note": "All axes normalized vs FullKV; larger is better on every axis.",
+            "note": "Each axis = method / FullKV; FullKV = 1.0 on all axes (outer baseline).",
         },
         "series": series_list,
     }
