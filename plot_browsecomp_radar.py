@@ -548,11 +548,8 @@ def plot_radar_single(
     ]
     radial_max = max(1.05, max(all_norm_vals) * 1.05 if all_norm_vals else 1.05)
     ax.set_ylim(0, radial_max)
-    tick_vals = [0.25, 0.5, 0.75, 1.0]
-    if radial_max > 1.05:
-        tick_vals.append(round(radial_max, 2))
-    ax.set_yticks(tick_vals)
-    ax.set_yticklabels([f"{t:.1f}" for t in tick_vals], fontsize=ticksize - 1, color="#666666")
+    ax.set_yticks([])
+    ax.set_yticklabels([])
     ax.grid(color="#CCCCCC", linestyle=":", linewidth=0.8)
     ax.spines["polar"].set_color("#AAAAAA")
 
