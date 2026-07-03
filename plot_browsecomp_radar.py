@@ -3,7 +3,11 @@
 BrowseComp StepKV radar chart vs FullKV baseline (single figure).
 
 Plots FullKV + StepKV@50% + StepKV@20% on one radar (six axes).
-Normalization: value / FullKV on every axis → FullKV = 1.0 (outermost polygon).
+
+Normalization (hybrid):
+  - EM / F1: if FullKV > 0 → value / FullKV (FullKV = 1, StepKV relative, can exceed 1).
+             if FullKV = 0 → (value + floor) / (scale + floor) so FullKV is not pinned to axis.
+  - Time / Cache: value / max(all methods) — FullKV usually largest on cache.
 
 Expected JSON layout:
   {run_dir}/fullkv/react_kv_none_browsecomp*.json
@@ -74,14 +78,16 @@ BROWSECOMP_METRICS_SERIES: List[Tuple[str, str, List[str], str]] = [
     ),
 ]
 
-AXIS_SPECS: List[Tuple[str, str, str]] = [
-    ("em", "EM", "em"),
-    ("f1", "F1", "f1"),
-    ("avg_sample_time_s", "Avg Time", "avg_sample_time_s"),
-    ("max_sample_time_s", "Max Time", "max_sample_time_s"),
-    ("avg_cache", "Avg Cache", "avg_cache"),
-    ("max_cache", "Max Cache", "max_cache"),
+AXIS_SPECS: List[Tuple[str, str, str, str]] = [
+    ("em", "EM", "em", "quality"),
+    ("f1", "F1", "f1", "quality"),
+    ("avg_sample_time_s", "Avg Time", "avg_sample_time_s", "cost"),
+    ("max_sample_time_s", "Max Time", "max_sample_time_s", "cost"),
+    ("avg_cache", "Avg Cache", "avg_cache", "cost"),
+    ("max_cache", "Max Cache", "max_cache", "cost"),
 ]
+
+QUALITY_AXIS_KEYS = frozenset(k for k, _, _, g in AXIS_SPECS if g == "quality")
 
 SERIES_COLORS = {
     "FullKV": "#009E73",
@@ -357,20 +363,84 @@ def _row_cache_stats(row: MethodRunStats, cache_metric: str) -> Tuple[Optional[f
     return getattr(row, avg_field), getattr(row, max_field)
 
 
-def _normalize_vs_fullkv(
-    method_val: Optional[float],
-    fullkv_val: Optional[float],
+def _raw_stats_for_row(row: MethodRunStats, cache_metric: str) -> Dict[str, Optional[float]]:
+    row_avg_cache, row_max_cache = _row_cache_stats(row, cache_metric)
+    return {
+        "em": row.em,
+        "f1": row.f1,
+        "avg_sample_time_s": row.avg_sample_time_s,
+        "max_sample_time_s": row.max_sample_time_s,
+        "avg_cache": row_avg_cache,
+        "max_cache": row_max_cache,
+    }
+
+
+def _axis_values(all_raw: List[Dict[str, Optional[float]]], field: str) -> List[float]:
+    return [
+        float(r[field])
+        for r in all_raw
+        if r.get(field) is not None and float(r[field]) >= 0
+    ]
+
+
+def _compute_axis_scales(
+    all_raw: List[Dict[str, Optional[float]]],
+    fullkv_raw: Dict[str, Optional[float]],
     *,
-    is_baseline: bool = False,
-) -> Optional[float]:
-    """method / FullKV; FullKV row is always 1.0; StepKV capped at 1.0 (inside FullKV)."""
-    if is_baseline:
-        return 1.0
-    if method_val is None or fullkv_val is None:
-        return None
-    if fullkv_val == 0:
-        return 0.0 if method_val == 0 else 1.0
-    return min(float(method_val) / float(fullkv_val), 1.0)
+    acc_display_floor: float,
+    acc_scale_override: Optional[float],
+    min_acc_scale: float,
+) -> Tuple[Dict[str, float], Dict[str, str]]:
+    """
+    Return per-axis denominator and a short note on how it was chosen.
+    Quality axes use FullKV-relative when FullKV>0, else soft-floor display scale.
+    Cost axes use max across all methods.
+    """
+    scales: Dict[str, float] = {}
+    modes: Dict[str, str] = {}
+
+    for key, _, field, group in AXIS_SPECS:
+        vals = _axis_values(all_raw, field)
+        max_v = max(vals) if vals else 0.0
+        fullkv_v = float(fullkv_raw.get(field) or 0.0)
+
+        if group == "quality":
+            if fullkv_v > 1e-9:
+                scales[key] = fullkv_v
+                modes[key] = "fullkv_relative"
+            else:
+                auto_scale = max(max_v * 1.15, min_acc_scale, 1e-9)
+                if acc_scale_override is not None and acc_scale_override > 0:
+                    auto_scale = max(float(acc_scale_override), min_acc_scale)
+                scales[key] = auto_scale
+                modes[key] = f"zero_fullkv_floor(floor={acc_display_floor})"
+        else:
+            scales[key] = max(max_v, 1e-9) if vals else 1.0
+            modes[key] = "max_all"
+
+    return scales, modes
+
+
+def _normalize_row(
+    raw: Dict[str, Optional[float]],
+    axis_scales: Dict[str, float],
+    axis_modes: Dict[str, str],
+    *,
+    acc_display_floor: float,
+) -> Dict[str, Optional[float]]:
+    norm: Dict[str, Optional[float]] = {}
+    for key, _, field, group in AXIS_SPECS:
+        v = raw.get(field)
+        if v is None:
+            norm[key] = None
+            continue
+        v = float(v)
+        scale = axis_scales[key]
+        if group == "quality" and axis_modes[key].startswith("zero_fullkv_floor"):
+            norm[key] = (v + acc_display_floor) / (scale + acc_display_floor)
+        else:
+            norm[key] = v / scale
+    return norm
 
 
 def _display_label(row: MethodRunStats) -> str:
@@ -382,47 +452,43 @@ def _display_label(row: MethodRunStats) -> str:
 
 def _build_normalized_series(
     rows: List[MethodRunStats],
-    baseline: MethodRunStats,
     cache_metric: str,
+    *,
+    acc_display_floor: float = 0.5,
+    acc_scale_override: Optional[float] = None,
+    min_acc_scale: float = 1.0,
 ) -> List[Dict[str, Any]]:
-    baseline_avg_cache, baseline_max_cache = _cache_fields(cache_metric)
-    baseline_raw = {
-        "em": baseline.em,
-        "f1": baseline.f1,
-        "avg_sample_time_s": baseline.avg_sample_time_s,
-        "max_sample_time_s": baseline.max_sample_time_s,
-        "avg_cache": getattr(baseline, baseline_avg_cache),
-        "max_cache": getattr(baseline, baseline_max_cache),
-    }
+    labeled_raw: List[Tuple[MethodRunStats, str, Dict[str, Optional[float]]]] = []
+    fullkv_raw: Optional[Dict[str, Optional[float]]] = None
+    for row in rows:
+        raw = _raw_stats_for_row(row, cache_metric)
+        if row.method == "FullKV":
+            fullkv_raw = raw
+        labeled_raw.append((row, _display_label(row), raw))
+
+    if fullkv_raw is None:
+        raise RuntimeError("FullKV row required for normalization.")
+
+    all_raw = [raw for _, _, raw in labeled_raw]
+    axis_scales, axis_modes = _compute_axis_scales(
+        all_raw,
+        fullkv_raw,
+        acc_display_floor=acc_display_floor,
+        acc_scale_override=acc_scale_override,
+        min_acc_scale=min_acc_scale,
+    )
 
     out: List[Dict[str, Any]] = []
-    for row in rows:
-        label = _display_label(row)
-        row_avg_cache, row_max_cache = _row_cache_stats(row, cache_metric)
-        raw = {
-            "em": row.em,
-            "f1": row.f1,
-            "avg_sample_time_s": row.avg_sample_time_s,
-            "max_sample_time_s": row.max_sample_time_s,
-            "avg_cache": row_avg_cache,
-            "max_cache": row_max_cache,
-        }
-
-        norm: Dict[str, Optional[float]] = {}
-        is_baseline = row.method == "FullKV"
-        for key, _, field in AXIS_SPECS:
-            norm[key] = _normalize_vs_fullkv(
-                raw.get(field),
-                baseline_raw.get(field),
-                is_baseline=is_baseline,
-            )
+    for row, label, raw in labeled_raw:
+        norm = _normalize_row(
+            raw,
+            axis_scales,
+            axis_modes,
+            acc_display_floor=acc_display_floor,
+        )
 
         if any(v is None for v in norm.values()):
-            missing = [
-                axis_key
-                for axis_key, v in norm.items()
-                if v is None
-            ]
+            missing = [axis_key for axis_key, v in norm.items() if v is None]
             print(f"[WARN] Skip incomplete series: {label} missing={missing} raw={raw}")
             continue
 
@@ -432,6 +498,8 @@ def _build_normalized_series(
                 "ratio": row.ratio,
                 "label": label,
                 "raw": raw,
+                "axis_scale": {k: axis_scales[k] for k in axis_scales},
+                "axis_scale_mode": {k: axis_modes[k] for k in axis_modes},
                 "normalized": norm,
             }
         )
@@ -488,20 +556,9 @@ def plot_radar_single(
     ax.grid(color="#CCCCCC", linestyle=":", linewidth=0.8)
     ax.spines["polar"].set_color("#AAAAAA")
 
-    # FullKV baseline ring at 1.0
-    ax.plot(
-        angles_closed,
-        [1.0] * (n_axes + 1),
-        color="#009E73",
-        linewidth=2.6,
-        linestyle="-",
-        zorder=2,
-        label="_nolegend_",
-    )
-
     for spec in series_list:
         label = spec["label"]
-        vals = [float(spec["normalized"][key]) for key, _, _ in AXIS_SPECS]
+        vals = [float(spec["normalized"][key]) for key, _, _, _ in AXIS_SPECS]
         vals_closed = vals + vals[:1]
         color = SERIES_COLORS.get(label, "#333333")
         lw = 2.6 if label == "FullKV" else 2.0
@@ -584,6 +641,24 @@ def main() -> None:
         help="Cache axes: peak = max per-step cache; final = end-of-sample cache.",
     )
     parser.add_argument(
+        "--acc_display_floor",
+        type=float,
+        default=0.5,
+        help="When FullKV EM/F1=0, add this floor (percent pts) for radar display only.",
+    )
+    parser.add_argument(
+        "--acc_scale",
+        type=float,
+        default=None,
+        help="Fixed EM/F1 scale (%%) when FullKV accuracy is 0; default auto from data.",
+    )
+    parser.add_argument(
+        "--min_acc_scale",
+        type=float,
+        default=1.0,
+        help="Minimum EM/F1 scale (%%) when FullKV accuracy is 0.",
+    )
+    parser.add_argument(
         "--title",
         type=str,
         default=None,
@@ -625,7 +700,13 @@ def main() -> None:
     if baseline is None:
         raise RuntimeError("FullKV baseline (fullkv/react_kv_none) is required.")
 
-    series_list = _build_normalized_series(rows, baseline, args.cache_metric)
+    series_list = _build_normalized_series(
+        rows,
+        args.cache_metric,
+        acc_display_floor=args.acc_display_floor,
+        acc_scale_override=args.acc_scale,
+        min_acc_scale=args.min_acc_scale,
+    )
     if len(series_list) < 2:
         raise RuntimeError(
             "Need at least FullKV + one StepKV ratio. "
@@ -647,7 +728,12 @@ def main() -> None:
             "max_cache": baseline_max,
         },
         "normalization": {
-            "note": "Each axis = method / FullKV; FullKV = 1.0 on all axes (outer baseline).",
+            "quality_axes": "FullKV>0: value/FullKV; FullKV=0: (value+floor)/(scale+floor)",
+            "cost_axes": "value / max(all methods)",
+            "acc_display_floor": args.acc_display_floor,
+            "acc_scale": args.acc_scale,
+            "axis_scale": series_list[0].get("axis_scale") if series_list else {},
+            "axis_scale_mode": series_list[0].get("axis_scale_mode") if series_list else {},
         },
         "series": series_list,
     }
