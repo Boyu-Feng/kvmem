@@ -16,6 +16,11 @@ Example:
   python analyze_run_kv_metrics.py \\
     --run_dir results/musique_qwen25_7b_v2/run2 \\
     --output_dir results/musique_qwen25_7b_v2/run2/analysis
+
+  # Combined 2×3 figure for all Qwen datasets (run2):
+  python analyze_run_kv_metrics.py \\
+    --combine_qwen --results_root results --run_tag run2 \\
+    --output_dir results/qwen25_7b_v2_run2/analysis
 """
 
 from __future__ import annotations
@@ -61,6 +66,14 @@ METHOD_DISPLAY = {
     "StepKV": "StepKV",
 }
 RATIO_ORDER = ["r50", "r20", "full"]
+
+# Preferred column order when combining Qwen multi-dataset figures.
+QWEN_DATASET_ORDER = ["musique", "browsecomp", "2wiki"]
+DATASET_DISPLAY = {
+    "musique": "MuSiQue",
+    "browsecomp": "BrowseComp",
+    "2wiki": "2Wiki",
+}
 
 RESULT_JSON_RE = re.compile(
     r"^(react_kv_[a-z0-9_]+)_(.+?)(?:_(r\d+))?\.json$", re.IGNORECASE
@@ -136,6 +149,38 @@ def detect_dataset_suffix(run_dir: str) -> Optional[str]:
         if m:
             return m.group(2)
     return None
+
+
+def discover_qwen_dataset_runs(
+    results_root: str,
+    run_tag: str = "run2",
+) -> List[Tuple[str, str, str]]:
+    """Find Qwen2.5-7B experiment dirs under results_root.
+
+    Returns list of (display_name, dataset_suffix, run_dir), sorted by QWEN_DATASET_ORDER.
+    """
+    results_root = os.path.abspath(results_root)
+    if not os.path.isdir(results_root):
+        raise FileNotFoundError(f"results_root not found: {results_root}")
+
+    order_index = {name: i for i, name in enumerate(QWEN_DATASET_ORDER)}
+    found: List[Tuple[int, str, str, str]] = []
+
+    for entry in sorted(glob.glob(os.path.join(results_root, "*_qwen25_7b_v2"))):
+        base = os.path.basename(entry)
+        m = re.match(r"^(.+?)_qwen25_7b_v2$", base)
+        if not m:
+            continue
+        dataset_suffix = m.group(1)
+        run_dir = os.path.join(entry, run_tag)
+        if not os.path.isdir(run_dir):
+            print(f"[WARN] Skip {dataset_suffix}: missing {run_dir}")
+            continue
+        display = DATASET_DISPLAY.get(dataset_suffix, dataset_suffix)
+        found.append((order_index.get(dataset_suffix, 100 + len(found)), display, dataset_suffix, run_dir))
+
+    found.sort(key=lambda item: item[0])
+    return [(display, suffix, run_dir) for _, display, suffix, run_dir in found]
 
 
 def resolve_result_json(
@@ -342,6 +387,8 @@ def _draw_method_ratio_bars(
     color_r50: str = "#0072B2",
     color_r20: str = "#E69F00",
     color_full: str = "#009E73",
+    show_xticklabels: bool = True,
+    show_ylabel: bool = True,
 ) -> None:
     """Grouped bars: FullKV + r50/r20 per method on one axes."""
     n_methods = len(METHOD_ORDER)
@@ -404,8 +451,12 @@ def _draw_method_ratio_bars(
         )
 
     ax.set_xticks(x)
-    ax.set_xticklabels(_method_tick_labels())
-    ax.set_ylabel(ylabel, fontsize=14)
+    if show_xticklabels:
+        ax.set_xticklabels(_method_tick_labels())
+    else:
+        ax.set_xticklabels([])
+    if show_ylabel and ylabel:
+        ax.set_ylabel(ylabel, fontsize=14)
     ax.tick_params(axis="both", labelsize=12)
     ax.grid(axis="y", linestyle=":", alpha=0.35)
     ax.set_axisbelow(True)
@@ -421,6 +472,107 @@ def _legend_patches(
         mpatches.Patch(facecolor=color_r20, edgecolor="white", label="keep ratio 0.2"),
         mpatches.Patch(facecolor=color_full, edgecolor="white", hatch="///", label="FullKV (no prune)"),
     ]
+
+
+def _add_bottom_legend(fig, color_r50: str, color_r20: str, color_full: str) -> None:
+    """Shared legend below all panels, kept close to the figure."""
+    fig.legend(
+        handles=_legend_patches(color_r50, color_r20, color_full),
+        loc="lower center",
+        ncol=3,
+        frameon=False,
+        bbox_to_anchor=(0.5, 0.02),
+    )
+
+
+def plot_multi_dataset_grid(
+    rows_by_dataset: List[Tuple[str, str, List[MethodRunStats]]],
+    *,
+    avg_field: str,
+    avg_ylabel: str,
+    max_field: str,
+    max_ylabel: str,
+    output_prefix: str,
+    stem: str,
+) -> None:
+    """2×N grid: top row = avg, bottom row = max; one column per dataset."""
+    if plt is None:
+        raise RuntimeError(
+            "matplotlib is required for plotting. Install with: pip install matplotlib"
+        ) from _MPL_IMPORT_ERROR
+    if not rows_by_dataset:
+        print("[WARN] Skip multi-dataset plot: no datasets.")
+        return
+
+    _setup_matplotlib_style()
+    color_r50, color_r20, color_full = "#0072B2", "#E69F00", "#009E73"
+    n_cols = len(rows_by_dataset)
+
+    fig, axes = plt.subplots(2, n_cols, figsize=(2.5 * n_cols + 1.2, 6.2), squeeze=False)
+
+    for col, (display_name, _suffix, rows) in enumerate(rows_by_dataset):
+        ax_avg = axes[0, col]
+        ax_max = axes[1, col]
+
+        _draw_method_ratio_bars(
+            ax_avg,
+            rows,
+            avg_field,
+            avg_ylabel,
+            color_r50=color_r50,
+            color_r20=color_r20,
+            color_full=color_full,
+            show_xticklabels=False,
+            show_ylabel=(col == 0),
+        )
+        ax_avg.set_title(display_name, fontsize=13, pad=6)
+
+        _draw_method_ratio_bars(
+            ax_max,
+            rows,
+            max_field,
+            max_ylabel,
+            color_r50=color_r50,
+            color_r20=color_r20,
+            color_full=color_full,
+            show_xticklabels=True,
+            show_ylabel=(col == 0),
+        )
+
+    _add_bottom_legend(fig, color_r50, color_r20, color_full)
+    fig.tight_layout(rect=(0, 0.07, 1, 1))
+    fig.subplots_adjust(hspace=0.28, wspace=0.22)
+
+    out_stem = f"{output_prefix}_{stem}"
+    for ext in ("pdf", "png"):
+        out = f"{out_stem}.{ext}"
+        fig.savefig(out)
+        print(f"[INFO] Saved figure: {out}")
+    plt.close(fig)
+
+
+def plot_combined_qwen_figures(
+    rows_by_dataset: List[Tuple[str, str, List[MethodRunStats]]],
+    output_prefix: str,
+) -> None:
+    plot_multi_dataset_grid(
+        rows_by_dataset,
+        avg_field="avg_sample_time_s",
+        avg_ylabel="Avg. Sample Time (s)",
+        max_field="max_sample_time_s",
+        max_ylabel="Max Sample Time (s)",
+        output_prefix=output_prefix,
+        stem="qwen_multi_time",
+    )
+    plot_multi_dataset_grid(
+        rows_by_dataset,
+        avg_field="avg_peak_kv_tokens",
+        avg_ylabel="Avg. Peak KV Cache",
+        max_field="max_peak_kv_tokens",
+        max_ylabel="Max Peak KV Cache",
+        output_prefix=output_prefix,
+        stem="qwen_multi_cache",
+    )
 
 
 TIME_BAR_METRICS: List[Tuple[str, str]] = [
@@ -457,15 +609,8 @@ def plot_time_bars(
             color_r50=color_r50, color_r20=color_r20, color_full=color_full,
         )
 
-    fig.legend(
-        handles=_legend_patches(color_r50, color_r20, color_full),
-        loc="upper center",
-        ncol=3,
-        frameon=False,
-        bbox_to_anchor=(0.5, -0.06),
-    )
-    fig.tight_layout()
-    fig.subplots_adjust(bottom=0.18)
+    _add_bottom_legend(fig, color_r50, color_r20, color_full)
+    fig.tight_layout(rect=(0, 0.07, 1, 1))
 
     stem = f"{output_prefix}_{dataset_suffix}_time"
     for ext in ("pdf", "png"):
@@ -498,15 +643,8 @@ def plot_cache_bars(
             color_r50=color_r50, color_r20=color_r20, color_full=color_full,
         )
 
-    fig.legend(
-        handles=_legend_patches(color_r50, color_r20, color_full),
-        loc="upper center",
-        ncol=3,
-        frameon=False,
-        bbox_to_anchor=(0.5, -0.06),
-    )
-    fig.tight_layout()
-    fig.subplots_adjust(bottom=0.18)
+    _add_bottom_legend(fig, color_r50, color_r20, color_full)
+    fig.tight_layout(rect=(0, 0.07, 1, 1))
 
     stem = f"{output_prefix}_{dataset_suffix}_cache"
     for ext in ("pdf", "png"):
@@ -589,20 +727,53 @@ def _analyze_and_write_dataset(
     output_dir: str,
     *,
     no_plot: bool,
-) -> None:
+    skip_individual_plots: bool = False,
+) -> Optional[List[MethodRunStats]]:
     rows = analyze_one_run(run_dir, dataset_suffix)
     if not rows:
         print(f"[WARN] No results for dataset={dataset_suffix}")
-        return
+        return None
 
     prefix = os.path.join(output_dir, "kv_efficiency")
     write_csv(rows, f"{prefix}_{dataset_suffix}_summary.csv")
     write_json_summary(rows, f"{prefix}_{dataset_suffix}_summary.json", run_dir, dataset_suffix)
     write_markdown_table(rows, f"{prefix}_{dataset_suffix}_summary.md")
 
-    if not no_plot:
+    if not no_plot and not skip_individual_plots:
         plot_grouped_bars(rows, prefix, dataset_suffix)
         plot_normalized_efficiency(rows, prefix, dataset_suffix)
+    return rows
+
+
+def _run_combine_qwen(
+    results_root: str,
+    run_tag: str,
+    output_dir: str,
+    *,
+    no_plot: bool,
+) -> None:
+    datasets = discover_qwen_dataset_runs(results_root, run_tag=run_tag)
+    if not datasets:
+        raise RuntimeError(
+            f"No Qwen run dirs found under {results_root}/*_qwen25_7b_v2/{run_tag}"
+        )
+
+    rows_by_dataset: List[Tuple[str, str, List[MethodRunStats]]] = []
+    for display_name, dataset_suffix, run_dir in datasets:
+        print(f"[INFO] Analyzing Qwen dataset={dataset_suffix} run_dir={run_dir}")
+        rows = _analyze_and_write_dataset(
+            run_dir,
+            dataset_suffix,
+            output_dir,
+            no_plot=no_plot,
+            skip_individual_plots=True,
+        )
+        if rows:
+            rows_by_dataset.append((display_name, dataset_suffix, rows))
+
+    if not no_plot and rows_by_dataset:
+        prefix = os.path.join(output_dir, "kv_efficiency")
+        plot_combined_qwen_figures(rows_by_dataset, prefix)
 
 
 def main() -> None:
@@ -610,8 +781,26 @@ def main() -> None:
     parser.add_argument(
         "--run_dir",
         type=str,
-        required=True,
+        default=None,
         help="Path to one run, e.g. results/musique_qwen25_7b_v2/run2",
+    )
+    parser.add_argument(
+        "--combine_qwen",
+        action="store_true",
+        help="Discover all Qwen datasets under --results_root, read --run_tag (default run2), "
+        "and write combined 2×N time/cache figures.",
+    )
+    parser.add_argument(
+        "--results_root",
+        type=str,
+        default="results",
+        help="Root folder for --combine_qwen (default: results)",
+    )
+    parser.add_argument(
+        "--run_tag",
+        type=str,
+        default="run2",
+        help="Run subfolder name for --combine_qwen (default: run2)",
     )
     parser.add_argument(
         "--dataset_suffix",
@@ -632,6 +821,24 @@ def main() -> None:
         help="Only write CSV/JSON/Markdown, skip figures.",
     )
     args = parser.parse_args()
+
+    if args.combine_qwen:
+        output_dir = args.output_dir or os.path.join(
+            os.path.abspath(args.results_root),
+            f"qwen25_7b_{args.run_tag}_analysis",
+        )
+        os.makedirs(output_dir, exist_ok=True)
+        _run_combine_qwen(
+            args.results_root,
+            args.run_tag,
+            output_dir,
+            no_plot=args.no_plot,
+        )
+        print(f"[DONE] Combined Qwen analysis written to {output_dir}")
+        return
+
+    if not args.run_dir:
+        parser.error("--run_dir is required unless --combine_qwen is set.")
 
     run_dir = os.path.abspath(args.run_dir)
     if not os.path.isdir(run_dir):
