@@ -68,13 +68,14 @@ METHOD_DISPLAY = {
 RATIO_ORDER = ["r50", "r20", "full"]
 
 # Preferred column order when combining Qwen multi-dataset figures.
-QWEN_DATASET_ORDER = ["musique", "browsecomp", "2wiki"]
+# hotpotqa uses results/wiki_qwen25_7b_v2 (folder key "wiki").
+QWEN_DATASET_ORDER = ["wiki", "2wiki", "musique"]
 DATASET_DISPLAY = {
-    "musique": "MuSiQue",
-    "browsecomp": "BrowseComp",
-    "2wiki": "2Wiki",
     "wiki": "HotpotQA",
     "hotpotqa": "HotpotQA",
+    "2wiki": "2Wiki",
+    "musique": "MuSiQue",
+    "browsecomp": "BrowseComp",
 }
 
 RESULT_JSON_RE = re.compile(
