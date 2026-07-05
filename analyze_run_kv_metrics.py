@@ -68,11 +68,12 @@ METHOD_DISPLAY = {
 RATIO_ORDER = ["r50", "r20", "full"]
 
 # Preferred column order when combining Qwen multi-dataset figures.
-QWEN_DATASET_ORDER = ["musique", "browsecomp", "2wiki"]
+QWEN_DATASET_ORDER = ["musique", "browsecomp", "wiki"]
 DATASET_DISPLAY = {
     "musique": "MuSiQue",
     "browsecomp": "BrowseComp",
-    "2wiki": "2Wiki",
+    "wiki": "HotpotQA",
+    "hotpotqa": "HotpotQA",
 }
 
 RESULT_JSON_RE = re.compile(
@@ -171,13 +172,16 @@ def discover_qwen_dataset_runs(
         m = re.match(r"^(.+?)_qwen25_7b_v2$", base)
         if not m:
             continue
-        dataset_suffix = m.group(1)
+        folder_key = m.group(1)
+        if folder_key not in order_index:
+            continue
         run_dir = os.path.join(entry, run_tag)
         if not os.path.isdir(run_dir):
-            print(f"[WARN] Skip {dataset_suffix}: missing {run_dir}")
+            print(f"[WARN] Skip {folder_key}: missing {run_dir}")
             continue
-        display = DATASET_DISPLAY.get(dataset_suffix, dataset_suffix)
-        found.append((order_index.get(dataset_suffix, 100 + len(found)), display, dataset_suffix, run_dir))
+        dataset_suffix = detect_dataset_suffix(run_dir) or folder_key
+        display = DATASET_DISPLAY.get(folder_key, DATASET_DISPLAY.get(dataset_suffix, folder_key))
+        found.append((order_index[folder_key], display, dataset_suffix, run_dir))
 
     found.sort(key=lambda item: item[0])
     return [(display, suffix, run_dir) for _, display, suffix, run_dir in found]
@@ -389,6 +393,7 @@ def _draw_method_ratio_bars(
     color_full: str = "#009E73",
     show_xticklabels: bool = True,
     show_ylabel: bool = True,
+    xtick_rotation: float = 0,
 ) -> None:
     """Grouped bars: FullKV + r50/r20 per method on one axes."""
     n_methods = len(METHOD_ORDER)
@@ -452,12 +457,15 @@ def _draw_method_ratio_bars(
 
     ax.set_xticks(x)
     if show_xticklabels:
-        ax.set_xticklabels(_method_tick_labels())
+        ha = "right" if xtick_rotation else "center"
+        ax.set_xticklabels(_method_tick_labels(), rotation=xtick_rotation, ha=ha)
     else:
         ax.set_xticklabels([])
     if show_ylabel and ylabel:
         ax.set_ylabel(ylabel, fontsize=14)
     ax.tick_params(axis="both", labelsize=12)
+    if show_xticklabels:
+        ax.tick_params(axis="x", labelsize=11)
     ax.grid(axis="y", linestyle=":", alpha=0.35)
     ax.set_axisbelow(True)
 
@@ -508,7 +516,7 @@ def plot_multi_dataset_grid(
     color_r50, color_r20, color_full = "#0072B2", "#E69F00", "#009E73"
     n_cols = len(rows_by_dataset)
 
-    fig, axes = plt.subplots(2, n_cols, figsize=(2.5 * n_cols + 1.2, 6.2), squeeze=False)
+    fig, axes = plt.subplots(2, n_cols, figsize=(3.4 * n_cols + 1.4, 6.6), squeeze=False)
 
     for col, (display_name, _suffix, rows) in enumerate(rows_by_dataset):
         ax_avg = axes[0, col]
@@ -522,8 +530,9 @@ def plot_multi_dataset_grid(
             color_r50=color_r50,
             color_r20=color_r20,
             color_full=color_full,
-            show_xticklabels=False,
+            show_xticklabels=True,
             show_ylabel=(col == 0),
+            xtick_rotation=12,
         )
         ax_avg.set_title(display_name, fontsize=13, pad=6)
 
@@ -537,11 +546,12 @@ def plot_multi_dataset_grid(
             color_full=color_full,
             show_xticklabels=True,
             show_ylabel=(col == 0),
+            xtick_rotation=12,
         )
 
     _add_bottom_legend(fig, color_r50, color_r20, color_full)
-    fig.tight_layout(rect=(0, 0.07, 1, 1))
-    fig.subplots_adjust(hspace=0.28, wspace=0.22)
+    fig.tight_layout(rect=(0, 0.08, 1, 1))
+    fig.subplots_adjust(hspace=0.38, wspace=0.28)
 
     out_stem = f"{output_prefix}_{stem}"
     for ext in ("pdf", "png"):
