@@ -568,8 +568,8 @@ def plot_multi_dataset_grid(
             xtick_rotation=12,
         )
 
-    _add_bottom_legend(fig, color_r50, color_r20, color_full, fontsize=13, y_anchor=0.01)
-    fig.tight_layout(rect=(0, 0.05, 1, 1))
+    _add_bottom_legend(fig, color_r50, color_r20, color_full, fontsize=13, y_anchor=-0.002)
+    fig.tight_layout(rect=(0, 0.07, 1, 1))
     fig.subplots_adjust(hspace=0.18, wspace=0.28)
 
     out_stem = f"{output_prefix}_{stem}"
