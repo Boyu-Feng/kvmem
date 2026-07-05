@@ -68,10 +68,11 @@ METHOD_DISPLAY = {
 RATIO_ORDER = ["r50", "r20", "full"]
 
 # Preferred column order when combining Qwen multi-dataset figures.
-QWEN_DATASET_ORDER = ["musique", "browsecomp", "wiki"]
+QWEN_DATASET_ORDER = ["musique", "browsecomp", "2wiki"]
 DATASET_DISPLAY = {
     "musique": "MuSiQue",
     "browsecomp": "BrowseComp",
+    "2wiki": "2Wiki",
     "wiki": "HotpotQA",
     "hotpotqa": "HotpotQA",
 }
@@ -457,8 +458,16 @@ def _draw_method_ratio_bars(
 
     ax.set_xticks(x)
     if show_xticklabels:
-        ha = "right" if xtick_rotation else "center"
-        ax.set_xticklabels(_method_tick_labels(), rotation=xtick_rotation, ha=ha)
+        labels = ax.set_xticklabels(
+            _method_tick_labels(),
+            rotation=xtick_rotation,
+            ha="center",
+            rotation_mode="anchor",
+        )
+        # Slight right shift so rotated labels align with bar-group centers.
+        if xtick_rotation:
+            for lbl in labels:
+                lbl.set_x(lbl.get_position()[0] + 0.08)
     else:
         ax.set_xticklabels([])
     if show_ylabel and ylabel:
