@@ -492,14 +492,23 @@ def _legend_patches(
     ]
 
 
-def _add_bottom_legend(fig, color_r50: str, color_r20: str, color_full: str) -> None:
+def _add_bottom_legend(
+    fig,
+    color_r50: str,
+    color_r20: str,
+    color_full: str,
+    *,
+    fontsize: int = 10,
+    y_anchor: float = 0.02,
+) -> None:
     """Shared legend below all panels, kept close to the figure."""
     fig.legend(
         handles=_legend_patches(color_r50, color_r20, color_full),
         loc="lower center",
         ncol=3,
         frameon=False,
-        bbox_to_anchor=(0.5, 0.02),
+        fontsize=fontsize,
+        bbox_to_anchor=(0.5, y_anchor),
     )
 
 
@@ -559,9 +568,9 @@ def plot_multi_dataset_grid(
             xtick_rotation=12,
         )
 
-    _add_bottom_legend(fig, color_r50, color_r20, color_full)
-    fig.tight_layout(rect=(0, 0.08, 1, 1))
-    fig.subplots_adjust(hspace=0.38, wspace=0.28)
+    _add_bottom_legend(fig, color_r50, color_r20, color_full, fontsize=13, y_anchor=0.01)
+    fig.tight_layout(rect=(0, 0.05, 1, 1))
+    fig.subplots_adjust(hspace=0.18, wspace=0.28)
 
     out_stem = f"{output_prefix}_{stem}"
     for ext in ("pdf", "png"):
