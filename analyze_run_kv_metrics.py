@@ -118,6 +118,17 @@ def _per_sample_final_kv(result: Dict[str, Any]) -> int:
     return int(step_lens[-1]) if step_lens else 0
 
 
+def detect_all_dataset_suffixes(run_dir: str) -> List[str]:
+    """Collect all dataset suffixes present under run_dir."""
+    found: set[str] = set()
+    for path in glob.glob(os.path.join(run_dir, "*", "react_kv_*.json")):
+        name = os.path.basename(path)
+        m = RESULT_JSON_RE.match(name)
+        if m:
+            found.add(m.group(2))
+    return sorted(found)
+
+
 def detect_dataset_suffix(run_dir: str) -> Optional[str]:
     for path in glob.glob(os.path.join(run_dir, "*", "react_kv_*.json")):
         name = os.path.basename(path)
@@ -322,133 +333,212 @@ def _setup_matplotlib_style() -> None:
     )
 
 
-def plot_grouped_bars(
+def _draw_method_ratio_bars(
+    ax,
+    rows: List[MethodRunStats],
+    field: str,
+    ylabel: str,
+    *,
+    color_r50: str = "#0072B2",
+    color_r20: str = "#E69F00",
+    color_full: str = "#009E73",
+) -> None:
+    """Grouped bars: FullKV + r50/r20 per method on one axes."""
+    n_methods = len(METHOD_ORDER)
+    group_width = 0.34
+    x = list(range(n_methods))
+
+    vals_r50: List[float] = []
+    vals_r20: List[float] = []
+    vals_full: List[float] = []
+
+    for method in METHOD_ORDER:
+        full_row = _lookup(rows, method, "full")
+        r50_row = _lookup(rows, method, "r50")
+        r20_row = _lookup(rows, method, "r20")
+
+        if method == "FullKV" and full_row:
+            v = getattr(full_row, field)
+            val = float(v) if v is not None else 0.0
+            vals_full.append(val)
+            vals_r50.append(val)
+            vals_r20.append(val)
+        else:
+            v50 = getattr(r50_row, field) if r50_row else None
+            v20 = getattr(r20_row, field) if r20_row else None
+            vals_r50.append(float(v50) if v50 is not None else 0.0)
+            vals_r20.append(float(v20) if v20 is not None else 0.0)
+            vals_full.append(0.0)
+
+    bar_r50 = ax.bar(
+        [xi - group_width / 2 for xi in x],
+        vals_r50,
+        width=group_width,
+        color=color_r50,
+        label="keep ratio 0.5",
+        edgecolor="white",
+        linewidth=0.6,
+    )
+    bar_r20 = ax.bar(
+        [xi + group_width / 2 for xi in x],
+        vals_r20,
+        width=group_width,
+        color=color_r20,
+        label="keep ratio 0.2",
+        edgecolor="white",
+        linewidth=0.6,
+    )
+
+    full_idx = METHOD_ORDER.index("FullKV")
+    if vals_full[full_idx] > 0:
+        for b in (bar_r50[full_idx], bar_r20[full_idx]):
+            b.set_visible(False)
+        ax.bar(
+            x[full_idx],
+            vals_full[full_idx],
+            width=group_width,
+            color=color_full,
+            edgecolor="white",
+            linewidth=0.6,
+            hatch="///",
+        )
+
+    ax.set_xticks(x)
+    ax.set_xticklabels(_method_tick_labels())
+    ax.set_ylabel(ylabel, fontsize=14)
+    ax.tick_params(axis="both", labelsize=12)
+    ax.grid(axis="y", linestyle=":", alpha=0.35)
+    ax.set_axisbelow(True)
+
+
+def _legend_patches(
+    color_r50: str = "#0072B2",
+    color_r20: str = "#E69F00",
+    color_full: str = "#009E73",
+):
+    return [
+        mpatches.Patch(facecolor=color_r50, edgecolor="white", label="keep ratio 0.5"),
+        mpatches.Patch(facecolor=color_r20, edgecolor="white", label="keep ratio 0.2"),
+        mpatches.Patch(facecolor=color_full, edgecolor="white", hatch="///", label="FullKV (no prune)"),
+    ]
+
+
+TIME_BAR_METRICS: List[Tuple[str, str]] = [
+    ("avg_sample_time_s", "Avg. Sample Time (s)"),
+    ("max_sample_time_s", "Max Sample Time (s)"),
+]
+
+CACHE_BAR_METRICS: List[Tuple[str, str]] = [
+    ("avg_peak_kv_tokens", "Avg. Peak KV Cache"),
+    ("max_peak_kv_tokens", "Max Peak KV Cache"),
+]
+
+
+def plot_time_bars(
     rows: List[MethodRunStats],
     output_prefix: str,
+    dataset_suffix: str,
 ) -> None:
+    """One figure per dataset: sample time only (avg + max as side-by-side panels)."""
     if plt is None:
         raise RuntimeError(
             "matplotlib is required for plotting. Install with: pip install matplotlib"
         ) from _MPL_IMPORT_ERROR
 
     _setup_matplotlib_style()
+    color_r50, color_r20, color_full = "#0072B2", "#E69F00", "#009E73"
 
-    # Colors: colorblind-friendly (Okabe-Ito inspired)
-    color_r50 = "#0072B2"
-    color_r20 = "#E69F00"
-    color_full = "#009E73"
-
-    metrics = [
-        ("avg_sample_time_s", "Avg. Sample Time (s)", "Time"),
-        ("max_sample_time_s", "Max Sample Time (s)", "Time"),
-        ("avg_peak_kv_tokens", "Avg. Peak KV Cache", "KV Cache"),
-        ("max_peak_kv_tokens", "Max Peak KV Cache", "KV Cache"),
-    ]
-
-    fig, axes = plt.subplots(2, 2, figsize=(7.2, 5.4))
-    axes_flat = axes.flatten()
-
-    n_methods = len(METHOD_ORDER)
-    group_width = 0.34
-    x = list(range(n_methods))
-
-    for ax, (field, ylabel, _) in zip(axes_flat, metrics):
-        vals_r50: List[float] = []
-        vals_r20: List[float] = []
-        vals_full: List[float] = []
-
-        for method in METHOD_ORDER:
-            full_row = _lookup(rows, method, "full")
-            r50_row = _lookup(rows, method, "r50")
-            r20_row = _lookup(rows, method, "r20")
-
-            if method == "FullKV" and full_row:
-                v = getattr(full_row, field)
-                vals_full.append(float(v) if v is not None else 0.0)
-                vals_r50.append(float(v) if v is not None else 0.0)
-                vals_r20.append(float(v) if v is not None else 0.0)
-            else:
-                v50 = getattr(r50_row, field) if r50_row else None
-                v20 = getattr(r20_row, field) if r20_row else None
-                vals_r50.append(float(v50) if v50 is not None else 0.0)
-                vals_r20.append(float(v20) if v20 is not None else 0.0)
-                vals_full.append(0.0)
-
-        bar_r50 = ax.bar(
-            [xi - group_width / 2 for xi in x],
-            vals_r50,
-            width=group_width,
-            color=color_r50,
-            label="keep ratio 0.5",
-            edgecolor="white",
-            linewidth=0.6,
-        )
-        bar_r20 = ax.bar(
-            [xi + group_width / 2 for xi in x],
-            vals_r20,
-            width=group_width,
-            color=color_r20,
-            label="keep ratio 0.2",
-            edgecolor="white",
-            linewidth=0.6,
+    fig, axes = plt.subplots(1, len(TIME_BAR_METRICS), figsize=(7.2, 4.0))
+    if len(TIME_BAR_METRICS) == 1:
+        axes = [axes]
+    for ax, (field, ylabel) in zip(axes, TIME_BAR_METRICS):
+        _draw_method_ratio_bars(
+            ax, rows, field, ylabel,
+            color_r50=color_r50, color_r20=color_r20, color_full=color_full,
         )
 
-        # FullKV: single centered bar (same height for both ratios visually -> use r50 bar only)
-        full_idx = METHOD_ORDER.index("FullKV")
-        if vals_full[full_idx] > 0:
-            for b in (bar_r50[full_idx], bar_r20[full_idx]):
-                b.set_visible(False)
-            ax.bar(
-                x[full_idx],
-                vals_full[full_idx],
-                width=group_width,
-                color=color_full,
-                edgecolor="white",
-                linewidth=0.6,
-                hatch="///",
-            )
-
-        ax.set_xticks(x)
-        ax.set_xticklabels(_method_tick_labels())
-        ax.set_ylabel(ylabel, fontsize=14)
-        ax.tick_params(axis="both", labelsize=12)
-        ax.grid(axis="y", linestyle=":", alpha=0.35)
-        ax.set_axisbelow(True)
-
-    handles = [
-        mpatches.Patch(facecolor=color_r50, edgecolor="white", label="keep ratio 0.5"),
-        mpatches.Patch(facecolor=color_r20, edgecolor="white", label="keep ratio 0.2"),
-        mpatches.Patch(facecolor=color_full, edgecolor="white", hatch="///", label="FullKV (no prune)"),
-    ]
     fig.legend(
-        handles=handles,
+        handles=_legend_patches(color_r50, color_r20, color_full),
         loc="upper center",
         ncol=3,
         frameon=False,
-        bbox_to_anchor=(0.5, -0.08),
+        bbox_to_anchor=(0.5, -0.06),
     )
     fig.tight_layout()
-    fig.subplots_adjust(bottom=0.16)
+    fig.subplots_adjust(bottom=0.18)
 
+    stem = f"{output_prefix}_{dataset_suffix}_time"
     for ext in ("pdf", "png"):
-        out = f"{output_prefix}_grouped.{ext}"
+        out = f"{stem}.{ext}"
         fig.savefig(out)
         print(f"[INFO] Saved figure: {out}")
     plt.close(fig)
 
 
+def plot_cache_bars(
+    rows: List[MethodRunStats],
+    output_prefix: str,
+    dataset_suffix: str,
+) -> None:
+    """One figure per dataset: KV cache size only (avg + max as side-by-side panels)."""
+    if plt is None:
+        raise RuntimeError(
+            "matplotlib is required for plotting. Install with: pip install matplotlib"
+        ) from _MPL_IMPORT_ERROR
+
+    _setup_matplotlib_style()
+    color_r50, color_r20, color_full = "#0072B2", "#E69F00", "#009E73"
+
+    fig, axes = plt.subplots(1, len(CACHE_BAR_METRICS), figsize=(7.2, 4.0))
+    if len(CACHE_BAR_METRICS) == 1:
+        axes = [axes]
+    for ax, (field, ylabel) in zip(axes, CACHE_BAR_METRICS):
+        _draw_method_ratio_bars(
+            ax, rows, field, ylabel,
+            color_r50=color_r50, color_r20=color_r20, color_full=color_full,
+        )
+
+    fig.legend(
+        handles=_legend_patches(color_r50, color_r20, color_full),
+        loc="upper center",
+        ncol=3,
+        frameon=False,
+        bbox_to_anchor=(0.5, -0.06),
+    )
+    fig.tight_layout()
+    fig.subplots_adjust(bottom=0.18)
+
+    stem = f"{output_prefix}_{dataset_suffix}_cache"
+    for ext in ("pdf", "png"):
+        out = f"{stem}.{ext}"
+        fig.savefig(out)
+        print(f"[INFO] Saved figure: {out}")
+    plt.close(fig)
+
+
+def plot_grouped_bars(
+    rows: List[MethodRunStats],
+    output_prefix: str,
+    dataset_suffix: str,
+) -> None:
+    """Plot separate time and cache figures for one dataset."""
+    plot_time_bars(rows, output_prefix, dataset_suffix)
+    plot_cache_bars(rows, output_prefix, dataset_suffix)
+
+
 def plot_normalized_efficiency(
     rows: List[MethodRunStats],
     output_prefix: str,
+    dataset_suffix: str,
 ) -> None:
-    """Normalized bars relative to FullKV."""
+    """Normalized bars relative to FullKV — time and cache in separate figures."""
     if plt is None:
         return
 
     _setup_matplotlib_style()
     baseline = _lookup(rows, "FullKV", "full")
     if not baseline or not baseline.avg_sample_time_s or not baseline.avg_peak_kv_tokens:
-        print("[WARN] Skip normalized plot: FullKV baseline missing.")
+        print(f"[WARN] Skip normalized plot for {dataset_suffix}: FullKV baseline missing.")
         return
 
     entries: List[Tuple[str, str, float, float]] = []
@@ -470,26 +560,49 @@ def plot_normalized_efficiency(
     kv_vals = [e[3] for e in entries]
     colors = ["#0072B2" if e[1] == "r50" else "#E69F00" for e in entries]
 
-    fig, ax = plt.subplots(figsize=(7.0, 3.6))
-    x = list(range(len(labels)))
-    width = 0.36
-    ax.bar([i - width / 2 for i in x], time_vals, width=width, color=colors, alpha=0.92, label="Time / FullKV")
-    ax.bar([i + width / 2 for i in x], kv_vals, width=width, color=colors, alpha=0.55, hatch="//", label="Peak KV / FullKV")
-    ax.axhline(1.0, color="#444444", linestyle="--", linewidth=1.0, alpha=0.8)
-    ax.set_xticks(x)
-    ax.set_xticklabels(labels, fontsize=12)
-    ax.set_ylabel("Ratio vs FullKV", fontsize=14)
-    ax.tick_params(axis="both", labelsize=12)
-    ax.grid(axis="y", linestyle=":", alpha=0.35)
-    ax.set_axisbelow(True)
-    ax.legend(frameon=False, loc="upper right", fontsize=10)
-    fig.tight_layout()
+    for category, vals, ylabel, stem_suffix in (
+        ("Time / FullKV", time_vals, "Ratio vs FullKV (time)", "time"),
+        ("Peak KV / FullKV", kv_vals, "Ratio vs FullKV (cache)", "cache"),
+    ):
+        fig, ax = plt.subplots(figsize=(7.0, 3.6))
+        x = list(range(len(labels)))
+        ax.bar(x, vals, width=0.55, color=colors, alpha=0.92)
+        ax.axhline(1.0, color="#444444", linestyle="--", linewidth=1.0, alpha=0.8)
+        ax.set_xticks(x)
+        ax.set_xticklabels(labels, fontsize=12)
+        ax.set_ylabel(ylabel, fontsize=14)
+        ax.tick_params(axis="both", labelsize=12)
+        ax.grid(axis="y", linestyle=":", alpha=0.35)
+        ax.set_axisbelow(True)
+        fig.tight_layout()
 
-    for ext in ("pdf", "png"):
-        out = f"{output_prefix}_normalized.{ext}"
-        fig.savefig(out)
-        print(f"[INFO] Saved figure: {out}")
-    plt.close(fig)
+        for ext in ("pdf", "png"):
+            out = f"{output_prefix}_{dataset_suffix}_normalized_{stem_suffix}.{ext}"
+            fig.savefig(out)
+            print(f"[INFO] Saved figure: {out}")
+        plt.close(fig)
+
+
+def _analyze_and_write_dataset(
+    run_dir: str,
+    dataset_suffix: str,
+    output_dir: str,
+    *,
+    no_plot: bool,
+) -> None:
+    rows = analyze_one_run(run_dir, dataset_suffix)
+    if not rows:
+        print(f"[WARN] No results for dataset={dataset_suffix}")
+        return
+
+    prefix = os.path.join(output_dir, "kv_efficiency")
+    write_csv(rows, f"{prefix}_{dataset_suffix}_summary.csv")
+    write_json_summary(rows, f"{prefix}_{dataset_suffix}_summary.json", run_dir, dataset_suffix)
+    write_markdown_table(rows, f"{prefix}_{dataset_suffix}_summary.md")
+
+    if not no_plot:
+        plot_grouped_bars(rows, prefix, dataset_suffix)
+        plot_normalized_efficiency(rows, prefix, dataset_suffix)
 
 
 def main() -> None:
@@ -504,7 +617,8 @@ def main() -> None:
         "--dataset_suffix",
         type=str,
         default=None,
-        help="JSON dataset suffix (musique, browsecomp, 2wiki, ...). Auto-detect if omitted.",
+        help="JSON dataset suffix (musique, browsecomp, 2wiki, ...). "
+        "Use 'all' for every dataset found under run_dir. Auto-detect if omitted.",
     )
     parser.add_argument(
         "--output_dir",
@@ -523,28 +637,28 @@ def main() -> None:
     if not os.path.isdir(run_dir):
         raise FileNotFoundError(f"run_dir not found: {run_dir}")
 
-    dataset_suffix = args.dataset_suffix or detect_dataset_suffix(run_dir)
-    if not dataset_suffix:
-        raise RuntimeError(
-            "Could not detect dataset suffix. Pass --dataset_suffix explicitly "
-            "(e.g. musique, browsecomp, 2wiki)."
-        )
-
     output_dir = args.output_dir or os.path.join(run_dir, "analysis")
     os.makedirs(output_dir, exist_ok=True)
 
-    rows = analyze_one_run(run_dir, dataset_suffix)
-    if not rows:
-        raise RuntimeError(f"No result JSONs found under {run_dir}")
+    if args.dataset_suffix and args.dataset_suffix.lower() == "all":
+        datasets = detect_all_dataset_suffixes(run_dir)
+    elif args.dataset_suffix:
+        datasets = [args.dataset_suffix]
+    else:
+        one = detect_dataset_suffix(run_dir)
+        datasets = [one] if one else []
 
-    prefix = os.path.join(output_dir, "kv_efficiency")
-    write_csv(rows, f"{prefix}_summary.csv")
-    write_json_summary(rows, f"{prefix}_summary.json", run_dir, dataset_suffix)
-    write_markdown_table(rows, f"{prefix}_summary.md")
+    if not datasets:
+        raise RuntimeError(
+            "Could not detect dataset suffix. Pass --dataset_suffix explicitly "
+            "(e.g. musique, browsecomp, 2wiki) or --dataset_suffix all."
+        )
 
-    if not args.no_plot:
-        plot_grouped_bars(rows, prefix)
-        plot_normalized_efficiency(rows, prefix)
+    for dataset_suffix in datasets:
+        print(f"[INFO] Analyzing dataset={dataset_suffix}")
+        _analyze_and_write_dataset(
+            run_dir, dataset_suffix, output_dir, no_plot=args.no_plot
+        )
 
     print(f"[DONE] Analysis written to {output_dir}")
 
