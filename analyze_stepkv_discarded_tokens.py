@@ -233,6 +233,90 @@ def _build_decode_attention_square(
     )
 
 
+def _decode_score_vector(score_info: Dict[str, Any], plot_len: int) -> np.ndarray:
+    """Per-decode-token combined score vector (token/H2O + step when needed)."""
+    n = int(plot_len)
+    vec = np.zeros(n, dtype=float)
+    combined = score_info.get("combined_scores") or score_info.get("scores") or []
+    hh = score_info.get("hh_scores") or []
+    step = score_info.get("step_scores") or []
+    for j in range(n):
+        if j < len(combined) and combined[j] is not None:
+            vec[j] = float(combined[j])
+            continue
+        hv = float(hh[j]) if j < len(hh) and hh[j] is not None else 0.0
+        sv = float(step[j]) if j < len(step) and step[j] is not None else 0.0
+        vec[j] = hv + sv
+    return vec
+
+
+def _causal_score_triangle(key_scores: np.ndarray) -> np.ndarray:
+    """Lower-triangular matrix: query i sees cumulative key scores up to i."""
+    n = int(len(key_scores))
+    mat = np.zeros((n, n), dtype=float)
+    for i in range(n):
+        mat[i, : i + 1] = key_scores[: i + 1]
+    return mat
+
+
+def _build_decode_score_square(
+    snapshot: Dict[str, Any],
+    prompt_len: int,
+    plot_len: int,
+    score_info: Optional[Dict[str, Any]] = None,
+) -> Tuple[np.ndarray, str]:
+    """
+    Build Q×K score matrix for visualization.
+
+    Priority:
+      1) true attention_matrix (causal Q×K)
+      2) causal triangle from combined token+step scores (all pruning scores)
+      3) legacy broadcast row fallback
+    """
+    fallback = None
+    if score_info:
+        fallback = score_info.get("combined_scores") or score_info.get("scores")
+    mat, source = _build_decode_attention_square(
+        snapshot,
+        prompt_len=prompt_len,
+        plot_len=plot_len,
+        fallback_scores=fallback,
+    )
+    if source == "attention" and np.any(mat > 0):
+        return mat, "attention"
+    if score_info:
+        vec = _decode_score_vector(score_info, plot_len)
+        if np.any(vec > 0):
+            return _causal_score_triangle(vec), "combined_causal"
+    return mat, source
+
+
+def _apply_causal_display_mask(mat: np.ndarray) -> np.ndarray:
+    """Mask upper triangle to NaN so causal structure matches attention heatmaps."""
+    out = mat.astype(float, copy=True)
+    n = out.shape[0]
+    if n <= 0:
+        return out
+    triu = np.triu(np.ones((n, n), dtype=bool), k=1)
+    out[triu] = np.nan
+    return out
+
+
+def _resolve_heatmap_plot_len(
+    score_info: Dict[str, Any],
+    snapshot: Dict[str, Any],
+    *,
+    segment_end: Optional[int] = None,
+) -> int:
+    plot_len = max(
+        len(snapshot.get("hh_scores") or snapshot.get("display_scores") or []),
+        _scored_decode_len(score_info),
+    )
+    if segment_end is not None:
+        plot_len = max(plot_len, int(segment_end))
+    return int(plot_len)
+
+
 def _enhance_attention_contrast(mat: np.ndarray) -> np.ndarray:
     """Log-scale + percentile stretch so differences are visible."""
     out = mat.copy()
@@ -1363,14 +1447,15 @@ def _plot_token_score_heatmap(
             if 0 <= shifted <= plot_len:
                 decode_boundaries.append(shifted)
 
-        mat, source = _build_decode_attention_square(
+        mat, source = _build_decode_score_square(
             snap,
             prompt_len=prompt_len,
             plot_len=plot_len,
-            fallback_scores=score_info.get("scores") or [],
+            score_info=score_info,
         )
         mat = _enhance_attention_contrast(mat)
-        if source == "empty" or not np.any(mat > 0):
+        mat = _apply_causal_display_mask(mat)
+        if source == "empty" or not np.any(np.isfinite(mat) & (mat > 0)):
             continue
 
         fig_side = _heatmap_figsize(plot_len)

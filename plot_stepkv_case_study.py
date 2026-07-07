@@ -43,12 +43,15 @@ from analyze_stepkv_discarded_tokens import (
     BASELINE_METHODS,
     METHOD_LABELS,
     OURS_METHOD,
-    _build_decode_attention_square,
+    _apply_causal_display_mask,
+    _build_decode_score_square,
     _enhance_attention_contrast,
     _latest_token_score_snapshot,
     _pick_sample,
     _prepare_dataset,
+    _resolve_heatmap_plot_len,
     _run_one_sample,
+    _scored_decode_len,
     _token_text_record,
     extract_decode_token_scores,
     run_success_gap_one_sample,
@@ -171,28 +174,55 @@ def _segment_arrays(
     return token_vals, step_vals
 
 
-def _segment_attention_matrix(
+def _build_full_score_matrix(
     snap: Dict[str, Any],
     prompt_len: int,
+    score_info: Dict[str, Any],
     plot_len: int,
-    seg_start: int,
-    seg_end: int,
-    fallback_scores: Optional[List[Any]],
-) -> np.ndarray:
-    full_mat, _ = _build_decode_attention_square(
+) -> Tuple[np.ndarray, str]:
+    mat, source = _build_decode_score_square(
         snap,
         prompt_len=prompt_len,
         plot_len=plot_len,
-        fallback_scores=fallback_scores,
+        score_info=score_info,
     )
-    if full_mat.size == 0:
-        return np.zeros((seg_end - seg_start, seg_end - seg_start), dtype=float)
-    seg_end_clamped = min(seg_end, full_mat.shape[0])
-    seg = full_mat[seg_start:seg_end_clamped, seg_start:seg_end_clamped]
-    if seg.shape[0] < (seg_end - seg_start):
-        pad = seg_end - seg_start - seg.shape[0]
-        seg = np.pad(seg, ((0, pad), (0, pad)), mode="constant")
-    return _enhance_attention_contrast(seg)
+    mat = _enhance_attention_contrast(mat)
+    mat = _apply_causal_display_mask(mat)
+    return mat, source
+
+
+def _plot_full_score_heatmap(
+    debug_payload: Dict[str, Any],
+    output_path: str,
+) -> Tuple[str, str]:
+    """Save the full Q×K score heatmap (same style as token_score_heatmap)."""
+    score_info = extract_decode_token_scores(debug_payload)
+    snap = _latest_token_score_snapshot(debug_payload) or {}
+    prompt_len = int(score_info.get("prompt_token_count", debug_payload.get("prompt_token_count", 0)) or 0)
+    plot_len = _resolve_heatmap_plot_len(score_info, snap)
+    mat, source = _build_full_score_matrix(snap, prompt_len, score_info, plot_len)
+
+    fig_side = float(min(12.0, max(4.0, plot_len * 0.08)))
+    fig, ax = plt.subplots(figsize=(fig_side, fig_side))
+    im = ax.imshow(
+        mat,
+        cmap="Reds",
+        interpolation="nearest",
+        aspect="equal",
+        origin="upper",
+        vmin=0.0,
+        vmax=1.0,
+    )
+    ax.set_xlabel("Key Token Index")
+    ax.set_ylabel("Query Token Index")
+    ax.set_xlim(-0.5, plot_len - 0.5)
+    ax.set_ylim(-0.5, plot_len - 0.5)
+    fig.colorbar(im, ax=ax, fraction=0.046, pad=0.04)
+    ax.set_title(f"Full score matrix ({source})", fontsize=10)
+    os.makedirs(os.path.dirname(output_path) or ".", exist_ok=True)
+    fig.savefig(output_path, dpi=220, bbox_inches="tight")
+    plt.close(fig)
+    return output_path, source
 
 
 def plot_stepkv_case_study(
@@ -216,12 +246,14 @@ def plot_stepkv_case_study(
         )
 
     prompt_len = int(score_info.get("prompt_token_count", debug_payload.get("prompt_token_count", 0)) or 0)
-    plot_len = max(
-        int(score_info.get("decode_len", 0) or 0),
-        _scored_decode_span(score_info)[1],
-        max(end for _, end in segments),
+    plot_len = _resolve_heatmap_plot_len(
+        score_info,
+        snap,
+        segment_end=max(end for _, end in segments),
     )
-    fallback = score_info.get("scores") or []
+
+    full_mat, matrix_source = _build_full_score_matrix(snap, prompt_len, score_info, plot_len)
+    print(f"[INFO] Score matrix source={matrix_source}, plot_len={plot_len}")
 
     if tokenizer is None:
         from transformers import AutoTokenizer
@@ -242,23 +274,33 @@ def plot_stepkv_case_study(
         ax_hm = axes[0, col]
         ax_bar = axes[1, col]
         seg_len = seg_end - seg_start
+        seg_end_clamped = min(seg_end, full_mat.shape[0])
+        mat = full_mat[seg_start:seg_end_clamped, seg_start:seg_end_clamped]
+        if mat.shape[0] < seg_len:
+            pad = seg_len - mat.shape[0]
+            mat = np.pad(mat, ((0, pad), (0, pad)), constant_values=np.nan)
 
-        mat = _segment_attention_matrix(snap, prompt_len, plot_len, seg_start, seg_end, fallback)
         im = ax_hm.imshow(
             mat,
-            cmap="YlGnBu",
+            cmap="Reds",
             interpolation="nearest",
             aspect="equal",
             origin="upper",
             vmin=0.0,
-            vmax=max(0.05, float(np.percentile(mat[mat > 0], 95)) if np.any(mat > 0) else 1.0),
+            vmax=1.0,
         )
         title = (column_titles[col] if column_titles and col < len(column_titles) else None)
         if not title:
             title = _segment_column_title(debug_payload, seg_start, seg_end)
         ax_hm.set_title(title, fontsize=12, pad=6)
-        ax_hm.set_xlabel("Key token", fontsize=10)
-        ax_hm.set_ylabel("Query token", fontsize=10)
+        ax_hm.set_xlabel("Key Token Index", fontsize=10)
+        ax_hm.set_ylabel("Query Token Index", fontsize=10)
+        tick_step = max(1, seg_len // 6)
+        local_ticks = list(range(0, seg_len, tick_step))
+        ax_hm.set_xticks(local_ticks)
+        ax_hm.set_xticklabels([str(seg_start + t) for t in local_ticks], fontsize=8)
+        ax_hm.set_yticks(local_ticks)
+        ax_hm.set_yticklabels([str(seg_start + t) for t in local_ticks], fontsize=8)
         if col == 2:
             fig.colorbar(im, ax=ax_hm, fraction=0.046, pad=0.04)
 
@@ -462,7 +504,7 @@ def main() -> None:
         default=None,
         help="Three decode-index windows (end exclusive), e.g. 12:28 40:56 72:88",
     )
-    parser.add_argument("--window_size", type=int, default=16, help="Auto-segment window length when --segments omitted.")
+    parser.add_argument("--window_size", type=int, default=24, help="Auto-segment window length when --segments omitted.")
     parser.add_argument(
         "--require_success_gap",
         action="store_true",
@@ -561,9 +603,17 @@ def main() -> None:
 
     out = args.output or os.path.join("results", "stepkv_case_study", f"{tag}_case_study.png")
     path = plot_stepkv_case_study(debug_payload, segments, out, suptitle=suptitle)
+    full_heatmap_path = os.path.splitext(path)[0] + "_full_heatmap.png"
+    full_path, matrix_source = _plot_full_score_heatmap(debug_payload, full_heatmap_path)
     meta = {
         "segments": [{"start": s, "end": e} for s, e in segments],
         "figure": path,
+        "full_heatmap": full_path,
+        "matrix_source": matrix_source,
+        "plot_len": _resolve_heatmap_plot_len(
+            extract_decode_token_scores(debug_payload),
+            _latest_token_score_snapshot(debug_payload) or {},
+        ),
         "dataset": args.dataset,
         "category": (gap_row or {}).get("category", "unknown"),
         "sample_pos": (gap_row or {}).get("sample_pos"),
@@ -577,6 +627,7 @@ def main() -> None:
     with open(meta_path, "w", encoding="utf-8") as f:
         json.dump(meta, f, ensure_ascii=False, indent=2)
     print(f"[DONE] case study figure: {path}")
+    print(f"[DONE] full score heatmap: {full_path}")
     print(f"[DONE] metadata: {meta_path}")
 
 
