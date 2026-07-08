@@ -8,6 +8,7 @@ import matplotlib
 
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
+import matplotlib.ticker as mticker
 
 import run_all_wiki_experiments_v2 as base
 from analyze_stepkv_discarded_tokens import _build_kv_config
@@ -151,6 +152,21 @@ def _step_label(step: int) -> str:
     return f"step {step}"
 
 
+def _display_step_from_point(point: Dict[str, Any]) -> int:
+    """Map orphan tokens (owner_step=-1) to a valid ReAct step id starting at 1."""
+    owner = int(point.get("owner_step", -1))
+    if owner >= 1:
+        return owner
+    prune = int(point.get("prune_step", 0) or 0)
+    return max(1, prune)
+
+
+def _point_display_step(point: Dict[str, Any], step_key: str) -> int:
+    if step_key == "owner_step":
+        return _display_step_from_point(point)
+    return max(1, int(point.get(step_key, 1)))
+
+
 def _plot_three_methods(
     method_plot_data: List[Tuple[str, Dict[str, Any]]],
     output_pdf: str,
@@ -173,8 +189,8 @@ def _plot_three_methods(
         points = plot_data.get("final_points", []) or plot_data.get("points", []) or []
         step_key = "owner_step" if points and "owner_step" in points[0] else "react_step"
         for p in points:
-            all_steps.add(int(p[step_key]))
-    steps = sorted(all_steps)
+            all_steps.add(_point_display_step(p, step_key))
+    steps = sorted(s for s in all_steps if s >= 1)
     cmap = plt.get_cmap("tab10")
     step_to_color = {s: cmap(i % 10) for i, s in enumerate(steps)}
     legend_handles = [
@@ -197,13 +213,16 @@ def _plot_three_methods(
     for ax, (method_label, plot_data) in zip(axes, method_plot_data):
         points = plot_data.get("final_points", []) or plot_data.get("points", []) or []
         step_key = "owner_step" if points and "owner_step" in points[0] else "react_step"
+        y_vals: List[int] = []
 
         if points:
             for step in steps:
-                xs = [p["x"] for p in points if int(p[step_key]) == step]
-                ys = [p["event_id"] for p in points if int(p[step_key]) == step]
+                matched = [p for p in points if _point_display_step(p, step_key) == step]
+                xs = [p["x"] for p in matched]
+                ys = [p["event_id"] for p in matched]
                 if not xs:
                     continue
+                y_vals.extend(int(y) for y in ys)
                 ax.scatter(xs, ys, s=16, alpha=0.85, c=[step_to_color[step]], edgecolors="none")
         else:
             ax.text(
@@ -222,6 +241,11 @@ def _plot_three_methods(
 
         ax.set_ylabel("Prune Event", fontsize=15)
         ax.set_title(method_label, loc="left", fontsize=15, pad=6)
+        ax.yaxis.set_major_locator(mticker.MaxNLocator(integer=True))
+        if y_vals:
+            y_min, y_max = min(y_vals), max(y_vals)
+            pad = 1 if y_max > y_min else 0
+            ax.set_ylim(y_min - pad, y_max + pad)
         ax.grid(True, alpha=0.25)
 
     axes[-1].set_xlabel("Key Position Index (No Prefill)", fontsize=15)
