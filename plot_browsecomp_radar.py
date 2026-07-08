@@ -579,21 +579,34 @@ def _fmt_cache_tokens(v: Optional[float]) -> str:
     return f"{iv} tok"
 
 
-def _inward_tangent_label_rotation(theta_rad: float) -> float:
-    """
-    Rotation so text follows the outer-circle tangent and the text box bottom
-    (center-bottom) points toward the radar origin.
+def _ensure_canvas_renderer(fig: plt.Figure) -> None:
+    if fig.canvas.get_renderer() is None:
+        fig.canvas.draw()
 
-    Polar setup: theta_offset=pi/2, theta_direction=-1 (clockwise from north).
+
+def _inward_tangent_rotation_display(
+    ax: plt.Axes,
+    theta_rad: float,
+    r_anchor: float,
+) -> float:
     """
-    phi_out = np.pi / 2.0 - float(theta_rad)
+    Screen-space rotation: baseline tangent to the outer circle, text bottom toward center.
+    """
+    _ensure_canvas_renderer(ax.figure)
+    cx, cy = ax.transData.transform((0.0, 0.0))
+    px, py = ax.transData.transform((theta_rad, r_anchor))
+    phi_out = np.arctan2(py - cy, px - cx)
     return float(np.degrees(phi_out) - 90.0)
 
 
-def _label_radius_on_circle(radial_max: float, *, has_subline: bool) -> float:
-    """Anchor on the outer ring; multiline labels use the same ring."""
-    _ = has_subline
-    return float(radial_max)
+def _outer_label_ring(tick_vals: Sequence[float]) -> float:
+    """Anchor labels on the main outer grid circle (usually r=1.0)."""
+    if not tick_vals:
+        return 1.0
+    ring_candidates = [float(t) for t in tick_vals if float(t) <= 1.0 + 1e-9]
+    if ring_candidates:
+        return max(ring_candidates)
+    return float(max(tick_vals))
 
 
 def _outer_axis_label_text(
@@ -623,22 +636,26 @@ def _style_radar_spokes(ax: plt.Axes, *, linewidth: float = 2.4) -> None:
 def _place_axis_labels_tangent(
     ax: plt.Axes,
     angles: Sequence[float],
-    radial_max: float,
+    label_ring: float,
     *,
     labelsize: int,
     axis_scales: Optional[Dict[str, float]] = None,
 ) -> None:
+    """Place labels in figure coords so rotation matches screen tangent exactly."""
     ax.set_xticklabels([""] * len(angles))
+    fig = ax.figure
+    _ensure_canvas_renderer(fig)
+    inv_fig = fig.transFigure.inverted()
     scales = axis_scales or {}
+
     for angle, (key, display_name, _field, group) in zip(angles, AXIS_SPECS):
-        scale = scales.get(key)
-        text = _outer_axis_label_text(display_name, key, group, scale)
-        has_subline = "\n" in text
-        label_r = _label_radius_on_circle(radial_max, has_subline=has_subline)
-        rot = _inward_tangent_label_rotation(angle)
-        ax.text(
-            angle,
-            label_r,
+        text = _outer_axis_label_text(display_name, key, group, scales.get(key))
+        rot = _inward_tangent_rotation_display(ax, angle, label_ring)
+        px, py = ax.transData.transform((angle, label_ring))
+        xf, yf = inv_fig.transform((px, py))
+        fig.text(
+            xf,
+            yf,
             text,
             ha="center",
             va="bottom",
@@ -740,7 +757,7 @@ def plot_radar_single(
     _place_axis_labels_tangent(
         ax,
         angles,
-        radial_max,
+        _outer_label_ring(tick_vals),
         labelsize=labelsize,
         axis_scales=axis_scales,
     )
@@ -757,7 +774,7 @@ def plot_radar_single(
 
     for ext in ("pdf", "png"):
         out = f"{output_prefix}_radar.{ext}"
-        fig.savefig(out, pad_inches=0.18)
+        fig.savefig(out, pad_inches=0.08)
         print(f"[INFO] Saved figure: {out}")
     plt.close(fig)
 
