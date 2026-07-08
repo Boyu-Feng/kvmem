@@ -2,49 +2,28 @@ import argparse
 import json
 import os
 from datetime import datetime
+from typing import Any, Dict, List, Optional, Tuple
 
 import matplotlib
+
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
 import run_all_wiki_experiments_v2 as base
+from analyze_stepkv_discarded_tokens import _build_kv_config
 from models.QwenLLMWithKVCache import QwenLLMWithKVCache
 from models.model_paths import resolve_local_model_path
 from retrievers.WikiBM25Retriever import WikiBM25Retriever
 from token_tracker import TokenTracker
 
-
-def _parse_layers(text, model_layers=32):
-    raw = []
-    for part in str(text).split(","):
-        part = part.strip()
-        if not part:
-            continue
-        try:
-            raw.append(int(part))
-        except ValueError:
-            continue
-    if not raw:
-        raw = [0, model_layers // 2, max(0, model_layers - 1)]
-    return raw[:3]
+METHOD_SERIES: List[Tuple[str, str]] = [
+    ("h2o", "H2O"),
+    ("tova", "TOVA"),
+    ("step_aware_h2o", "StepKV"),
+]
 
 
-def _build_kv_config(args):
-    return {
-        "pruning_mode": "h2o",
-        "prune_every_n": 1,
-        "cache_ratio": float(args.cache_ratio),
-        "protect_prompt": bool(args.protect_prompt),
-        "pool_window": 4,
-        "max_trajectory_tokens": 1024,
-        "sink_size": 4,
-        "observation_window": int(args.observation_window),
-        "num_score_layers": int(args.num_score_layers),
-        "attn_mode": "scoring_forward",
-    }
-
-
-def _extract_plot_data(debug_payload):
+def _extract_plot_data(debug_payload: Dict[str, Any]) -> Dict[str, Any]:
     prompt_token_count = int(debug_payload.get("prompt_token_count", 0))
     pruning_history = debug_payload.get("pruning_history", []) or []
     step_token_ranges = debug_payload.get("step_token_ranges", {}) or {}
@@ -54,10 +33,9 @@ def _extract_plot_data(debug_payload):
     event_rows = []
     scatter_points = []
     event_id = 0
-    owner_rows = {}
+    owner_rows: Dict[str, Dict[str, Any]] = {}
 
-    # Build step span lookup for "token belongs to which step".
-    step_ranges = []
+    step_ranges: List[Tuple[int, int, int]] = []
     for sid_str, rng in sorted(step_token_ranges.items(), key=lambda kv: int(kv[0])):
         if not isinstance(rng, (list, tuple)) or len(rng) != 2:
             continue
@@ -66,7 +44,7 @@ def _extract_plot_data(debug_payload):
         if e >= s:
             step_ranges.append((sid, s, e))
 
-    def _owner_step(global_id):
+    def _owner_step(global_id: int) -> int:
         gid = int(global_id)
         for sid, s, e in step_ranges:
             if s <= gid <= e:
@@ -76,12 +54,9 @@ def _extract_plot_data(debug_payload):
     for ev in pruning_history:
         if not isinstance(ev, dict):
             continue
-        if ev.get("mode") != "h2o":
-            continue
         dropped = ev.get("evicted_abs_indices", []) or []
         if not dropped:
             continue
-        # Exclude prompt/prefill region from visualization.
         dropped_no_prefill = [int(x) for x in dropped if int(x) >= prompt_token_count]
         if not dropped_no_prefill:
             continue
@@ -111,8 +86,6 @@ def _extract_plot_data(debug_payload):
                 }
             )
 
-    # Final-view points: use token_tracker global dropped IDs,
-    # then classify each dropped token by the step span it belongs to.
     final_points = []
     final_event_rows = []
     final_event_id = 0
@@ -123,7 +96,7 @@ def _extract_plot_data(debug_payload):
         if not dropped_ids:
             continue
         final_event_id += 1
-        owner_counts = {}
+        owner_counts: Dict[int, int] = {}
         shifted_ids = []
         for gid in dropped_ids:
             shifted_x = int(gid - prompt_token_count)
@@ -174,30 +147,64 @@ def _extract_plot_data(debug_payload):
     }
 
 
-def _plot_three_layers(plot_data, layer_ids, output_png):
-    # Use final-view points by default: dropped tokens after whole reasoning,
-    # classified by owner step spans.
-    points = plot_data.get("final_points", []) or plot_data.get("points", [])
-    boundaries = plot_data["step_boundaries"]
-    step_key = "owner_step" if points and "owner_step" in points[0] else "react_step"
-    steps = sorted(set(int(p[step_key]) for p in points))
+def _step_label(step: int) -> str:
+    return f"step {step}"
+
+
+def _plot_three_methods(
+    method_plot_data: List[Tuple[str, Dict[str, Any]]],
+    output_pdf: str,
+) -> None:
+    """Three rows: H2O / TOVA / StepKV dropped-token scatter (shared x-axis)."""
+    plt.rcParams.update(
+        {
+            "font.size": 12,
+            "axes.labelsize": 15,
+            "axes.titlesize": 15,
+            "xtick.labelsize": 13,
+            "ytick.labelsize": 13,
+            "legend.fontsize": 12,
+        }
+    )
+
+    boundaries = method_plot_data[0][1].get("step_boundaries", []) if method_plot_data else []
+    all_steps: set[int] = set()
+    for _, plot_data in method_plot_data:
+        points = plot_data.get("final_points", []) or plot_data.get("points", []) or []
+        step_key = "owner_step" if points and "owner_step" in points[0] else "react_step"
+        for p in points:
+            all_steps.add(int(p[step_key]))
+    steps = sorted(all_steps)
     cmap = plt.get_cmap("tab10")
     step_to_color = {s: cmap(i % 10) for i, s in enumerate(steps)}
+    legend_handles = [
+        plt.Line2D(
+            [0],
+            [0],
+            marker="o",
+            color="w",
+            markerfacecolor=step_to_color[s],
+            markersize=8,
+            linestyle="None",
+        )
+        for s in steps
+    ]
+    legend_labels = [_step_label(s) for s in steps]
 
-    fig, axes = plt.subplots(3, 1, figsize=(14, 10), sharex=True)
-    for ax_idx, ax in enumerate(axes):
+    fig, axes = plt.subplots(3, 1, figsize=(14, 11), sharex=True)
+    fig.subplots_adjust(hspace=0.22, bottom=0.16, top=0.90)
+
+    for ax, (method_label, plot_data) in zip(axes, method_plot_data):
+        points = plot_data.get("final_points", []) or plot_data.get("points", []) or []
+        step_key = "owner_step" if points and "owner_step" in points[0] else "react_step"
+
         if points:
             for step in steps:
                 xs = [p["x"] for p in points if int(p[step_key]) == step]
                 ys = [p["event_id"] for p in points if int(p[step_key]) == step]
                 if not xs:
                     continue
-                if step_key == "owner_step":
-                    label_text = f"owner_step{step}"
-                else:
-                    label_text = f"step{step}"
-                label = label_text if ax_idx == 0 else None
-                ax.scatter(xs, ys, s=12, alpha=0.85, c=[step_to_color[step]], label=label)
+                ax.scatter(xs, ys, s=16, alpha=0.85, c=[step_to_color[step]], edgecolors="none")
         else:
             ax.text(
                 0.5,
@@ -206,29 +213,83 @@ def _plot_three_layers(plot_data, layer_ids, output_png):
                 ha="center",
                 va="center",
                 transform=ax.transAxes,
-                fontsize=11,
+                fontsize=13,
                 color="gray",
             )
 
         for bd in boundaries:
             ax.axvline(float(bd["x"]), linestyle="--", linewidth=1.0, color="gray", alpha=0.7)
 
-        ax.set_ylabel("Prune Event")
+        ax.set_ylabel("Prune Event", fontsize=15)
+        ax.set_title(method_label, loc="left", fontsize=15, pad=6)
         ax.grid(True, alpha=0.25)
 
-    axes[-1].set_xlabel("Key Position Index (No Prefill)")
-    if steps:
-        axes[0].legend(loc="upper right", ncol=min(6, max(1, len(steps))))
-    plt.tight_layout()
-    fig.savefig(output_png, dpi=220)
+    axes[-1].set_xlabel("Key Position Index (No Prefill)", fontsize=15)
+    fig.suptitle(
+        "HotpotQA Dropped Tokens by Method (Step Boundaries as Dashed Lines)",
+        fontsize=16,
+        y=0.98,
+    )
+
+    if legend_handles:
+        fig.legend(
+            legend_handles,
+            legend_labels,
+            loc="upper center",
+            bbox_to_anchor=(0.5, 0.02),
+            ncol=min(8, max(1, len(legend_labels))),
+            frameon=False,
+        )
+
+    os.makedirs(os.path.dirname(output_pdf) or ".", exist_ok=True)
+    fig.savefig(output_pdf, bbox_inches="tight")
     plt.close(fig)
 
 
+def _run_one_method(
+    sample: Dict[str, Any],
+    retriever,
+    pruning_mode: str,
+    cache_ratio: float,
+    max_steps: int,
+) -> Tuple[str, List[Any], List[Any], Dict[str, Any]]:
+    kv_config = _build_kv_config(pruning_mode, cache_ratio=cache_ratio)
+    token_tracker = TokenTracker()
+    llm = QwenLLMWithKVCache(base.MODEL_PATH, kv_config, token_tracker=token_tracker)
+    try:
+        pred_answer, trajectory_log, step_timings, debug_payload = base._run_react_kv_episode(
+            sample["question"],
+            llm,
+            retriever,
+            pruning_mode=pruning_mode,
+            max_steps=max_steps,
+            return_debug=True,
+        )
+    finally:
+        del llm
+    return pred_answer, trajectory_log, step_timings, debug_payload if isinstance(debug_payload, dict) else {}
+
+
+def _has_dropped_points(plot_data: Dict[str, Any]) -> bool:
+    return bool(plot_data.get("final_points") or plot_data.get("points"))
+
+
 def main():
-    parser = argparse.ArgumentParser(description="Analyze and plot dropped tokens for H2O on HotpotQA.")
+    parser = argparse.ArgumentParser(
+        description="Plot dropped decode tokens for H2O / TOVA / StepKV on HotpotQA."
+    )
     parser.add_argument("--sample_pos", type=int, default=0, help="Position in shuffled selected samples.")
-    parser.add_argument("--auto_find_nonempty", action="store_true", help="Auto scan next samples until non-empty dropped points are found.")
-    parser.add_argument("--max_auto_tries", type=int, default=20, help="Max samples to try when --auto_find_nonempty is set.")
+    parser.add_argument(
+        "--auto_find_nonempty",
+        action="store_true",
+        help="Auto scan next samples until at least one method has dropped points.",
+    )
+    parser.add_argument(
+        "--max_auto_tries",
+        type=int,
+        default=20,
+        help="Max samples to try when --auto_find_nonempty is set.",
+    )
     parser.add_argument("--max_steps", type=int, default=12)
     parser.add_argument("--num_samples", type=int, default=500)
     parser.add_argument("--seed", type=int, default=233)
@@ -242,10 +303,6 @@ def main():
     )
     parser.add_argument("--output_dir", type=str, default="results/h2o_drop_analysis")
     parser.add_argument("--cache_ratio", type=float, default=0.5)
-    parser.add_argument("--protect_prompt", action="store_true")
-    parser.add_argument("--observation_window", type=int, default=32)
-    parser.add_argument("--num_score_layers", type=int, default=3)
-    parser.add_argument("--layers", type=str, default="0,13,31")
     args = parser.parse_args()
 
     os.makedirs(args.output_dir, exist_ok=True)
@@ -268,18 +325,14 @@ def main():
         raise IndexError(f"--sample_pos out of range: {args.sample_pos} (total {len(selected_samples)})")
 
     retriever = WikiBM25Retriever(index_dir=args.wiki_index_dir, load_corpus=True)
-    kv_config = _build_kv_config(args)
 
     start_pos = int(args.sample_pos)
     tries = int(args.max_auto_tries) if args.auto_find_nonempty else 1
     chosen_pos = None
     chosen_orig_idx = None
     chosen_sample = None
-    pred_answer = ""
-    trajectory_log = []
-    step_timings = []
-    debug_payload = {}
-    plot_data = {"prompt_token_count": 0, "events": [], "points": [], "step_boundaries": []}
+    method_results: Dict[str, Dict[str, Any]] = {}
+    method_plot_data: List[Tuple[str, Dict[str, Any]]] = []
 
     for off in range(max(1, tries)):
         pos = start_pos + off
@@ -288,46 +341,51 @@ def main():
         orig_idx, sample = selected_samples[pos]
         print(f"[INFO] Trying sample_pos={pos}, orig_idx={orig_idx}, id={sample['id']}")
 
-        token_tracker = TokenTracker()
-        llm = QwenLLMWithKVCache(base.MODEL_PATH, kv_config, token_tracker=token_tracker)
-        try:
-            pred_answer, trajectory_log, step_timings, debug_payload = base._run_react_kv_episode(
-                sample["question"],
-                llm,
+        method_results = {}
+        method_plot_data = []
+        any_points = False
+        for pruning_mode, display_name in METHOD_SERIES:
+            print(f"[INFO]   Running {display_name} ({pruning_mode}) ...")
+            pred, traj, timings, debug_payload = _run_one_method(
+                sample,
                 retriever,
-                pruning_mode="h2o",
+                pruning_mode=pruning_mode,
+                cache_ratio=float(args.cache_ratio),
                 max_steps=int(args.max_steps),
-                return_debug=True,
             )
-        finally:
-            del llm
+            plot_data = _extract_plot_data(debug_payload)
+            method_results[pruning_mode] = {
+                "display_name": display_name,
+                "predicted_answer": pred,
+                "trajectory": traj,
+                "step_timings": timings,
+                "plot_data": plot_data,
+            }
+            method_plot_data.append((display_name, plot_data))
+            if _has_dropped_points(plot_data):
+                any_points = True
 
-        plot_data = _extract_plot_data(debug_payload)
         chosen_pos = pos
         chosen_orig_idx = orig_idx
         chosen_sample = sample
-        if plot_data["points"]:
-            print(f"[INFO] Found non-empty dropped-token points at sample_pos={pos}")
+        if any_points or not args.auto_find_nonempty:
+            if any_points:
+                print(f"[INFO] Found dropped-token points at sample_pos={pos}")
             break
 
     if chosen_sample is None:
         raise RuntimeError("No valid sample could be executed.")
 
-    layer_ids = _parse_layers(args.layers, model_layers=32)
-    if len(layer_ids) < 3:
-        while len(layer_ids) < 3:
-            layer_ids.append(layer_ids[-1] if layer_ids else 0)
-    if not plot_data["points"]:
+    if not any(_has_dropped_points(pd) for _, pd in method_plot_data):
         print(
             "[WARN] No dropped-token points found in selected sample range. "
             "Output files will still be generated."
         )
 
     stamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    prefix = f"hotpot_h2o_sample{args.sample_pos}_{stamp}"
+    prefix = f"hotpot_drop_tokens_sample{chosen_pos}_{stamp}"
     json_path = os.path.join(args.output_dir, f"{prefix}.json")
-    png_path = os.path.join(args.output_dir, f"{prefix}.png")
-    svg_path = os.path.join(args.output_dir, f"{prefix}.svg")
+    pdf_path = os.path.join(args.output_dir, f"{prefix}.pdf")
     points_jsonl_path = os.path.join(args.output_dir, f"{prefix}_points.jsonl")
     plot_error_path = os.path.join(args.output_dir, f"{prefix}_plot_error.txt")
 
@@ -340,39 +398,34 @@ def main():
             "sample_id": chosen_sample["id"],
             "question": chosen_sample["question"],
             "gold_answer": chosen_sample["answer"],
-            "predicted_answer": pred_answer,
             "max_steps": int(args.max_steps),
-            "kv_config": kv_config,
-            "layers_for_plot": layer_ids,
+            "cache_ratio": float(args.cache_ratio),
+            "methods": [m for m, _ in METHOD_SERIES],
             "auto_find_nonempty": bool(args.auto_find_nonempty),
             "max_auto_tries": int(args.max_auto_tries),
-            "nonempty_points_found": bool(len(plot_data["points"]) > 0),
         },
-        "trajectory": trajectory_log,
-        "step_timings": step_timings,
-        "plot_data": plot_data,
+        "method_results": method_results,
     }
 
     with open(json_path, "w", encoding="utf-8") as f:
         json.dump(output_blob, f, ensure_ascii=False, indent=2)
 
     with open(points_jsonl_path, "w", encoding="utf-8") as f:
-        for p in plot_data["points"]:
-            f.write(json.dumps(p, ensure_ascii=False) + "\n")
+        for display_name, plot_data in method_plot_data:
+            for p in plot_data.get("final_points", []) or plot_data.get("points", []) or []:
+                f.write(json.dumps({"method": display_name, **p}, ensure_ascii=False) + "\n")
 
     try:
-        _plot_three_layers(plot_data, layer_ids, png_path)
-        # Also save an SVG for notebook/file-browser preview compatibility.
-        _plot_three_layers(plot_data, layer_ids, svg_path)
+        _plot_three_methods(method_plot_data, pdf_path)
     except Exception as e:
         with open(plot_error_path, "w", encoding="utf-8") as f:
             f.write(str(e))
         print(f"[WARN] Plot generation failed, see: {plot_error_path}")
+        raise
 
     print(f"[DONE] Data saved: {json_path}")
     print(f"[DONE] Point data saved: {points_jsonl_path}")
-    print(f"[DONE] Figure saved: {png_path}")
-    print(f"[DONE] Figure saved: {svg_path}")
+    print(f"[DONE] Figure saved: {pdf_path}")
 
 
 if __name__ == "__main__":
