@@ -420,12 +420,6 @@ def _plot_three_methods(
         else "No dropped-token points under current config"
     )
     legend_title = "Kept token origin" if mode == "kept" else "Dropped token origin"
-    footer = (
-        "Y-axis = cache snapshot after each ReAct step; color = token origin. "
-        "Fewer dots on higher rows means earlier-step tokens were evicted."
-        if mode == "kept"
-        else "Y-axis = when token was evicted; red ring = evicted earlier than token origin (cross-step drop)"
-    )
 
     for ax, (method_label, plot_data) in zip(axes, method_plot_data):
         points, step_key = _collect_plot_points(plot_data, mode)
@@ -495,19 +489,10 @@ def _plot_three_methods(
             legend_handles,
             legend_labels,
             loc="upper center",
-            bbox_to_anchor=(0.5, 0.08),
+            bbox_to_anchor=(0.5, 0.06),
             ncol=min(4, max(1, len(legend_labels))),
             frameon=False,
             title=legend_title,
-        )
-        fig.text(
-            0.5,
-            0.115,
-            footer,
-            ha="center",
-            va="center",
-            fontsize=11,
-            color="#555555",
         )
 
     os.makedirs(os.path.dirname(output_pdf) or ".", exist_ok=True)
