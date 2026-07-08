@@ -1,14 +1,23 @@
 #!/usr/bin/env python3
 """
-StepKV gap case study figure (baseline fail / StepKV success):
+StepKV gap case study outputs (baseline fail / StepKV success):
 
-  Header : Q, Gold, H2O/TOVA/StepKV EM
-  (A)      Critical tokens — discard status per method + combined score bar
-  (B)      StepKV token score + step score (stacked) for those tokens
-  (C)      Mini causal score heatmap over the critical-token window
+  - critical_tokens.json : baseline discarded but StepKV kept (all such tokens)
+  - *_score_decomp.pdf    : grouped token vs step score bars (raw values)
+  - *_global_heatmap.pdf  : full-decode causal score heatmap (log + percentile norm)
 
 Example:
-  python plot_stepkv_case_study.py --dataset hotpotqa
+  # List selectable samples in the current subset
+  python plot_stepkv_case_study.py --dataset hotpotqa --list_samples
+
+  # Pick by position in selected subset (recommended)
+  python plot_stepkv_case_study.py --dataset hotpotqa --sample_pos 12
+
+  # Pick by original dataset index or sample id
+  python plot_stepkv_case_study.py --dataset hotpotqa --orig_idx 42
+  python plot_stepkv_case_study.py --dataset hotpotqa --sample_id dev_123
+
+  # Auto-scan gap samples and pick the N-th one (baseline fail / StepKV success)
   python plot_stepkv_case_study.py --dataset hotpotqa --gap_index 1 --scan_limit 50
 """
 
@@ -17,7 +26,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass
 from typing import Any, Dict, List, Optional, Sequence, Tuple
 
 import matplotlib
@@ -38,19 +47,20 @@ from analyze_stepkv_discarded_tokens import (
     _discard_sets_from_run,
     _evaluate_run,
     _latest_token_score_snapshot,
-    _pick_sample,
     _prepare_dataset,
-    _resolve_heatmap_plot_len,
     _run_one_sample,
     _save_json,
     _save_success_gap_token_detail_files,
     _save_tokens_jsonl,
+    _scored_decode_len,
     _summarize_discard_diff,
     _get_analysis_tokenizer,
     _token_text_record,
     extract_decode_token_scores,
     run_success_gap_one_sample,
 )
+
+HEATMAP_MAX_LEN = 140
 
 
 @dataclass
@@ -77,25 +87,38 @@ def _minmax_norm(values: Sequence[float]) -> np.ndarray:
     return (arr - lo) / (hi - lo)
 
 
-def _minmax_normalize_matrix(mat: np.ndarray) -> np.ndarray:
-    """Stretch matrix values to [0, 1] using min/max over the lower triangle."""
+def _normalize_heatmap_display(mat: np.ndarray) -> Tuple[np.ndarray, Dict[str, float]]:
+    """Log1p + percentile stretch on lower triangle for visible contrast."""
     out = np.array(mat, dtype=float)
-    if out.size == 0:
-        return out
-    tril = np.tril(np.ones_like(out, dtype=bool), k=0)
+    n = out.shape[0]
+    if n <= 0:
+        return out, {"lo": 0.0, "hi": 1.0, "p_low": 2.0, "p_high": 98.0}
+
+    tril = np.tril(np.ones((n, n), dtype=bool), k=0)
     vals = out[tril & np.isfinite(out)]
-    if vals.size == 0:
-        return np.zeros_like(out)
-    pos = vals[vals > 0]
-    use = pos if pos.size > 0 else vals
-    lo, hi = float(np.min(use)), float(np.max(use))
+    pos = vals[vals > 0] if np.any(vals > 0) else vals
+    if pos.size == 0:
+        display = np.full_like(out, np.nan)
+        return display, {"lo": 0.0, "hi": 1.0, "p_low": 2.0, "p_high": 98.0}
+
+    logged = np.log1p(pos)
+    p_low, p_high = 2.0, 98.0
+    lo = float(np.percentile(logged, p_low))
+    hi = float(np.percentile(logged, p_high))
     if hi <= lo:
-        norm = np.zeros_like(out)
-    else:
-        norm = (out - lo) / (hi - lo)
-        norm = np.clip(norm, 0.0, 1.0)
-    norm[~tril] = np.nan
-    return norm
+        hi = lo + 1e-8
+
+    display = np.full_like(out, np.nan)
+    for i in range(n):
+        for j in range(i + 1):
+            v = out[i, j]
+            if not np.isfinite(v):
+                continue
+            lv = float(np.log1p(max(0.0, v)))
+            display[i, j] = float(np.clip((lv - lo) / (hi - lo), 0.0, 1.0))
+
+    meta = {"lo": lo, "hi": hi, "p_low": p_low, "p_high": p_high, "log1p": 1.0}
+    return display, meta
 
 
 def _decode_token_label(
@@ -137,32 +160,36 @@ def _score_at(score_info: Dict[str, Any], field: str, idx: int) -> float:
     return 0.0
 
 
-def _pick_critical_tokens(
+def _all_critical_indices(
     method_runs: Dict[str, Dict[str, Any]],
     discard_diff: Dict[str, Any],
+) -> List[int]:
+    """All decode indices discarded by any baseline but kept by StepKV."""
+    ours_discarded = _discard_sets_from_run(method_runs[OURS_METHOD])
+    return sorted(
+        {
+            int(i)
+            for i in (discard_diff.get("only_baseline_not_ours", []) or [])
+            if int(i) not in ours_discarded
+        }
+    )
+
+
+def _pick_score_contrast_tokens(
+    rows: Sequence[CriticalTokenRow],
     *,
     max_tokens: int = 12,
-) -> List[int]:
-    """Tokens discarded by any baseline but kept by StepKV."""
-    ours_discarded = _discard_sets_from_run(method_runs[OURS_METHOD])
-    candidates = [
-        int(i)
-        for i in (discard_diff.get("only_baseline_not_ours", []) or [])
-        if int(i) not in ours_discarded
-    ]
-    if not candidates:
-        return []
+) -> List[CriticalTokenRow]:
+    """Pick tokens where token score and step score differ most (easier to read in panel B)."""
 
-    ours_payload = method_runs[OURS_METHOD].get("debug_payload", {}) or {}
-    score_info = extract_decode_token_scores(ours_payload)
+    def _key(row: CriticalTokenRow) -> Tuple[float, float, float]:
+        diff = abs(float(row.token_score) - float(row.step_score))
+        denom = max(1e-8, max(abs(row.token_score), abs(row.step_score)))
+        rel = diff / denom
+        return (rel, diff, float(row.combined_score))
 
-    def _rank_key(idx: int) -> Tuple[float, float, int]:
-        step_s = _score_at(score_info, "step_scores", idx)
-        hh_s = _score_at(score_info, "hh_scores", idx)
-        return (step_s, hh_s, -int(idx))
-
-    ranked = sorted(set(candidates), key=_rank_key, reverse=True)
-    return ranked[: int(max_tokens)]
+    ranked = sorted(rows, key=_key, reverse=True)
+    return list(ranked[: int(max_tokens)])
 
 
 def _build_critical_rows(
@@ -213,110 +240,115 @@ def _format_header(gap_row: Dict[str, Any]) -> str:
     return f"Q: {q}    Gold: {gold}    |    " + "    ".join(em_parts)
 
 
-def _plot_panel_a(ax, rows: List[CriticalTokenRow]) -> None:
+def _save_figure(fig: plt.Figure, output_path: str) -> None:
+    os.makedirs(os.path.dirname(output_path) or ".", exist_ok=True)
+    ext = os.path.splitext(output_path)[1].lower()
+    if ext == ".pdf":
+        fig.savefig(output_path, bbox_inches="tight")
+    else:
+        fig.savefig(output_path, dpi=220, bbox_inches="tight")
+    plt.close(fig)
+
+
+def _export_critical_tokens_file(
+    output_path: str,
+    gap_row: Dict[str, Any],
+    all_rows: List[CriticalTokenRow],
+) -> None:
+    payload = {
+        "header": _format_header(gap_row),
+        "question": gap_row.get("question", ""),
+        "gold_answer": gap_row.get("gold_answer", ""),
+        "evaluations": gap_row.get("evaluations", {}),
+        "description": "Tokens discarded by H2O and/or TOVA but kept by StepKV.",
+        "count": len(all_rows),
+        "tokens": [asdict(r) for r in all_rows],
+    }
+    _save_json(output_path, payload)
+
+
+def _save_panel_b_figure(
+    output_path: str,
+    gap_row: Dict[str, Any],
+    rows: List[CriticalTokenRow],
+) -> None:
+    plt.rcParams.update({"font.size": 11, "axes.labelsize": 12, "axes.titlesize": 13})
+    fig, ax = plt.subplots(figsize=(14, 5.5))
+
+    fig.suptitle(_format_header(gap_row), fontsize=10, y=1.02)
     ax.set_title(
-        "(A) Critical tokens: baseline discarded (✗) vs StepKV kept (✓)",
+        "StepKV score decomposition — token (H2O) vs step (raw scores, contrast-picked tokens)",
         loc="left",
         fontsize=13,
-        pad=8,
+        pad=10,
     )
+
     if not rows:
-        ax.text(0.5, 0.5, "No baseline-discarded / StepKV-kept tokens", ha="center", va="center")
+        ax.text(0.5, 0.5, "No tokens selected", ha="center", va="center")
         ax.axis("off")
-        return
-
-    n = len(rows)
-    ax.set_xlim(-0.5, 4.6)
-    ax.set_ylim(-0.5, n - 0.5)
-    ax.invert_yaxis()
-
-    combined_scores = [r.combined_score for r in rows]
-    combined_norm = _minmax_norm(combined_scores)
-    cmap = plt.get_cmap("Blues")
-
-    for i, row in enumerate(rows):
-        ax.text(-0.05, i, row.label, ha="right", va="center", fontsize=10, transform=ax.get_yaxis_transform())
-        ax.text(0.35, i, f"st{row.owner_step}", ha="center", va="center", fontsize=9, color="#666666")
-
-        for col, discarded in enumerate((row.h2o_discarded, row.tova_discarded, row.stepkv_discarded)):
-            mark = "✗" if discarded else "✓"
-            color = "#E45756" if discarded else "#54A24B"
-            ax.text(1.0 + col * 0.55, i, mark, ha="center", va="center", fontsize=13, color=color, fontweight="bold")
-
-        frac = float(combined_norm[i])
-        bar_w = 2.2 * frac
-        ax.barh(
-            i,
-            bar_w,
-            left=2.85,
-            height=0.55,
-            color=cmap(0.35 + 0.6 * frac),
-            edgecolor="white",
-            linewidth=0.5,
-        )
-
-    ax.text(1.0, -0.9, "H2O", ha="center", va="bottom", fontsize=11, fontweight="bold")
-    ax.text(1.55, -0.9, "TOVA", ha="center", va="bottom", fontsize=11, fontweight="bold")
-    ax.text(2.1, -0.9, "StepKV", ha="center", va="bottom", fontsize=11, fontweight="bold")
-    ax.text(3.95, -0.9, "Combined score (min-max)", ha="center", va="bottom", fontsize=11, fontweight="bold")
-    ax.text(-0.05, -0.9, "Token", ha="right", va="bottom", fontsize=11, fontweight="bold", transform=ax.get_yaxis_transform())
-
-    ax.set_yticks([])
-    ax.set_xticks([])
-    for spine in ax.spines.values():
-        spine.set_visible(False)
-
-
-def _plot_panel_b(ax, rows: List[CriticalTokenRow]) -> None:
-    ax.set_title("(B) StepKV score decomposition (token + step)", loc="left", fontsize=13, pad=8)
-    if not rows:
-        ax.axis("off")
+        _save_figure(fig, output_path)
         return
 
     x = np.arange(len(rows))
-    token_vals = _minmax_norm([r.token_score for r in rows])
-    step_vals = _minmax_norm([r.step_score for r in rows])
+    width = 0.36
+    token_vals = [r.token_score for r in rows]
+    step_vals = [r.step_score for r in rows]
     labels = [r.label for r in rows]
 
-    ax.bar(x, token_vals, color="#6BAED6", edgecolor="white", linewidth=0.5, label="Token score (H2O, min-max)")
-    ax.bar(x, step_vals, bottom=token_vals, color="#FC9272", edgecolor="white", linewidth=0.5, label="Step score (min-max)")
+    ax.bar(x - width / 2, token_vals, width, color="#6BAED6", edgecolor="white", linewidth=0.5, label="Token score (H2O)")
+    ax.bar(x + width / 2, step_vals, width, color="#FC9272", edgecolor="white", linewidth=0.5, label="Step score")
     ax.set_xticks(x)
     ax.set_xticklabels(labels, rotation=45, ha="right", fontsize=9)
-    ax.set_ylabel("Relative score (min-max within window)", fontsize=12)
-    ax.set_ylim(0, max(1.05, float(np.max(token_vals + step_vals)) + 0.05))
+    ax.set_ylabel("Raw score", fontsize=12)
+    ymax = max(token_vals + step_vals + [1e-6]) * 1.15
+    ax.set_ylim(0, ymax)
     ax.grid(axis="y", linestyle=":", alpha=0.35)
     ax.set_axisbelow(True)
     ax.legend(loc="upper right", frameon=False, fontsize=10)
+    fig.tight_layout()
+    _save_figure(fig, output_path)
 
 
-def _plot_panel_c(
-    ax,
+def _downsample_matrix(mat: np.ndarray, max_len: int) -> Tuple[np.ndarray, int]:
+    n = int(mat.shape[0])
+    if n <= max_len:
+        return mat, 1
+    step = int(np.ceil(n / max_len))
+    return mat[::step, ::step], step
+
+
+def _save_global_heatmap_figure(
+    output_path: str,
+    gap_row: Dict[str, Any],
     debug_payload: Dict[str, Any],
-    rows: List[CriticalTokenRow],
-) -> None:
-    ax.set_title("(C) Mini causal score heatmap (critical window)", loc="left", fontsize=13, pad=8)
-    if not rows:
-        ax.axis("off")
-        return
-
-    indices = [r.decode_idx for r in rows]
-    seg_start = max(0, min(indices) - 1)
-    seg_end = max(indices) + 2
+    critical_indices: Sequence[int],
+) -> Dict[str, Any]:
+    plt.rcParams.update({"font.size": 11, "axes.labelsize": 12, "axes.titlesize": 13})
 
     score_info = extract_decode_token_scores(debug_payload)
     snap = _latest_token_score_snapshot(debug_payload) or {}
     prompt_len = int(score_info.get("prompt_token_count", debug_payload.get("prompt_token_count", 0)) or 0)
-    plot_len = _resolve_heatmap_plot_len(score_info, snap, segment_end=seg_end)
+    plot_len = max(int(score_info.get("decode_len", 0) or 0), _scored_decode_len(score_info))
+    plot_len = max(plot_len, 1)
 
     mat, source = _build_decode_score_square(snap, prompt_len, plot_len, score_info)
     mat = _apply_causal_display_mask(mat)
+    mat, stride = _downsample_matrix(mat, HEATMAP_MAX_LEN)
+    display, norm_meta = _normalize_heatmap_display(mat)
 
-    seg_end = min(seg_end, mat.shape[0])
-    sub = mat[seg_start:seg_end, seg_start:seg_end]
-    sub_norm = _minmax_normalize_matrix(sub)
+    fig_h = float(min(12.0, max(4.5, display.shape[0] * 0.07)))
+    fig, ax = plt.subplots(figsize=(14, fig_h))
+    fig.suptitle(_format_header(gap_row), fontsize=10, y=1.02)
+    ax.set_title(
+        f"Global causal score heatmap (decode 0–{plot_len - 1}, log+percentile norm)",
+        loc="left",
+        fontsize=13,
+        pad=10,
+    )
+
     im = ax.imshow(
-        sub_norm,
-        cmap="Reds",
+        display,
+        cmap="viridis",
         interpolation="nearest",
         aspect="auto",
         origin="upper",
@@ -324,17 +356,33 @@ def _plot_panel_c(
         vmax=1.0,
     )
 
-    for idx in indices:
-        if seg_start <= idx < seg_end:
-            local = idx - seg_start
-            ax.axvline(local, color="#333333", linewidth=0.6, alpha=0.35)
-            ax.axhline(local, color="#333333", linewidth=0.6, alpha=0.35)
+    for idx in critical_indices:
+        local = int(idx) // stride
+        if 0 <= local < display.shape[0]:
+            ax.axvline(local, color="#FF6B6B", linewidth=0.5, alpha=0.55)
+            ax.axhline(local, color="#FF6B6B", linewidth=0.5, alpha=0.55)
 
-    ax.set_xlabel("Key token index (local)", fontsize=11)
-    ax.set_ylabel("Query token index (local)", fontsize=11)
-    ax.text(0.02, 0.98, f"source={source}; color=min-max stretch", transform=ax.transAxes, va="top", fontsize=9, color="#555555")
-    fig = ax.figure
-    fig.colorbar(im, ax=ax, fraction=0.046, pad=0.04)
+    ax.set_xlabel("Key token index (decode, downsampled)" if stride > 1 else "Key token index (decode)", fontsize=11)
+    ax.set_ylabel("Query token index (decode)", fontsize=11)
+    ax.text(
+        0.02,
+        0.98,
+        f"source={source}; norm=log1p + p{norm_meta['p_low']:.0f}–p{norm_meta['p_high']:.0f}; stride={stride}",
+        transform=ax.transAxes,
+        va="top",
+        fontsize=9,
+        color="#555555",
+    )
+    fig.colorbar(im, ax=ax, fraction=0.035, pad=0.02, label="Relative score")
+    fig.tight_layout()
+    _save_figure(fig, output_path)
+
+    return {
+        "plot_len": int(plot_len),
+        "matrix_source": source,
+        "downsample_stride": int(stride),
+        "norm": norm_meta,
+    }
 
 
 def _export_decode_token_status(
@@ -343,7 +391,6 @@ def _export_decode_token_status(
     critical_indices: Sequence[int],
     output_jsonl: str,
 ) -> None:
-    """Flat per-decode-index kept/discarded status for all methods."""
     discard_sets = {m: _discard_sets_from_run(method_runs[m]) for m in SCORE_METHODS}
     critical_set = {int(i) for i in critical_indices}
 
@@ -375,21 +422,19 @@ def _export_decode_token_status(
     _save_tokens_jsonl(output_jsonl, rows)
 
 
-def plot_gap_case_study_figure(
+def save_case_study_outputs(
     gap_row: Dict[str, Any],
     method_runs: Dict[str, Dict[str, Any]],
-    output_path: str,
+    output_prefix: str,
     *,
-    max_critical_tokens: int = 12,
+    max_score_tokens: int = 12,
     tokenizer=None,
-) -> Tuple[str, List[CriticalTokenRow]]:
+) -> Dict[str, Any]:
     discard_diff = _summarize_discard_diff(
         {m: method_runs[m] for m in BASELINE_METHODS},
         method_runs[OURS_METHOD],
     )
-    critical_indices = _pick_critical_tokens(
-        method_runs, discard_diff, max_tokens=max_critical_tokens
-    )
+    critical_indices = _all_critical_indices(method_runs, discard_diff)
     if not critical_indices:
         raise RuntimeError(
             "No critical tokens (only_baseline_not_ours) found. "
@@ -397,42 +442,91 @@ def plot_gap_case_study_figure(
         )
 
     if tokenizer is None:
-        from transformers import AutoTokenizer
-        from models.model_paths import resolve_local_model_path
+        tokenizer = _get_analysis_tokenizer(wiki_base.MODEL_PATH)
 
-        model_path = resolve_local_model_path(wiki_base.MODEL_PATH)
-        tokenizer = AutoTokenizer.from_pretrained(model_path, trust_remote_code=True)
-
-    rows = _build_critical_rows(method_runs, critical_indices, tokenizer)
+    all_rows = _build_critical_rows(method_runs, critical_indices, tokenizer)
+    score_rows = _pick_score_contrast_tokens(all_rows, max_tokens=max_score_tokens)
     ours_payload = method_runs[OURS_METHOD].get("debug_payload", {}) or {}
 
-    plt.rcParams.update(
-        {
-            "font.size": 11,
-            "axes.labelsize": 12,
-            "axes.titlesize": 13,
-        }
+    critical_json = f"{output_prefix}_critical_tokens.json"
+    panel_b_pdf = f"{output_prefix}_score_decomp.pdf"
+    panel_c_pdf = f"{output_prefix}_global_heatmap.pdf"
+
+    _export_critical_tokens_file(critical_json, gap_row, all_rows)
+    _save_panel_b_figure(panel_b_pdf, gap_row, score_rows)
+    heatmap_meta = _save_global_heatmap_figure(panel_c_pdf, gap_row, ours_payload, critical_indices)
+
+    return {
+        "critical_tokens_json": critical_json,
+        "score_decomp_pdf": panel_b_pdf,
+        "global_heatmap_pdf": panel_c_pdf,
+        "all_critical_count": len(all_rows),
+        "score_plot_tokens": [asdict(r) for r in score_rows],
+        "heatmap_meta": heatmap_meta,
+    }
+
+
+def _pick_case_study_sample(
+    selected: List[Tuple[int, Dict[str, Any]]],
+    *,
+    sample_pos: Optional[int] = None,
+    orig_idx: Optional[int] = None,
+    sample_id: str = "",
+) -> Optional[Tuple[int, int, Dict[str, Any]]]:
+    """Resolve one sample by pos / orig_idx / id. Returns None when none specified."""
+    if sample_id:
+        for pos, (oidx, sample) in enumerate(selected):
+            if str(sample.get("id", "")) == str(sample_id):
+                return pos, oidx, sample
+        raise ValueError(f"sample_id not found in selected set: {sample_id}")
+    if orig_idx is not None:
+        for pos, (oidx, sample) in enumerate(selected):
+            if int(oidx) == int(orig_idx):
+                return pos, oidx, sample
+        raise ValueError(f"orig_idx not found in selected set: {orig_idx}")
+    if sample_pos is not None:
+        pos = int(sample_pos)
+        if pos < 0 or pos >= len(selected):
+            raise IndexError(f"sample_pos out of range: {pos} (total {len(selected)})")
+        oidx, sample = selected[pos]
+        return pos, oidx, sample
+    return None
+
+
+def _print_sample_catalog(selected: List[Tuple[int, Dict[str, Any]]], args) -> None:
+    print(
+        f"[INFO] dataset={args.dataset} seed={args.seed} num_samples={args.num_samples} "
+        f"selected={len(selected)}"
     )
+    print(f"{'pos':>5}  {'orig_idx':>8}  {'id':<24}  question")
+    print("-" * 100)
+    for pos, (orig_idx, sample) in enumerate(selected):
+        sid = str(sample.get("id", "") or "")[:24]
+        q = str(sample.get("question", "") or "").replace("\n", " ").strip()
+        if len(q) > 72:
+            q = q[:69] + "..."
+        print(f"{pos:5d}  {orig_idx:8d}  {sid:<24}  {q}")
 
-    fig = plt.figure(figsize=(14, 11))
-    gs = fig.add_gridspec(4, 1, height_ratios=[0.10, 0.34, 0.30, 0.30], hspace=0.42)
 
-    ax_header = fig.add_subplot(gs[0])
-    ax_header.axis("off")
-    ax_header.text(0.5, 0.5, _format_header(gap_row), ha="center", va="center", fontsize=11, wrap=True)
-
-    _plot_panel_a(fig.add_subplot(gs[1]), rows)
-    _plot_panel_b(fig.add_subplot(gs[2]), rows)
-    _plot_panel_c(fig.add_subplot(gs[3]), ours_payload, rows)
-
-    os.makedirs(os.path.dirname(output_path) or ".", exist_ok=True)
-    ext = os.path.splitext(output_path)[1].lower()
-    if ext == ".pdf":
-        fig.savefig(output_path, bbox_inches="tight")
-    else:
-        fig.savefig(output_path, dpi=220, bbox_inches="tight")
-    plt.close(fig)
-    return output_path, rows
+def _print_gap_sample_catalog(
+    selected: List[Tuple[int, Dict[str, Any]]],
+    found: List[Tuple[int, int, Dict[str, Any], Dict[str, Any]]],
+) -> None:
+    print(f"[INFO] baseline_fail_ours_success samples: {len(found)}")
+    print(f"{'gap_idx':>7}  {'pos':>5}  {'orig_idx':>8}  {'id':<24}  question")
+    print("-" * 100)
+    for gap_idx, (pos, orig_idx, sample, row) in enumerate(found):
+        sid = str(sample.get("id", "") or "")[:24]
+        q = str(sample.get("question", "") or "").replace("\n", " ").strip()
+        if len(q) > 60:
+            q = q[:57] + "..."
+        evals = row.get("evaluations", {}) or {}
+        marks = []
+        for method in BASELINE_METHODS + [OURS_METHOD]:
+            label = METHOD_LABELS.get(method, method)
+            ok = bool((evals.get(method) or {}).get("exact_match"))
+            marks.append(f"{label}:{'✓' if ok else '✗'}")
+        print(f"{gap_idx:7d}  {pos:5d}  {orig_idx:8d}  {sid:<24}  {q}  | {' '.join(marks)}")
 
 
 def _load_success_gap_positions(path: str) -> List[int]:
@@ -467,25 +561,52 @@ def _resolve_success_gap_sample(selected, retriever, args):
         positions = _load_success_gap_positions(args.success_gap_json)
         if not positions:
             raise RuntimeError(f"No gap samples in {args.success_gap_json}")
-        pos = positions[int(args.gap_index)]
+        gap_index = int(args.gap_index)
+        if gap_index < 0 or gap_index >= len(positions):
+            raise IndexError(
+                f"gap_index={gap_index} out of range for {len(positions)} gap sample(s) in JSON"
+            )
+        pos = positions[gap_index]
+        if pos < 0 or pos >= len(selected):
+            raise IndexError(f"sample_pos={pos} from JSON out of range (total {len(selected)})")
         orig_idx, sample = selected[pos]
         row = run_success_gap_one_sample(sample, retriever, args, pos, orig_idx)
         return pos, orig_idx, sample, row
 
-    if args.sample_pos is not None:
-        pos, orig_idx, sample = _pick_sample(selected, args)
+    picked = _pick_case_study_sample(
+        selected,
+        sample_pos=args.sample_pos,
+        orig_idx=args.orig_idx,
+        sample_id=args.sample_id or "",
+    )
+    if picked is not None:
+        pos, orig_idx, sample = picked
+        print(
+            f"[INFO] using sample pos={pos} orig_idx={orig_idx} id={sample.get('id', '')}"
+        )
         row = run_success_gap_one_sample(sample, retriever, args, pos, orig_idx)
         if args.require_success_gap and row.get("category") != "baseline_fail_ours_success":
-            raise RuntimeError(f"sample_pos={pos} is not a gap sample ({row.get('category')})")
+            raise RuntimeError(
+                f"Selected sample pos={pos} is not baseline_fail_ours_success "
+                f"(category={row.get('category')}). Use --no_require_success_gap to force run."
+            )
         return pos, orig_idx, sample, row
 
     found = _scan_success_gap_samples(selected, retriever, args)
     if not found:
-        raise RuntimeError("No baseline_fail_ours_success sample found; increase --scan_limit")
+        raise RuntimeError(
+            "No baseline_fail_ours_success sample found in scan range. "
+            "Increase --scan_limit or pick explicitly with --sample_pos / --orig_idx / --sample_id."
+        )
     gap_index = int(args.gap_index)
-    if gap_index >= len(found):
+    if gap_index < 0 or gap_index >= len(found):
         raise IndexError(f"gap_index={gap_index} but only {len(found)} gap sample(s) found")
-    return found[gap_index]
+    pos, orig_idx, sample, row = found[gap_index]
+    print(
+        f"[INFO] auto-selected gap_index={gap_index} -> pos={pos} orig_idx={orig_idx} "
+        f"id={sample.get('id', '')}"
+    )
+    return pos, orig_idx, sample, row
 
 
 def _run_all_methods_for_case_study(sample, retriever, args) -> Dict[str, Dict[str, Any]]:
@@ -504,9 +625,50 @@ def _run_all_methods_for_case_study(sample, retriever, args) -> Dict[str, Dict[s
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Plot StepKV gap case study (A/B/C panels).")
+    parser = argparse.ArgumentParser(
+        description="StepKV gap case study outputs (critical JSON + B/C PDFs).",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog=(
+            "Sample selection (pick one):\n"
+            "  --sample_pos N   index in the selected subset (0 .. num_samples-1)\n"
+            "  --orig_idx N     original dataset index after seed shuffle\n"
+            "  --sample_id ID   dataset sample id string\n"
+            "  --gap_index N    when auto-scanning, use the N-th gap sample (default 0)\n"
+            "\n"
+            "If none of sample_pos/orig_idx/sample_id is given, the script scans forward\n"
+            "from --scan_start for baseline_fail_ours_success samples."
+        ),
+    )
     parser.add_argument("--dataset", choices=["hotpotqa", "2wiki", "musique"], default="hotpotqa")
-    parser.add_argument("--sample_pos", type=int, default=None)
+    sample_group = parser.add_mutually_exclusive_group()
+    sample_group.add_argument(
+        "--sample_pos",
+        type=int,
+        default=None,
+        help="Sample position in the selected subset (see --list_samples).",
+    )
+    sample_group.add_argument(
+        "--orig_idx",
+        type=int,
+        default=None,
+        help="Original dataset index within the selected subset.",
+    )
+    sample_group.add_argument(
+        "--sample_id",
+        type=str,
+        default="",
+        help="Dataset sample id (exact match in selected subset).",
+    )
+    parser.add_argument(
+        "--list_samples",
+        action="store_true",
+        help="Print the selectable sample catalog and exit.",
+    )
+    parser.add_argument(
+        "--list_gap_samples",
+        action="store_true",
+        help="Scan (or read --success_gap_json) and list gap samples, then exit.",
+    )
     parser.add_argument("--num_samples", type=int, default=500)
     parser.add_argument("--seed", type=int, default=233)
     parser.add_argument("--max_steps", type=str, default="7")
@@ -515,19 +677,24 @@ def main() -> None:
     parser.add_argument("--data_path", type=str, default="")
     parser.add_argument("--wiki_index_dir", type=str, default=wiki_base.WIKI_INDEX_DIR)
     parser.add_argument("--bm25_top_k", type=int, default=wiki_base.BM25_TOP_K)
-    parser.add_argument("--max_critical_tokens", type=int, default=12)
+    parser.add_argument("--max_critical_tokens", type=int, default=12, help="Max tokens in score-decomp figure (B).")
     parser.add_argument("--require_success_gap", action="store_true", default=True)
     parser.add_argument("--no_require_success_gap", action="store_false", dest="require_success_gap")
     parser.add_argument("--scan_start", type=int, default=0)
     parser.add_argument("--scan_limit", type=int, default=30)
-    parser.add_argument("--gap_index", type=int, default=0)
+    parser.add_argument(
+        "--gap_index",
+        type=int,
+        default=0,
+        help="When auto-scanning or using --success_gap_json, pick the N-th gap sample.",
+    )
     parser.add_argument("--baseline_fail_mode", choices=["all", "any"], default="all")
     parser.add_argument("--success_gap_json", type=str, default="")
     parser.add_argument(
-        "--output",
+        "--output_prefix",
         type=str,
         default="",
-        help="Output path (.pdf recommended). Default: results/stepkv_case_study/...pdf",
+        help="Output path prefix. Default: results/stepkv_case_study/{dataset}_sample{N}_gap",
     )
     args = parser.parse_args()
 
@@ -536,6 +703,30 @@ def main() -> None:
     args.model_path = resolve_local_model_path(args.model_path)
 
     selected, retriever = _prepare_dataset(args)
+
+    if args.list_samples:
+        _print_sample_catalog(selected, args)
+        return
+
+    if args.list_gap_samples:
+        if args.success_gap_json:
+            positions = _load_success_gap_positions(args.success_gap_json)
+            found = []
+            for pos in positions:
+                if pos < 0 or pos >= len(selected):
+                    continue
+                orig_idx, sample = selected[pos]
+                found.append((pos, orig_idx, sample, {"evaluations": {}}))
+            _print_gap_sample_catalog(selected, found)
+        else:
+            print(
+                f"[INFO] scanning pos [{args.scan_start}, "
+                f"{min(len(selected), args.scan_start + args.scan_limit)}) for gap samples ..."
+            )
+            found = _scan_success_gap_samples(selected, retriever, args)
+            _print_gap_sample_catalog(selected, found)
+        return
+
     pos, orig_idx, sample, gap_row = _resolve_success_gap_sample(selected, retriever, args)
 
     method_runs = _run_all_methods_for_case_study(sample, retriever, args)
@@ -557,57 +748,42 @@ def main() -> None:
 
     tag = f"{args.dataset}_sample{pos}_gap"
     out_dir = os.path.join("results", "stepkv_case_study")
-    out = args.output or os.path.join(out_dir, f"{tag}_case_study.pdf")
+    prefix = args.output_prefix or os.path.join(out_dir, tag)
 
-    path, rows = plot_gap_case_study_figure(
+    outputs = save_case_study_outputs(
         gap_row,
         method_runs,
-        out,
-        max_critical_tokens=int(args.max_critical_tokens),
+        prefix,
+        max_score_tokens=int(args.max_critical_tokens),
     )
 
     detail_paths = _save_success_gap_token_detail_files(gap_row, out_dir, f"{args.dataset}_gap")
     status_jsonl = os.path.join(out_dir, f"{tag}_decode_status.jsonl")
     tokenizer = _get_analysis_tokenizer(wiki_base.MODEL_PATH)
-    critical_indices = [r.decode_idx for r in rows]
+    critical_indices = _all_critical_indices(method_runs, gap_row["discard_diff"])
     _export_decode_token_status(method_runs, tokenizer, critical_indices, status_jsonl)
 
     meta = {
-        "figure": path,
         "dataset": args.dataset,
         "sample_pos": pos,
         "sample_id": sample.get("id", ""),
         "category": gap_row.get("category"),
         "evaluations": gap_row.get("evaluations"),
-        "critical_tokens": [
-            {
-                "decode_idx": r.decode_idx,
-                "label": r.label,
-                "owner_step": r.owner_step,
-                "h2o_discarded": r.h2o_discarded,
-                "tova_discarded": r.tova_discarded,
-                "stepkv_discarded": r.stepkv_discarded,
-                "token_score": r.token_score,
-                "step_score": r.step_score,
-                "combined_score": r.combined_score,
-            }
-            for r in rows
-        ],
         "discard_diff_counts": gap_row.get("discard_diff", {}).get("counts", {}),
+        "outputs": outputs,
         "token_detail_files": detail_paths,
         "decode_status_jsonl": status_jsonl,
     }
-    meta_path = os.path.splitext(path)[0] + ".json"
-    os.makedirs(os.path.dirname(meta_path) or ".", exist_ok=True)
-    with open(meta_path, "w", encoding="utf-8") as f:
-        json.dump(meta, f, ensure_ascii=False, indent=2)
+    meta_path = f"{prefix}_meta.json"
+    _save_json(meta_path, meta)
 
-    print(f"[DONE] case study figure: {path}")
+    print(f"[DONE] critical tokens JSON: {outputs['critical_tokens_json']} ({outputs['all_critical_count']} tokens)")
+    print(f"[DONE] score decomp figure: {outputs['score_decomp_pdf']}")
+    print(f"[DONE] global heatmap: {outputs['global_heatmap_pdf']}")
     print(f"[DONE] metadata: {meta_path}")
     print(f"[DONE] decode status jsonl: {status_jsonl}")
     if detail_paths:
         print(f"[DONE] token detail files: {detail_paths}")
-    print(f"[INFO] critical tokens: {len(rows)}")
 
 
 if __name__ == "__main__":
