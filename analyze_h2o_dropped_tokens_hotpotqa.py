@@ -24,10 +24,53 @@ METHOD_SERIES: List[Tuple[str, str]] = [
 ]
 
 
+def _build_full_step_ranges(
+    step_token_ranges: Dict[str, Any],
+    obs_step_ranges: Dict[str, Any],
+) -> List[Tuple[int, int, int]]:
+    """Merge Think+Action with the following Observation into one ReAct step span."""
+    full_ranges: List[Tuple[int, int, int]] = []
+    step_ids = sorted(int(k) for k in step_token_ranges.keys())
+    for sid in step_ids:
+        rng = step_token_ranges.get(str(sid)) or step_token_ranges.get(sid)
+        if not isinstance(rng, (list, tuple)) or len(rng) != 2:
+            continue
+        s, e = int(rng[0]), int(rng[1])
+        if e < s:
+            continue
+        obs_rng = obs_step_ranges.get(str(sid + 1)) or obs_step_ranges.get(sid + 1)
+        if isinstance(obs_rng, (list, tuple)) and len(obs_rng) == 2:
+            e = max(e, int(obs_rng[1]))
+        full_ranges.append((sid, s, e))
+    return full_ranges
+
+
+def _resolve_owner_step(
+    global_id: int,
+    step_ranges: List[Tuple[int, int, int]],
+    obs_step_ranges: Dict[str, Any],
+) -> int:
+    """Map a global token id to the ReAct step that produced it."""
+    gid = int(global_id)
+    for sid, s, e in step_ranges:
+        if s <= gid <= e:
+            return sid
+    for obs_step_str, rng in sorted(obs_step_ranges.items(), key=lambda kv: int(kv[0])):
+        if not isinstance(rng, (list, tuple)) or len(rng) != 2:
+            continue
+        obs_at_loop_step = int(obs_step_str)
+        s, e = int(rng[0]), int(rng[1])
+        if s <= gid <= e:
+            # Observation {k} is prefilled at loop step k+1.
+            return max(1, obs_at_loop_step - 1)
+    return -1
+
+
 def _extract_plot_data(debug_payload: Dict[str, Any]) -> Dict[str, Any]:
     prompt_token_count = int(debug_payload.get("prompt_token_count", 0))
     pruning_history = debug_payload.get("pruning_history", []) or []
     step_token_ranges = debug_payload.get("step_token_ranges", {}) or {}
+    obs_step_ranges = debug_payload.get("obs_step_ranges", {}) or {}
     token_tracker = debug_payload.get("token_tracker", {}) or {}
     step_pruning_events = token_tracker.get("step_pruning_events", {}) or {}
 
@@ -36,21 +79,10 @@ def _extract_plot_data(debug_payload: Dict[str, Any]) -> Dict[str, Any]:
     event_id = 0
     owner_rows: Dict[str, Dict[str, Any]] = {}
 
-    step_ranges: List[Tuple[int, int, int]] = []
-    for sid_str, rng in sorted(step_token_ranges.items(), key=lambda kv: int(kv[0])):
-        if not isinstance(rng, (list, tuple)) or len(rng) != 2:
-            continue
-        sid = int(sid_str)
-        s, e = int(rng[0]), int(rng[1])
-        if e >= s:
-            step_ranges.append((sid, s, e))
+    step_ranges = _build_full_step_ranges(step_token_ranges, obs_step_ranges)
 
     def _owner_step(global_id: int) -> int:
-        gid = int(global_id)
-        for sid, s, e in step_ranges:
-            if s <= gid <= e:
-                return sid
-        return -1
+        return _resolve_owner_step(global_id, step_ranges, obs_step_ranges)
 
     for ev in pruning_history:
         if not isinstance(ev, dict):
@@ -128,11 +160,7 @@ def _extract_plot_data(debug_payload: Dict[str, Any]) -> Dict[str, Any]:
         )
 
     step_boundaries = []
-    for sid_str, rng in sorted(step_token_ranges.items(), key=lambda kv: int(kv[0])):
-        if not isinstance(rng, (list, tuple)) or len(rng) != 2:
-            continue
-        sid = int(sid_str)
-        end_abs = int(rng[1])
+    for sid, _start, end_abs in step_ranges:
         end_shifted = end_abs - prompt_token_count
         if end_shifted >= 0:
             step_boundaries.append({"step": sid, "x": float(end_shifted) + 0.5})
@@ -149,7 +177,7 @@ def _extract_plot_data(debug_payload: Dict[str, Any]) -> Dict[str, Any]:
 
 
 def _step_label(step: int) -> str:
-    return f"step {step}"
+    return f"token from step {step}"
 
 
 def _display_step_from_point(point: Dict[str, Any]) -> int:
@@ -171,7 +199,7 @@ def _plot_three_methods(
     method_plot_data: List[Tuple[str, Dict[str, Any]]],
     output_pdf: str,
 ) -> None:
-    """Three rows: H2O / TOVA / StepKV dropped-token scatter (shared x-axis)."""
+    """Three rows: H2O / TOVA / StepKV dropped-token scatter (per-method x-axis)."""
     plt.rcParams.update(
         {
             "font.size": 12,
@@ -183,47 +211,71 @@ def _plot_three_methods(
         }
     )
 
-    boundaries = method_plot_data[0][1].get("step_boundaries", []) if method_plot_data else []
-    all_steps: set[int] = set()
+    all_owner_steps: set[int] = set()
+    all_prune_steps: set[int] = set()
     for _, plot_data in method_plot_data:
         points = plot_data.get("final_points", []) or plot_data.get("points", []) or []
         step_key = "owner_step" if points and "owner_step" in points[0] else "react_step"
         for p in points:
-            all_steps.add(_point_display_step(p, step_key))
-    steps = sorted(s for s in all_steps if s >= 1)
+            all_owner_steps.add(_point_display_step(p, step_key))
+            if "prune_step" in p:
+                all_prune_steps.add(max(1, int(p.get("prune_step", 1))))
+            elif "react_step" in p:
+                all_prune_steps.add(max(1, int(p.get("react_step", 1))))
+    owner_steps = sorted(s for s in all_owner_steps if s >= 1)
+    prune_steps = sorted(s for s in all_prune_steps if s >= 1)
     cmap = plt.get_cmap("tab10")
-    step_to_color = {s: cmap(i % 10) for i, s in enumerate(steps)}
+    owner_to_color = {s: cmap(i % 10) for i, s in enumerate(owner_steps)}
     legend_handles = [
         plt.Line2D(
             [0],
             [0],
             marker="o",
             color="w",
-            markerfacecolor=step_to_color[s],
+            markerfacecolor=owner_to_color[s],
             markersize=8,
             linestyle="None",
         )
-        for s in steps
+        for s in owner_steps
     ]
-    legend_labels = [_step_label(s) for s in steps]
+    legend_labels = [_step_label(s) for s in owner_steps]
 
-    fig, axes = plt.subplots(3, 1, figsize=(14, 11), sharex=True)
-    fig.subplots_adjust(hspace=0.22, bottom=0.11, top=0.98)
+    fig, axes = plt.subplots(3, 1, figsize=(14, 11), sharex=False)
+    fig.subplots_adjust(hspace=0.22, bottom=0.16, top=0.98)
 
     for ax, (method_label, plot_data) in zip(axes, method_plot_data):
         points = plot_data.get("final_points", []) or plot_data.get("points", []) or []
         step_key = "owner_step" if points and "owner_step" in points[0] else "react_step"
+        boundaries = plot_data.get("step_boundaries", []) or []
         y_vals: List[int] = []
+        x_vals: List[int] = []
 
         if points:
-            for step in steps:
-                matched = [p for p in points if _point_display_step(p, step_key) == step]
+            for owner_step in owner_steps:
+                matched = [p for p in points if _point_display_step(p, step_key) == owner_step]
                 xs = [p["x"] for p in matched]
-                ys = [p["event_id"] for p in matched]
+                ys = [
+                    max(1, int(p.get("prune_step", p.get("react_step", p.get("event_id", 1))) or 1))
+                    for p in matched
+                ]
                 if not xs:
                     continue
                 y_vals.extend(int(y) for y in ys)
-                ax.scatter(xs, ys, s=16, alpha=0.85, c=[step_to_color[step]], edgecolors="none")
+                x_vals.extend(int(x) for x in xs)
+                edgecolors = []
+                for p in matched:
+                    prune_step = max(1, int(p.get("prune_step", p.get("react_step", 1)) or 1))
+                    owner = _point_display_step(p, step_key)
+                    edgecolors.append("#d62728" if prune_step < owner else "none")
+                ax.scatter(
+                    xs,
+                    ys,
+                    s=16,
+                    alpha=0.85,
+                    c=[owner_to_color[owner_step]],
+                    edgecolors=edgecolors,
+                    linewidths=[1.2 if ec != "none" else 0.0 for ec in edgecolors],
+                )
         else:
             ax.text(
                 0.5,
@@ -239,13 +291,15 @@ def _plot_three_methods(
         for bd in boundaries:
             ax.axvline(float(bd["x"]), linestyle="--", linewidth=1.0, color="gray", alpha=0.7)
 
-        ax.set_ylabel("Prune Event", fontsize=15)
+        ax.set_ylabel("Evicted at ReAct step", fontsize=15)
         ax.set_title(method_label, loc="left", fontsize=15, pad=6)
-        ax.yaxis.set_major_locator(mticker.MaxNLocator(integer=True))
+        ax.yaxis.set_major_locator(mticker.MultipleLocator(1))
         if y_vals:
             y_min, y_max = min(y_vals), max(y_vals)
             pad = 1 if y_max > y_min else 0
             ax.set_ylim(y_min - pad, y_max + pad)
+        if x_vals:
+            ax.set_xlim(-0.5, max(x_vals) + 0.5)
         ax.grid(True, alpha=0.25)
 
     axes[-1].set_xlabel("Key Position Index (No Prefill)", fontsize=15)
@@ -255,10 +309,21 @@ def _plot_three_methods(
             legend_handles,
             legend_labels,
             loc="upper center",
-            bbox_to_anchor=(0.5, 0.06),
-            ncol=min(8, max(1, len(legend_labels))),
+            bbox_to_anchor=(0.5, 0.04),
+            ncol=min(4, max(1, len(legend_labels))),
             frameon=False,
+            title="Dropped token origin",
         )
+        if prune_steps:
+            fig.text(
+                0.5,
+                0.085,
+                "Y-axis = when token was evicted; red ring = evicted earlier than token origin (cross-step drop)",
+                ha="center",
+                va="center",
+                fontsize=11,
+                color="#555555",
+            )
 
     os.makedirs(os.path.dirname(output_pdf) or ".", exist_ok=True)
     fig.savefig(output_pdf, bbox_inches="tight", pad_inches=0.08)
