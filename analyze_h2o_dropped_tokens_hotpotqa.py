@@ -2,13 +2,14 @@ import argparse
 import json
 import os
 from datetime import datetime
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Sequence, Tuple
 
 import matplotlib
 
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import matplotlib.ticker as mticker
+import numpy as np
 
 import run_all_wiki_experiments_v2 as base
 from analyze_stepkv_discarded_tokens import _build_kv_config
@@ -350,6 +351,35 @@ def _point_y_value(point: Dict[str, Any], mode: str, step_key: str) -> int:
     )
 
 
+def _scatter_style_for_density(n_points: int, mode: str) -> Tuple[float, float, float]:
+    """Return marker size, alpha, and y-jitter span for readable dense scatter."""
+    if mode == "kept":
+        if n_points > 1200:
+            return 2.5, 0.10, 0.16
+        if n_points > 600:
+            return 3.5, 0.16, 0.14
+        if n_points > 250:
+            return 5.0, 0.24, 0.12
+        if n_points > 80:
+            return 7.0, 0.35, 0.10
+        return 10.0, 0.55, 0.0
+    if n_points > 400:
+        return 4.0, 0.28, 0.20
+    if n_points > 150:
+        return 6.0, 0.38, 0.16
+    if n_points > 60:
+        return 8.0, 0.50, 0.12
+    return 12.0, 0.72, 0.0
+
+
+def _jitter_y_values(ys: Sequence[int], span: float, seed: int) -> List[float]:
+    if span <= 0 or len(ys) <= 1:
+        return [float(y) for y in ys]
+    rng = np.random.default_rng(int(seed))
+    jitter = rng.uniform(-span, span, size=len(ys))
+    return [float(y) + float(j) for y, j in zip(ys, jitter)]
+
+
 def _max_react_step_in_plot_data(plot_data: Dict[str, Any], mode: str) -> int:
     max_step = 1
     for bd in plot_data.get("step_boundaries", []) or []:
@@ -421,10 +451,12 @@ def _plot_three_methods(
     )
     legend_title = "Kept token origin" if mode == "kept" else "Dropped token origin"
 
-    for ax, (method_label, plot_data) in zip(axes, method_plot_data):
+    for ax_idx, (method_label, plot_data) in enumerate(method_plot_data):
+        ax = axes[ax_idx]
         points, step_key = _collect_plot_points(plot_data, mode)
         boundaries = plot_data.get("step_boundaries", []) or []
         x_vals: List[int] = []
+        jitter_seed = abs(hash((method_label, mode))) % (2**32)
 
         if points:
             for owner_step in owner_steps:
@@ -434,29 +466,41 @@ def _plot_three_methods(
                 if not xs:
                     continue
                 x_vals.extend(int(x) for x in xs)
+                size, alpha, y_jitter = _scatter_style_for_density(len(xs), mode)
+                plot_ys = _jitter_y_values(ys, y_jitter, jitter_seed + int(owner_step))
+                face = owner_to_color[owner_step]
                 if mode == "kept":
                     ax.scatter(
                         xs,
-                        ys,
-                        s=12,
-                        alpha=0.75,
-                        c=[owner_to_color[owner_step]],
+                        plot_ys,
+                        s=size,
+                        alpha=alpha,
+                        c=[face],
                         edgecolors="none",
+                        linewidths=0,
+                        rasterized=True,
                     )
                 else:
                     edgecolors = []
+                    linewidths = []
                     for p in matched:
                         prune_step = max(1, int(p.get("prune_step", p.get("react_step", 1)) or 1))
                         owner = _point_display_step(p, step_key)
-                        edgecolors.append("#d62728" if prune_step < owner else "none")
+                        if prune_step < owner:
+                            edgecolors.append("#d62728")
+                            linewidths.append(0.8)
+                        else:
+                            edgecolors.append("none")
+                            linewidths.append(0.0)
                     ax.scatter(
                         xs,
-                        ys,
-                        s=16,
-                        alpha=0.85,
-                        c=[owner_to_color[owner_step]],
+                        plot_ys,
+                        s=size,
+                        alpha=alpha,
+                        c=[face],
                         edgecolors=edgecolors,
-                        linewidths=[1.2 if ec != "none" else 0.0 for ec in edgecolors],
+                        linewidths=linewidths,
+                        rasterized=True,
                     )
         else:
             ax.text(
