@@ -122,14 +122,44 @@ def _extract_plot_data(debug_payload: Dict[str, Any]) -> Dict[str, Any]:
     final_points = []
     final_event_rows = []
     final_event_id = 0
-    for prune_step_str, dropped_ids in sorted(step_pruning_events.items(), key=lambda kv: int(kv[0])):
-        prune_step = int(prune_step_str)
+    init_dropped, react_pruning_events = _split_pruning_events(step_pruning_events)
+    if init_dropped:
+        init_decode = sorted(set(int(x) for x in init_dropped if int(x) >= prompt_token_count))
+        if init_decode:
+            final_event_id += 1
+            owner_counts: Dict[int, int] = {}
+            shifted_ids = []
+            for gid in init_decode:
+                shifted_x = int(gid - prompt_token_count)
+                shifted_ids.append(shifted_x)
+                owner = int(_owner_step(gid))
+                owner_counts[owner] = int(owner_counts.get(owner, 0) + 1)
+                final_points.append(
+                    {
+                        "event_id": int(final_event_id),
+                        "prune_step": 0,
+                        "owner_step": int(owner),
+                        "x": shifted_x,
+                        "global_id": int(gid),
+                    }
+                )
+            final_event_rows.append(
+                {
+                    "event_id": int(final_event_id),
+                    "prune_step": 0,
+                    "tokens_evicted": int(len(shifted_ids)),
+                    "evicted_abs_indices_no_prefill": shifted_ids,
+                    "owner_step_counts": {str(int(k)): int(v) for k, v in sorted(owner_counts.items())},
+                }
+            )
+
+    for prune_step, dropped_ids in sorted(react_pruning_events.items(), key=lambda kv: int(kv[0])):
         dropped_ids = sorted(set(int(x) for x in (dropped_ids or [])))
         dropped_ids = [gid for gid in dropped_ids if gid >= prompt_token_count]
         if not dropped_ids:
             continue
         final_event_id += 1
-        owner_counts: Dict[int, int] = {}
+        owner_counts = {}
         shifted_ids = []
         for gid in dropped_ids:
             shifted_x = int(gid - prompt_token_count)
@@ -185,6 +215,33 @@ def _extract_plot_data(debug_payload: Dict[str, Any]) -> Dict[str, Any]:
     }
 
 
+def _split_pruning_events(step_pruning_events: Dict[str, Any]) -> Tuple[List[int], Dict[int, List[int]]]:
+    """Split pre-step (init) drops from numbered ReAct-step drops."""
+    init_dropped: List[int] = []
+    react_events: Dict[int, List[int]] = {}
+    for key, dropped_ids in (step_pruning_events or {}).items():
+        ids = [int(x) for x in (dropped_ids or [])]
+        if key is None or str(key).lower() in {"init", "none", "null"}:
+            init_dropped.extend(ids)
+            continue
+        try:
+            step_id = int(key)
+        except (TypeError, ValueError):
+            continue
+        react_events.setdefault(step_id, []).extend(ids)
+    return init_dropped, react_events
+
+
+def _prune_step_sort_key(item: Tuple[Any, Any]) -> Tuple[int, int]:
+    key = item[0]
+    if key is None or str(key).lower() in {"init", "none", "null"}:
+        return (0, -1)
+    try:
+        return (1, int(key))
+    except (TypeError, ValueError):
+        return (2, 0)
+
+
 def _decode_end_global_id_through_step(
     step_ranges: List[Tuple[int, int, int]],
     through_step: int,
@@ -211,18 +268,20 @@ def _build_kept_points(
     if next_global_id <= prompt_token_count:
         return []
 
-    prune_steps = sorted(int(k) for k in step_pruning_events.keys())
-    max_step = max(
-        prune_steps or [1],
-        max((sid for sid, _, _ in step_ranges), default=1),
-    )
+    init_dropped, react_pruning_events = _split_pruning_events(step_pruning_events)
 
-    cumulative_dropped: set[int] = set()
+    prune_steps = sorted(react_pruning_events.keys())
+    max_range_step = max((sid for sid, _, _ in step_ranges), default=1)
+    max_step = max(max(prune_steps) if prune_steps else 1, max_range_step)
+
+    cumulative_dropped: set[int] = set(
+        int(x) for x in init_dropped if int(x) >= prompt_token_count
+    )
     kept_points: List[Dict[str, Any]] = []
 
     for snapshot_step in range(1, max_step + 1):
-        dropped_now = step_pruning_events.get(str(snapshot_step)) or step_pruning_events.get(snapshot_step) or []
-        cumulative_dropped.update(int(x) for x in dropped_now)
+        dropped_now = react_pruning_events.get(snapshot_step, [])
+        cumulative_dropped.update(int(x) for x in dropped_now if int(x) >= prompt_token_count)
 
         decode_end = _decode_end_global_id_through_step(
             step_ranges,

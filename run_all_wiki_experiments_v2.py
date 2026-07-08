@@ -2123,9 +2123,8 @@ def _run_react_kv_episode(
                 "next_global_id": int(getattr(tracker, "next_global_id", 0)),
                 "cache_length": int(getattr(tracker, "cache_length", 0)),
                 "step_pruning_events": {
-                    str(int(k)): sorted(set(int(x) for x in (v or [])))
+                    ("init" if k is None else str(int(k))): sorted(set(int(x) for x in (v or [])))
                     for k, v in getattr(tracker, "step_pruning_events", {}).items()
-                    if k is not None
                 },
             }
         if llm is not None and hasattr(llm, "get_global_token_id_log"):
