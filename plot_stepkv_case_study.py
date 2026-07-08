@@ -34,15 +34,19 @@ from analyze_stepkv_discarded_tokens import (
     SCORE_METHODS,
     _apply_causal_display_mask,
     _build_decode_score_square,
+    _build_success_gap_token_text_report,
     _discard_sets_from_run,
-    _enhance_attention_contrast,
     _evaluate_run,
     _latest_token_score_snapshot,
     _pick_sample,
     _prepare_dataset,
     _resolve_heatmap_plot_len,
     _run_one_sample,
+    _save_json,
+    _save_success_gap_token_detail_files,
+    _save_tokens_jsonl,
     _summarize_discard_diff,
+    _get_analysis_tokenizer,
     _token_text_record,
     extract_decode_token_scores,
     run_success_gap_one_sample,
@@ -60,6 +64,38 @@ class CriticalTokenRow:
     token_score: float
     step_score: float
     combined_score: float
+
+
+def _minmax_norm(values: Sequence[float]) -> np.ndarray:
+    arr = np.asarray(list(values), dtype=float)
+    if arr.size == 0:
+        return arr
+    lo = float(np.min(arr))
+    hi = float(np.max(arr))
+    if hi <= lo:
+        return np.ones_like(arr) if hi > 0 else np.zeros_like(arr)
+    return (arr - lo) / (hi - lo)
+
+
+def _minmax_normalize_matrix(mat: np.ndarray) -> np.ndarray:
+    """Stretch matrix values to [0, 1] using min/max over the lower triangle."""
+    out = np.array(mat, dtype=float)
+    if out.size == 0:
+        return out
+    tril = np.tril(np.ones_like(out, dtype=bool), k=0)
+    vals = out[tril & np.isfinite(out)]
+    if vals.size == 0:
+        return np.zeros_like(out)
+    pos = vals[vals > 0]
+    use = pos if pos.size > 0 else vals
+    lo, hi = float(np.min(use)), float(np.max(use))
+    if hi <= lo:
+        norm = np.zeros_like(out)
+    else:
+        norm = (out - lo) / (hi - lo)
+        norm = np.clip(norm, 0.0, 1.0)
+    norm[~tril] = np.nan
+    return norm
 
 
 def _decode_token_label(
@@ -107,8 +143,13 @@ def _pick_critical_tokens(
     *,
     max_tokens: int = 12,
 ) -> List[int]:
-    """Tokens discarded by baseline union but kept by StepKV."""
-    candidates = list(discard_diff.get("only_baseline_not_ours", []) or [])
+    """Tokens discarded by any baseline but kept by StepKV."""
+    ours_discarded = _discard_sets_from_run(method_runs[OURS_METHOD])
+    candidates = [
+        int(i)
+        for i in (discard_diff.get("only_baseline_not_ours", []) or [])
+        if int(i) not in ours_discarded
+    ]
     if not candidates:
         return []
 
@@ -120,7 +161,7 @@ def _pick_critical_tokens(
         hh_s = _score_at(score_info, "hh_scores", idx)
         return (step_s, hh_s, -int(idx))
 
-    ranked = sorted({int(i) for i in candidates}, key=_rank_key, reverse=True)
+    ranked = sorted(set(candidates), key=_rank_key, reverse=True)
     return ranked[: int(max_tokens)]
 
 
@@ -173,19 +214,25 @@ def _format_header(gap_row: Dict[str, Any]) -> str:
 
 
 def _plot_panel_a(ax, rows: List[CriticalTokenRow]) -> None:
-    ax.set_title("(A) Critical tokens: baseline discard vs StepKV keep", loc="left", fontsize=13, pad=8)
+    ax.set_title(
+        "(A) Critical tokens: baseline discarded (✗) vs StepKV kept (✓)",
+        loc="left",
+        fontsize=13,
+        pad=8,
+    )
     if not rows:
-        ax.text(0.5, 0.5, "No only_baseline_not_ours tokens", ha="center", va="center")
+        ax.text(0.5, 0.5, "No baseline-discarded / StepKV-kept tokens", ha="center", va="center")
         ax.axis("off")
         return
 
     n = len(rows)
-    y = np.arange(n)
-    max_combined = max(r.combined_score for r in rows) or 1.0
-
     ax.set_xlim(-0.5, 4.6)
     ax.set_ylim(-0.5, n - 0.5)
     ax.invert_yaxis()
+
+    combined_scores = [r.combined_score for r in rows]
+    combined_norm = _minmax_norm(combined_scores)
+    cmap = plt.get_cmap("Blues")
 
     for i, row in enumerate(rows):
         ax.text(-0.05, i, row.label, ha="right", va="center", fontsize=10, transform=ax.get_yaxis_transform())
@@ -196,13 +243,22 @@ def _plot_panel_a(ax, rows: List[CriticalTokenRow]) -> None:
             color = "#E45756" if discarded else "#54A24B"
             ax.text(1.0 + col * 0.55, i, mark, ha="center", va="center", fontsize=13, color=color, fontweight="bold")
 
-        bar_w = 2.2 * (row.combined_score / max_combined)
-        ax.barh(i, bar_w, left=2.85, height=0.55, color="#9ECAE1", edgecolor="white", linewidth=0.5)
+        frac = float(combined_norm[i])
+        bar_w = 2.2 * frac
+        ax.barh(
+            i,
+            bar_w,
+            left=2.85,
+            height=0.55,
+            color=cmap(0.35 + 0.6 * frac),
+            edgecolor="white",
+            linewidth=0.5,
+        )
 
     ax.text(1.0, -0.9, "H2O", ha="center", va="bottom", fontsize=11, fontweight="bold")
     ax.text(1.55, -0.9, "TOVA", ha="center", va="bottom", fontsize=11, fontweight="bold")
     ax.text(2.1, -0.9, "StepKV", ha="center", va="bottom", fontsize=11, fontweight="bold")
-    ax.text(3.95, -0.9, "Combined score", ha="center", va="bottom", fontsize=11, fontweight="bold")
+    ax.text(3.95, -0.9, "Combined score (min-max)", ha="center", va="bottom", fontsize=11, fontweight="bold")
     ax.text(-0.05, -0.9, "Token", ha="right", va="bottom", fontsize=11, fontweight="bold", transform=ax.get_yaxis_transform())
 
     ax.set_yticks([])
@@ -218,15 +274,16 @@ def _plot_panel_b(ax, rows: List[CriticalTokenRow]) -> None:
         return
 
     x = np.arange(len(rows))
-    token_vals = [r.token_score for r in rows]
-    step_vals = [r.step_score for r in rows]
+    token_vals = _minmax_norm([r.token_score for r in rows])
+    step_vals = _minmax_norm([r.step_score for r in rows])
     labels = [r.label for r in rows]
 
-    ax.bar(x, token_vals, color="#6BAED6", edgecolor="white", linewidth=0.5, label="Token score (H2O)")
-    ax.bar(x, step_vals, bottom=token_vals, color="#FC9272", edgecolor="white", linewidth=0.5, label="Step score")
+    ax.bar(x, token_vals, color="#6BAED6", edgecolor="white", linewidth=0.5, label="Token score (H2O, min-max)")
+    ax.bar(x, step_vals, bottom=token_vals, color="#FC9272", edgecolor="white", linewidth=0.5, label="Step score (min-max)")
     ax.set_xticks(x)
     ax.set_xticklabels(labels, rotation=45, ha="right", fontsize=9)
-    ax.set_ylabel("Score", fontsize=12)
+    ax.set_ylabel("Relative score (min-max within window)", fontsize=12)
+    ax.set_ylim(0, max(1.05, float(np.max(token_vals + step_vals)) + 0.05))
     ax.grid(axis="y", linestyle=":", alpha=0.35)
     ax.set_axisbelow(True)
     ax.legend(loc="upper right", frameon=False, fontsize=10)
@@ -252,12 +309,20 @@ def _plot_panel_c(
     plot_len = _resolve_heatmap_plot_len(score_info, snap, segment_end=seg_end)
 
     mat, source = _build_decode_score_square(snap, prompt_len, plot_len, score_info)
-    mat = _enhance_attention_contrast(mat)
     mat = _apply_causal_display_mask(mat)
 
     seg_end = min(seg_end, mat.shape[0])
     sub = mat[seg_start:seg_end, seg_start:seg_end]
-    im = ax.imshow(sub, cmap="Reds", interpolation="nearest", aspect="auto", origin="upper", vmin=0.0, vmax=1.0)
+    sub_norm = _minmax_normalize_matrix(sub)
+    im = ax.imshow(
+        sub_norm,
+        cmap="Reds",
+        interpolation="nearest",
+        aspect="auto",
+        origin="upper",
+        vmin=0.0,
+        vmax=1.0,
+    )
 
     for idx in indices:
         if seg_start <= idx < seg_end:
@@ -267,9 +332,47 @@ def _plot_panel_c(
 
     ax.set_xlabel("Key token index (local)", fontsize=11)
     ax.set_ylabel("Query token index (local)", fontsize=11)
-    ax.text(0.02, 0.98, f"source={source}", transform=ax.transAxes, va="top", fontsize=9, color="#555555")
+    ax.text(0.02, 0.98, f"source={source}; color=min-max stretch", transform=ax.transAxes, va="top", fontsize=9, color="#555555")
     fig = ax.figure
     fig.colorbar(im, ax=ax, fraction=0.046, pad=0.04)
+
+
+def _export_decode_token_status(
+    method_runs: Dict[str, Dict[str, Any]],
+    tokenizer,
+    critical_indices: Sequence[int],
+    output_jsonl: str,
+) -> None:
+    """Flat per-decode-index kept/discarded status for all methods."""
+    discard_sets = {m: _discard_sets_from_run(method_runs[m]) for m in SCORE_METHODS}
+    critical_set = {int(i) for i in critical_indices}
+
+    decode_lens = []
+    for method in SCORE_METHODS:
+        payload = method_runs[method].get("debug_payload", {}) or {}
+        tracker = payload.get("token_tracker", {}) or {}
+        prompt_len = int(payload.get("prompt_token_count", 0) or 0)
+        next_gid = int(tracker.get("next_global_id", prompt_len) or prompt_len)
+        decode_lens.append(max(0, next_gid - prompt_len))
+    max_decode = max(decode_lens) if decode_lens else 0
+
+    rows: List[Dict[str, Any]] = []
+    ref_payload = method_runs[OURS_METHOD].get("debug_payload", {}) or {}
+    for decode_idx in range(max_decode):
+        label = _decode_token_label(ref_payload, decode_idx, tokenizer)
+        row: Dict[str, Any] = {
+            "decode_index": int(decode_idx),
+            "label": label,
+            "is_critical_baseline_drop_stepkv_keep": int(decode_idx) in critical_set,
+        }
+        for method in SCORE_METHODS:
+            label_m = METHOD_LABELS.get(method, method)
+            discarded = int(decode_idx) in discard_sets[method]
+            row[f"{label_m}_status"] = "discarded" if discarded else "kept"
+        rows.append(row)
+
+    os.makedirs(os.path.dirname(output_jsonl) or ".", exist_ok=True)
+    _save_tokens_jsonl(output_jsonl, rows)
 
 
 def plot_gap_case_study_figure(
@@ -449,10 +552,12 @@ def main() -> None:
             {m: method_runs[m] for m in BASELINE_METHODS},
             method_runs[OURS_METHOD],
         ),
+        "token_text_detail": _build_success_gap_token_text_report(method_runs),
     }
 
     tag = f"{args.dataset}_sample{pos}_gap"
-    out = args.output or os.path.join("results", "stepkv_case_study", f"{tag}_case_study.pdf")
+    out_dir = os.path.join("results", "stepkv_case_study")
+    out = args.output or os.path.join(out_dir, f"{tag}_case_study.pdf")
 
     path, rows = plot_gap_case_study_figure(
         gap_row,
@@ -460,6 +565,12 @@ def main() -> None:
         out,
         max_critical_tokens=int(args.max_critical_tokens),
     )
+
+    detail_paths = _save_success_gap_token_detail_files(gap_row, out_dir, f"{args.dataset}_gap")
+    status_jsonl = os.path.join(out_dir, f"{tag}_decode_status.jsonl")
+    tokenizer = _get_analysis_tokenizer(wiki_base.MODEL_PATH)
+    critical_indices = [r.decode_idx for r in rows]
+    _export_decode_token_status(method_runs, tokenizer, critical_indices, status_jsonl)
 
     meta = {
         "figure": path,
@@ -483,6 +594,8 @@ def main() -> None:
             for r in rows
         ],
         "discard_diff_counts": gap_row.get("discard_diff", {}).get("counts", {}),
+        "token_detail_files": detail_paths,
+        "decode_status_jsonl": status_jsonl,
     }
     meta_path = os.path.splitext(path)[0] + ".json"
     os.makedirs(os.path.dirname(meta_path) or ".", exist_ok=True)
@@ -491,6 +604,9 @@ def main() -> None:
 
     print(f"[DONE] case study figure: {path}")
     print(f"[DONE] metadata: {meta_path}")
+    print(f"[DONE] decode status jsonl: {status_jsonl}")
+    if detail_paths:
+        print(f"[DONE] token detail files: {detail_paths}")
     print(f"[INFO] critical tokens: {len(rows)}")
 
 
