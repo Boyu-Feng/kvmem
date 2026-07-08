@@ -558,72 +558,6 @@ def _build_normalized_series(
     return out
 
 
-def _fmt_time_seconds(v: Optional[float]) -> str:
-    if v is None:
-        return ""
-    if v >= 3600:
-        return f"{v / 3600:.1f}h"
-    if v >= 120:
-        return f"{v / 60:.1f}m"
-    return f"{v:.1f}s"
-
-
-def _fmt_cache_tokens(v: Optional[float]) -> str:
-    if v is None:
-        return ""
-    iv = int(round(float(v)))
-    if iv >= 1_000_000:
-        return f"{iv / 1_000_000:.1f}M tok"
-    if iv >= 1000:
-        return f"{iv / 1000:.1f}k tok"
-    return f"{iv} tok"
-
-
-def _ensure_canvas_renderer(fig: plt.Figure) -> None:
-    if fig.canvas.get_renderer() is None:
-        fig.canvas.draw()
-
-
-def _inward_tangent_rotation_display(
-    ax: plt.Axes,
-    theta_rad: float,
-    r_anchor: float,
-) -> float:
-    """
-    Screen-space rotation: baseline tangent to the outer circle, text bottom toward center.
-    """
-    _ensure_canvas_renderer(ax.figure)
-    cx, cy = ax.transData.transform((0.0, 0.0))
-    px, py = ax.transData.transform((theta_rad, r_anchor))
-    phi_out = np.arctan2(py - cy, px - cx)
-    return float(np.degrees(phi_out) - 90.0)
-
-
-def _outer_label_ring(tick_vals: Sequence[float]) -> float:
-    """Anchor labels on the main outer grid circle (usually r=1.0)."""
-    if not tick_vals:
-        return 1.0
-    ring_candidates = [float(t) for t in tick_vals if float(t) <= 1.0 + 1e-9]
-    if ring_candidates:
-        return max(ring_candidates)
-    return float(max(tick_vals))
-
-
-def _outer_axis_label_text(
-    display_name: str,
-    axis_key: str,
-    group: str,
-    axis_scale: Optional[float],
-) -> str:
-    if group != "cost" or axis_scale is None:
-        return display_name
-    if "time" in axis_key:
-        return f"{display_name}\n(max {_fmt_time_seconds(axis_scale)})"
-    if "cache" in axis_key:
-        return f"{display_name}\n(max {_fmt_cache_tokens(axis_scale)})"
-    return display_name
-
-
 def _style_radar_spokes(ax: plt.Axes, *, linewidth: float = 2.4) -> None:
     """Bold radial spokes (one per dimension)."""
     for line in ax.xaxis.get_gridlines():
@@ -631,41 +565,6 @@ def _style_radar_spokes(ax: plt.Axes, *, linewidth: float = 2.4) -> None:
         line.set_color("#B0B0B0")
         line.set_linewidth(linewidth)
         line.set_alpha(0.95)
-
-
-def _place_axis_labels_tangent(
-    ax: plt.Axes,
-    angles: Sequence[float],
-    label_ring: float,
-    *,
-    labelsize: int,
-    axis_scales: Optional[Dict[str, float]] = None,
-) -> None:
-    """Place labels in figure coords so rotation matches screen tangent exactly."""
-    ax.set_xticklabels([""] * len(angles))
-    fig = ax.figure
-    _ensure_canvas_renderer(fig)
-    inv_fig = fig.transFigure.inverted()
-    scales = axis_scales or {}
-
-    for angle, (key, display_name, _field, group) in zip(angles, AXIS_SPECS):
-        text = _outer_axis_label_text(display_name, key, group, scales.get(key))
-        rot = _inward_tangent_rotation_display(ax, angle, label_ring)
-        px, py = ax.transData.transform((angle, label_ring))
-        xf, yf = inv_fig.transform((px, py))
-        fig.text(
-            xf,
-            yf,
-            text,
-            ha="center",
-            va="bottom",
-            fontsize=labelsize,
-            rotation=rot,
-            rotation_mode="anchor",
-            color="#222222",
-            clip_on=False,
-            zorder=6,
-        )
 
 
 def _setup_style(labelsize: int, ticksize: int) -> None:
@@ -702,8 +601,7 @@ def plot_radar_single(
     ax.set_theta_offset(np.pi / 2)
     ax.set_theta_direction(-1)
     ax.set_xticks(angles)
-
-    axis_scales = series_list[0].get("axis_scale", {}) if series_list else {}
+    ax.set_xticklabels(axis_labels, fontsize=labelsize)
 
     all_norm_vals = [
         float(v) for spec in series_list for v in spec["normalized"].values()
@@ -753,14 +651,6 @@ def plot_radar_single(
             linewidths=0.9,
             zorder=zorder + 2,
         )
-
-    _place_axis_labels_tangent(
-        ax,
-        angles,
-        _outer_label_ring(tick_vals),
-        labelsize=labelsize,
-        axis_scales=axis_scales,
-    )
 
     ax.legend(
         loc="upper right",
