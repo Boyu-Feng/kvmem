@@ -165,15 +165,87 @@ def _extract_plot_data(debug_payload: Dict[str, Any]) -> Dict[str, Any]:
         if end_shifted >= 0:
             step_boundaries.append({"step": sid, "x": float(end_shifted) + 0.5})
 
+    kept_points = _build_kept_points(
+        prompt_token_count=prompt_token_count,
+        step_ranges=step_ranges,
+        step_pruning_events=step_pruning_events,
+        token_tracker=token_tracker,
+        owner_step_fn=_owner_step,
+    )
+
     return {
         "prompt_token_count": prompt_token_count,
         "events": event_rows,
         "points": scatter_points,
         "final_events": final_event_rows,
         "final_points": final_points,
+        "kept_points": kept_points,
         "dropped_by_owner_step": [owner_rows[k] for k in sorted(owner_rows.keys(), key=lambda x: int(x))],
         "step_boundaries": step_boundaries,
     }
+
+
+def _decode_end_global_id_through_step(
+    step_ranges: List[Tuple[int, int, int]],
+    through_step: int,
+    prompt_token_count: int,
+    next_global_id: int,
+) -> int:
+    """Last global token id that exists after finishing the given ReAct step."""
+    end = int(prompt_token_count) - 1
+    for sid, _s, e in step_ranges:
+        if int(sid) <= int(through_step):
+            end = max(end, int(e))
+    return min(end, int(next_global_id) - 1)
+
+
+def _build_kept_points(
+    prompt_token_count: int,
+    step_ranges: List[Tuple[int, int, int]],
+    step_pruning_events: Dict[str, Any],
+    token_tracker: Dict[str, Any],
+    owner_step_fn,
+) -> List[Dict[str, Any]]:
+    """Tokens still in cache after each ReAct step (inverse of cumulative drops)."""
+    next_global_id = int(token_tracker.get("next_global_id", prompt_token_count))
+    if next_global_id <= prompt_token_count:
+        return []
+
+    prune_steps = sorted(int(k) for k in step_pruning_events.keys())
+    max_step = max(
+        prune_steps or [1],
+        max((sid for sid, _, _ in step_ranges), default=1),
+    )
+
+    cumulative_dropped: set[int] = set()
+    kept_points: List[Dict[str, Any]] = []
+
+    for snapshot_step in range(1, max_step + 1):
+        dropped_now = step_pruning_events.get(str(snapshot_step)) or step_pruning_events.get(snapshot_step) or []
+        cumulative_dropped.update(int(x) for x in dropped_now)
+
+        decode_end = _decode_end_global_id_through_step(
+            step_ranges,
+            snapshot_step,
+            prompt_token_count,
+            next_global_id,
+        )
+        if decode_end < prompt_token_count:
+            continue
+
+        for gid in range(int(prompt_token_count), decode_end + 1):
+            if gid in cumulative_dropped:
+                continue
+            kept_points.append(
+                {
+                    "snapshot_step": int(snapshot_step),
+                    "owner_step": int(owner_step_fn(gid)),
+                    "x": int(gid - prompt_token_count),
+                    "global_id": int(gid),
+                }
+            )
+
+    return kept_points
 
 
 def _step_label(step: int) -> str:
@@ -195,11 +267,32 @@ def _point_display_step(point: Dict[str, Any], step_key: str) -> int:
     return max(1, int(point.get(step_key, 1)))
 
 
+def _collect_plot_points(plot_data: Dict[str, Any], mode: str) -> Tuple[List[Dict[str, Any]], str]:
+    if mode == "kept":
+        return list(plot_data.get("kept_points", []) or []), "owner_step"
+    points = plot_data.get("final_points", []) or plot_data.get("points", []) or []
+    step_key = "owner_step" if points and "owner_step" in points[0] else "react_step"
+    return points, step_key
+
+
+def _point_y_value(point: Dict[str, Any], mode: str, step_key: str) -> int:
+    if mode == "kept":
+        return max(1, int(point.get("snapshot_step", 1) or 1))
+    return max(
+        1,
+        int(point.get("prune_step", point.get("react_step", point.get("event_id", 1))) or 1),
+    )
+
+
 def _plot_three_methods(
     method_plot_data: List[Tuple[str, Dict[str, Any]]],
     output_pdf: str,
+    mode: str = "dropped",
 ) -> None:
-    """Three rows: H2O / TOVA / StepKV dropped-token scatter (per-method x-axis)."""
+    """Three rows: H2O / TOVA / StepKV token scatter (per-method x-axis)."""
+    if mode not in ("dropped", "kept"):
+        raise ValueError(f"Unknown plot mode: {mode}")
+
     plt.rcParams.update(
         {
             "font.size": 12,
@@ -212,18 +305,14 @@ def _plot_three_methods(
     )
 
     all_owner_steps: set[int] = set()
-    all_prune_steps: set[int] = set()
+    all_y_steps: set[int] = set()
     for _, plot_data in method_plot_data:
-        points = plot_data.get("final_points", []) or plot_data.get("points", []) or []
-        step_key = "owner_step" if points and "owner_step" in points[0] else "react_step"
+        points, step_key = _collect_plot_points(plot_data, mode)
         for p in points:
             all_owner_steps.add(_point_display_step(p, step_key))
-            if "prune_step" in p:
-                all_prune_steps.add(max(1, int(p.get("prune_step", 1))))
-            elif "react_step" in p:
-                all_prune_steps.add(max(1, int(p.get("react_step", 1))))
+            all_y_steps.add(_point_y_value(p, mode, step_key))
     owner_steps = sorted(s for s in all_owner_steps if s >= 1)
-    prune_steps = sorted(s for s in all_prune_steps if s >= 1)
+    y_steps = sorted(s for s in all_y_steps if s >= 1)
     cmap = plt.get_cmap("tab10")
     owner_to_color = {s: cmap(i % 10) for i, s in enumerate(owner_steps)}
     legend_handles = [
@@ -243,9 +332,21 @@ def _plot_three_methods(
     fig, axes = plt.subplots(3, 1, figsize=(14, 11), sharex=False)
     fig.subplots_adjust(hspace=0.22, bottom=0.16, top=0.98)
 
+    y_label = "Retained after ReAct step" if mode == "kept" else "Evicted at ReAct step"
+    empty_msg = (
+        "No retained-token points under current config"
+        if mode == "kept"
+        else "No dropped-token points under current config"
+    )
+    legend_title = "Retained token origin" if mode == "kept" else "Dropped token origin"
+    footer = (
+        "Y-axis = cache snapshot after each ReAct step finishes (tokens not yet evicted)"
+        if mode == "kept"
+        else "Y-axis = when token was evicted; red ring = evicted earlier than token origin (cross-step drop)"
+    )
+
     for ax, (method_label, plot_data) in zip(axes, method_plot_data):
-        points = plot_data.get("final_points", []) or plot_data.get("points", []) or []
-        step_key = "owner_step" if points and "owner_step" in points[0] else "react_step"
+        points, step_key = _collect_plot_points(plot_data, mode)
         boundaries = plot_data.get("step_boundaries", []) or []
         y_vals: List[int] = []
         x_vals: List[int] = []
@@ -254,33 +355,40 @@ def _plot_three_methods(
             for owner_step in owner_steps:
                 matched = [p for p in points if _point_display_step(p, step_key) == owner_step]
                 xs = [p["x"] for p in matched]
-                ys = [
-                    max(1, int(p.get("prune_step", p.get("react_step", p.get("event_id", 1))) or 1))
-                    for p in matched
-                ]
+                ys = [_point_y_value(p, mode, step_key) for p in matched]
                 if not xs:
                     continue
                 y_vals.extend(int(y) for y in ys)
                 x_vals.extend(int(x) for x in xs)
-                edgecolors = []
-                for p in matched:
-                    prune_step = max(1, int(p.get("prune_step", p.get("react_step", 1)) or 1))
-                    owner = _point_display_step(p, step_key)
-                    edgecolors.append("#d62728" if prune_step < owner else "none")
-                ax.scatter(
-                    xs,
-                    ys,
-                    s=16,
-                    alpha=0.85,
-                    c=[owner_to_color[owner_step]],
-                    edgecolors=edgecolors,
-                    linewidths=[1.2 if ec != "none" else 0.0 for ec in edgecolors],
-                )
+                if mode == "kept":
+                    ax.scatter(
+                        xs,
+                        ys,
+                        s=12,
+                        alpha=0.75,
+                        c=[owner_to_color[owner_step]],
+                        edgecolors="none",
+                    )
+                else:
+                    edgecolors = []
+                    for p in matched:
+                        prune_step = max(1, int(p.get("prune_step", p.get("react_step", 1)) or 1))
+                        owner = _point_display_step(p, step_key)
+                        edgecolors.append("#d62728" if prune_step < owner else "none")
+                    ax.scatter(
+                        xs,
+                        ys,
+                        s=16,
+                        alpha=0.85,
+                        c=[owner_to_color[owner_step]],
+                        edgecolors=edgecolors,
+                        linewidths=[1.2 if ec != "none" else 0.0 for ec in edgecolors],
+                    )
         else:
             ax.text(
                 0.5,
                 0.5,
-                "No dropped-token points under current config",
+                empty_msg,
                 ha="center",
                 va="center",
                 transform=ax.transAxes,
@@ -291,7 +399,7 @@ def _plot_three_methods(
         for bd in boundaries:
             ax.axvline(float(bd["x"]), linestyle="--", linewidth=1.0, color="gray", alpha=0.7)
 
-        ax.set_ylabel("Evicted at ReAct step", fontsize=15)
+        ax.set_ylabel(y_label, fontsize=15)
         ax.set_title(method_label, loc="left", fontsize=15, pad=6)
         ax.yaxis.set_major_locator(mticker.MultipleLocator(1))
         if y_vals:
@@ -312,13 +420,13 @@ def _plot_three_methods(
             bbox_to_anchor=(0.5, 0.04),
             ncol=min(4, max(1, len(legend_labels))),
             frameon=False,
-            title="Dropped token origin",
+            title=legend_title,
         )
-        if prune_steps:
+        if y_steps:
             fig.text(
                 0.5,
                 0.085,
-                "Y-axis = when token was evicted; red ring = evicted earlier than token origin (cross-step drop)",
+                footer,
                 ha="center",
                 va="center",
                 fontsize=11,
@@ -328,6 +436,20 @@ def _plot_three_methods(
     os.makedirs(os.path.dirname(output_pdf) or ".", exist_ok=True)
     fig.savefig(output_pdf, bbox_inches="tight", pad_inches=0.08)
     plt.close(fig)
+
+
+def _plot_dropped_three_methods(
+    method_plot_data: List[Tuple[str, Dict[str, Any]]],
+    output_pdf: str,
+) -> None:
+    _plot_three_methods(method_plot_data, output_pdf, mode="dropped")
+
+
+def _plot_kept_three_methods(
+    method_plot_data: List[Tuple[str, Dict[str, Any]]],
+    output_pdf: str,
+) -> None:
+    _plot_three_methods(method_plot_data, output_pdf, mode="kept")
 
 
 def _run_one_method(
@@ -358,9 +480,10 @@ def _has_dropped_points(plot_data: Dict[str, Any]) -> bool:
     return bool(plot_data.get("final_points") or plot_data.get("points"))
 
 
+
 def main():
     parser = argparse.ArgumentParser(
-        description="Plot dropped decode tokens for H2O / TOVA / StepKV on HotpotQA."
+        description="Plot dropped/kept decode tokens for H2O / TOVA / StepKV on HotpotQA."
     )
     parser.add_argument("--sample_pos", type=int, default=0, help="Position in shuffled selected samples.")
     parser.add_argument(
@@ -469,8 +592,10 @@ def main():
     stamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     prefix = f"hotpot_drop_tokens_sample{chosen_pos}_{stamp}"
     json_path = os.path.join(args.output_dir, f"{prefix}.json")
-    pdf_path = os.path.join(args.output_dir, f"{prefix}.pdf")
-    points_jsonl_path = os.path.join(args.output_dir, f"{prefix}_points.jsonl")
+    dropped_pdf_path = os.path.join(args.output_dir, f"{prefix}_dropped.pdf")
+    kept_pdf_path = os.path.join(args.output_dir, f"{prefix}_kept.pdf")
+    dropped_points_jsonl_path = os.path.join(args.output_dir, f"{prefix}_dropped_points.jsonl")
+    kept_points_jsonl_path = os.path.join(args.output_dir, f"{prefix}_kept_points.jsonl")
     plot_error_path = os.path.join(args.output_dir, f"{prefix}_plot_error.txt")
 
     output_blob = {
@@ -494,13 +619,19 @@ def main():
     with open(json_path, "w", encoding="utf-8") as f:
         json.dump(output_blob, f, ensure_ascii=False, indent=2)
 
-    with open(points_jsonl_path, "w", encoding="utf-8") as f:
+    with open(dropped_points_jsonl_path, "w", encoding="utf-8") as f:
         for display_name, plot_data in method_plot_data:
             for p in plot_data.get("final_points", []) or plot_data.get("points", []) or []:
                 f.write(json.dumps({"method": display_name, **p}, ensure_ascii=False) + "\n")
 
+    with open(kept_points_jsonl_path, "w", encoding="utf-8") as f:
+        for display_name, plot_data in method_plot_data:
+            for p in plot_data.get("kept_points", []) or []:
+                f.write(json.dumps({"method": display_name, **p}, ensure_ascii=False) + "\n")
+
     try:
-        _plot_three_methods(method_plot_data, pdf_path)
+        _plot_dropped_three_methods(method_plot_data, dropped_pdf_path)
+        _plot_kept_three_methods(method_plot_data, kept_pdf_path)
     except Exception as e:
         with open(plot_error_path, "w", encoding="utf-8") as f:
             f.write(str(e))
@@ -508,8 +639,10 @@ def main():
         raise
 
     print(f"[DONE] Data saved: {json_path}")
-    print(f"[DONE] Point data saved: {points_jsonl_path}")
-    print(f"[DONE] Figure saved: {pdf_path}")
+    print(f"[DONE] Dropped points saved: {dropped_points_jsonl_path}")
+    print(f"[DONE] Kept points saved: {kept_points_jsonl_path}")
+    print(f"[DONE] Dropped figure saved: {dropped_pdf_path}")
+    print(f"[DONE] Kept figure saved: {kept_pdf_path}")
 
 
 if __name__ == "__main__":
