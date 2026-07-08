@@ -89,36 +89,42 @@ class TokenTracker:
             start = len(self.global_id_mapper)
             self.global_id_mapper.extend(range(start, old_cache_length))
 
+        old_mapper = list(self.global_id_mapper)
+
         # Identify discarded local indices
         all_local_indices = set(range(old_cache_length))
-        kept_set = set(kept_local_indices)
+        kept_set = set(int(i) for i in kept_local_indices)
         discarded_local_indices = list(all_local_indices - kept_set)
-        
-        # Convert local indices to global IDs
-        discarded_global_ids = [self.global_id_mapper[i] for i in sorted(discarded_local_indices)]
-        
+
+        # Convert local indices to global IDs using pre-prune mapper
+        discarded_global_ids = [
+            old_mapper[i] for i in sorted(discarded_local_indices) if 0 <= int(i) < len(old_mapper)
+        ]
+
+        kept_prunable_global = []
+        if prune_start is not None and prune_end is not None:
+            ps, pe = int(prune_start), int(prune_end)
+            kept_prunable_global = [
+                old_mapper[i]
+                for i in sorted(kept_set)
+                if ps <= int(i) < pe and 0 <= int(i) < len(old_mapper)
+            ]
+
         # Update mapper to only keep the kept indices
-        new_mapper = [self.global_id_mapper[i] for i in sorted(kept_local_indices)]
+        new_mapper = [old_mapper[i] for i in sorted(kept_set) if 0 <= int(i) < len(old_mapper)]
         self.global_id_mapper = new_mapper
         self.cache_length = len(self.global_id_mapper)
-        
+
         # Record the event
         if step not in self.step_pruning_events:
             self.step_pruning_events[step] = []
         self.step_pruning_events[step].extend(discarded_global_ids)
         self.total_discarded += len(discarded_global_ids)
 
-        if prune_start is not None and prune_end is not None:
-            ps, pe = int(prune_start), int(prune_end)
-            kept_prunable_global = [
-                self.global_id_mapper[i]
-                for i in sorted(kept_set)
-                if ps <= int(i) < pe
-            ]
-            if kept_prunable_global:
-                if step not in self.step_pruning_kept_events:
-                    self.step_pruning_kept_events[step] = []
-                self.step_pruning_kept_events[step].extend(kept_prunable_global)
+        if kept_prunable_global:
+            if step not in self.step_pruning_kept_events:
+                self.step_pruning_kept_events[step] = []
+            self.step_pruning_kept_events[step].extend(kept_prunable_global)
 
     def get_step_discarded_tokens(self, step):
         """Return sorted global token IDs discarded in this step."""
