@@ -558,6 +558,91 @@ def _build_normalized_series(
     return out
 
 
+def _fmt_time_seconds(v: Optional[float]) -> str:
+    if v is None:
+        return ""
+    if v >= 3600:
+        return f"{v / 3600:.1f}h"
+    if v >= 120:
+        return f"{v / 60:.1f}m"
+    return f"{v:.1f}s"
+
+
+def _fmt_cache_tokens(v: Optional[float]) -> str:
+    if v is None:
+        return ""
+    iv = int(round(float(v)))
+    if iv >= 1_000_000:
+        return f"{iv / 1_000_000:.1f}M tok"
+    if iv >= 1000:
+        return f"{iv / 1000:.1f}k tok"
+    return f"{iv} tok"
+
+
+def _tangent_label_rotation(theta_rad: float) -> float:
+    """Text rotation (deg) parallel to the radar axis tangent at angle theta."""
+    deg = float(np.degrees(theta_rad))
+    rot = deg - 90.0
+    if rot > 90.0:
+        rot -= 180.0
+    elif rot < -90.0:
+        rot += 180.0
+    return rot
+
+
+def _outer_axis_label_text(
+    display_name: str,
+    axis_key: str,
+    group: str,
+    axis_scale: Optional[float],
+) -> str:
+    if group != "cost" or axis_scale is None:
+        return display_name
+    if "time" in axis_key:
+        return f"{display_name}\n(max {_fmt_time_seconds(axis_scale)})"
+    if "cache" in axis_key:
+        return f"{display_name}\n(max {_fmt_cache_tokens(axis_scale)})"
+    return display_name
+
+
+def _style_radar_spokes(ax: plt.Axes, *, linewidth: float = 2.4) -> None:
+    """Bold radial spokes (one per dimension)."""
+    for line in ax.xaxis.get_gridlines():
+        line.set_linestyle("-")
+        line.set_color("#B0B0B0")
+        line.set_linewidth(linewidth)
+        line.set_alpha(0.95)
+
+
+def _place_axis_labels_tangent(
+    ax: plt.Axes,
+    angles: Sequence[float],
+    radial_max: float,
+    *,
+    labelsize: int,
+    axis_scales: Optional[Dict[str, float]] = None,
+    label_radius_factor: float = 1.10,
+) -> None:
+    ax.set_xticklabels([""] * len(angles))
+    label_r = float(radial_max) * float(label_radius_factor)
+    scales = axis_scales or {}
+    for angle, (key, display_name, _field, group) in zip(angles, AXIS_SPECS):
+        text = _outer_axis_label_text(display_name, key, group, scales.get(key))
+        rot = _tangent_label_rotation(angle)
+        ax.text(
+            angle,
+            label_r,
+            text,
+            ha="center",
+            va="center",
+            fontsize=labelsize,
+            rotation=rot,
+            rotation_mode="anchor",
+            color="#222222",
+            zorder=6,
+        )
+
+
 def _setup_style(labelsize: int, ticksize: int) -> None:
     plt.rcParams.update(
         {
@@ -587,11 +672,12 @@ def plot_radar_single(
     angles = np.linspace(0, 2 * np.pi, n_axes, endpoint=False).tolist()
     angles_closed = angles + angles[:1]
 
-    fig, ax = plt.subplots(figsize=(6.8, 6.8), subplot_kw={"polar": True})
+    fig, ax = plt.subplots(figsize=(7.2, 7.2), subplot_kw={"polar": True})
     ax.set_theta_offset(np.pi / 2)
     ax.set_theta_direction(-1)
     ax.set_xticks(angles)
-    ax.set_xticklabels(axis_labels, fontsize=labelsize)
+
+    axis_scales = series_list[0].get("axis_scale", {}) if series_list else {}
 
     all_norm_vals = [
         float(v) for spec in series_list for v in spec["normalized"].values()
@@ -602,7 +688,6 @@ def plot_radar_single(
     outer = round(radial_max, 2)
     if outer > 1.0 and outer not in tick_vals:
         tick_vals.append(outer)
-    # Concentric circles at tick positions; hide numeric labels only.
     ax.set_yticks(tick_vals)
     ax.set_yticklabels([""] * len(tick_vals))
     ax.grid(True, linestyle=":", color="#CCCCCC", linewidth=0.8)
@@ -610,8 +695,10 @@ def plot_radar_single(
         line.set_linestyle(":")
         line.set_color("#CCCCCC")
         line.set_linewidth(0.8)
+    _style_radar_spokes(ax, linewidth=2.4)
     ax.tick_params(axis="y", labelleft=False, labelright=False)
     ax.spines["polar"].set_color("#AAAAAA")
+    ax.spines["polar"].set_linewidth(1.0)
 
     for spec in series_list:
         label = spec["label"]
@@ -631,6 +718,24 @@ def plot_radar_single(
             zorder=zorder,
         )
         ax.fill(angles_closed, vals_closed, color=color, alpha=fill_a, zorder=1)
+        ax.scatter(
+            angles,
+            vals,
+            s=46,
+            facecolors=color,
+            edgecolors="white",
+            linewidths=0.9,
+            zorder=zorder + 2,
+        )
+
+    _place_axis_labels_tangent(
+        ax,
+        angles,
+        radial_max,
+        labelsize=labelsize,
+        axis_scales=axis_scales,
+        label_radius_factor=1.12,
+    )
 
     ax.legend(
         loc="upper right",
