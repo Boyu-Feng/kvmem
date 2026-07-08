@@ -372,6 +372,64 @@ def _panel_x_span(points: Sequence[Dict[str, Any]]) -> int:
     return max(1, max(xs) - min(xs) + 1)
 
 
+def _draw_react_step_segment_labels(
+    ax: plt.Axes,
+    boundaries: Sequence[Dict[str, Any]],
+    x_left: float,
+    x_right: float,
+    *,
+    fontsize: float = 18,
+    y_offset: float = -0.035,
+) -> None:
+    """Label each ReAct step segment under the x-axis (Step 1, Step 2, ...)."""
+    bds = sorted(boundaries, key=lambda b: float(b["x"]))
+    if not bds:
+        return
+    prev = float(x_left)
+    for bd in bds:
+        right = float(bd["x"])
+        step = int(bd.get("step", 0))
+        if step >= 1 and right > prev:
+            cx = (prev + right) / 2.0
+            ax.text(
+                cx,
+                y_offset,
+                f"Step {step}",
+                transform=ax.get_xaxis_transform(),
+                ha="center",
+                va="top",
+                fontsize=fontsize,
+                clip_on=False,
+            )
+        prev = right
+
+
+def _plot_style(mode: str) -> Dict[str, float]:
+    if mode == "dropped":
+        return {
+            "axis_label": 26,
+            "tick": 22,
+            "title": 20,
+            "step_seg_label": 20,
+            "panel_h": 2.35,
+            "fig_w_min": 14.0,
+            "fig_w_max": 24.0,
+            "fig_w_scale": 0.032,
+            "labelpad": 3,
+        }
+    return {
+        "axis_label": 20,
+        "tick": 17,
+        "title": 18,
+        "step_seg_label": 16,
+        "panel_h": 2.8,
+        "fig_w_min": 16.0,
+        "fig_w_max": 32.0,
+        "fig_w_scale": 0.045,
+        "labelpad": 4,
+    }
+
+
 def _max_react_step_in_plot_data(plot_data: Dict[str, Any], mode: str) -> int:
     max_step = 1
     for bd in plot_data.get("step_boundaries", []) or []:
@@ -392,13 +450,14 @@ def _plot_three_methods(
     if mode not in ("dropped", "kept"):
         raise ValueError(f"Unknown plot mode: {mode}")
 
+    style = _plot_style(mode)
     plt.rcParams.update(
         {
-            "font.size": 14,
-            "axes.labelsize": 20,
-            "axes.titlesize": 18,
-            "xtick.labelsize": 17,
-            "ytick.labelsize": 17,
+            "font.size": style["tick"],
+            "axes.labelsize": style["axis_label"],
+            "axes.titlesize": style["title"],
+            "xtick.labelsize": style["tick"],
+            "ytick.labelsize": style["tick"],
             "legend.fontsize": 14,
         }
     )
@@ -434,13 +493,14 @@ def _plot_three_methods(
     if max_react_steps is not None and int(max_react_steps) > 0:
         global_y_max = min(global_y_max, int(max_react_steps))
 
-    fig_w = max(18.0, min(40.0, 14.0 + panel_max_x * 0.055))
-    fig_h = max(13.0, 4.8 * len(method_plot_data))
-    fig, axes = plt.subplots(len(method_plot_data), 1, figsize=(fig_w, fig_h), sharex=False)
-    if len(method_plot_data) == 1:
+    n_panels = len(method_plot_data)
+    fig_w = max(style["fig_w_min"], min(style["fig_w_max"], 10.0 + panel_max_x * style["fig_w_scale"]))
+    fig_h = style["panel_h"] * n_panels
+    fig, axes = plt.subplots(n_panels, 1, figsize=(fig_w, fig_h), sharex=False)
+    if n_panels == 1:
         axes = [axes]
-    bottom_margin = 0.10 if mode == "kept" and legend_handles else 0.07
-    fig.subplots_adjust(hspace=0.24, bottom=bottom_margin, top=0.97)
+    bottom_margin = 0.14 if mode == "dropped" else (0.10 if mode == "kept" and legend_handles else 0.08)
+    fig.subplots_adjust(hspace=0.30 if mode == "dropped" else 0.24, bottom=bottom_margin, top=0.96)
 
     y_label = "Cumulative keep after step" if mode == "kept" else "Evicted at ReAct step"
     empty_msg = (
@@ -449,11 +509,14 @@ def _plot_three_methods(
         else "No dropped-token points under current config"
     )
     legend_title = "Kept token origin"
+    last_boundaries: List[Dict[str, Any]] = []
 
     for ax_idx, (method_label, plot_data) in enumerate(method_plot_data):
         ax = axes[ax_idx]
         points, step_key = _collect_plot_points(plot_data, mode)
         boundaries = plot_data.get("step_boundaries", []) or []
+        if ax_idx == n_panels - 1:
+            last_boundaries = boundaries
         x_vals: List[int] = []
 
         if points:
@@ -512,16 +575,35 @@ def _plot_three_methods(
         for bd in boundaries:
             ax.axvline(float(bd["x"]), linestyle="--", linewidth=1.0, color="gray", alpha=0.7)
 
-        ax.set_ylabel(y_label, fontsize=20)
-        ax.set_title(method_label, loc="left", fontsize=18, pad=8)
+        ax.set_ylabel(y_label, fontsize=style["axis_label"], labelpad=style["labelpad"])
+        ax.set_title(method_label, loc="left", fontsize=style["title"], pad=6)
+        ax.tick_params(axis="both", which="major", pad=2)
         ax.yaxis.set_major_locator(mticker.MultipleLocator(1))
         ax.set_ylim(0.5, global_y_max + 0.5)
-        ax.set_yticks(list(range(1, global_y_max + 1)))
+        y_ticks = list(range(1, global_y_max + 1))
+        ax.set_yticks(y_ticks)
+        if mode == "dropped":
+            ax.set_yticklabels([f"Step {s}" for s in y_ticks])
         if x_vals:
             ax.set_xlim(-0.5, max(x_vals) + 0.5)
         ax.grid(True, alpha=0.25)
 
-    axes[-1].set_xlabel("Key Position Index (No Prefill)", fontsize=20)
+    bottom_ax = axes[-1]
+    bottom_ax.set_xlabel(
+        "Key Position Index (No Prefill)",
+        fontsize=style["axis_label"],
+        labelpad=style["labelpad"],
+    )
+    if mode == "dropped" and last_boundaries:
+        x_left, x_right = bottom_ax.get_xlim()
+        _draw_react_step_segment_labels(
+            bottom_ax,
+            last_boundaries,
+            x_left,
+            x_right,
+            fontsize=style["step_seg_label"],
+            y_offset=-0.04,
+        )
 
     if mode == "kept" and legend_handles:
         fig.legend(
@@ -535,7 +617,7 @@ def _plot_three_methods(
         )
 
     os.makedirs(os.path.dirname(output_pdf) or ".", exist_ok=True)
-    fig.savefig(output_pdf, bbox_inches="tight", pad_inches=0.12)
+    fig.savefig(output_pdf, bbox_inches="tight", pad_inches=0.06)
     plt.close(fig)
 
 
