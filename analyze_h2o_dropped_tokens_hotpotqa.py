@@ -380,9 +380,10 @@ def _plot_style(mode: str) -> Dict[str, float]:
             "title": 18,
             "legend_font": 16,
             "legend_marker": 11,
-            "panel_h": 3.4,
-            "fig_w": 14.0,
-            "labelpad": 4,
+            "legend_ncol": 4,
+            "panel_h": 4.0,
+            "fig_w": 16.0,
+            "labelpad": 6,
         }
     return {
         "axis_label": 20,
@@ -390,6 +391,7 @@ def _plot_style(mode: str) -> Dict[str, float]:
         "title": 18,
         "legend_font": 14,
         "legend_marker": 9,
+        "legend_ncol": 4,
         "panel_h": 2.8,
         "fig_w": 14.0,
         "fig_w_min": 16.0,
@@ -397,6 +399,11 @@ def _plot_style(mode: str) -> Dict[str, float]:
         "fig_w_scale": 0.045,
         "labelpad": 4,
     }
+
+
+def _legend_bottom_margin(n_items: int, ncol: int) -> float:
+    rows = max(1, (int(n_items) + int(ncol) - 1) // int(ncol))
+    return 0.08 + 0.045 * rows
 
 
 def _max_react_step_in_plot_data(plot_data: Dict[str, Any], mode: str) -> int:
@@ -474,10 +481,15 @@ def _plot_three_methods(
     if n_panels == 1:
         axes = [axes]
     has_bottom_legend = bool(legend_handles) and mode in ("dropped", "kept")
-    bottom_margin = 0.11 if mode == "dropped" and has_bottom_legend else (
-        0.10 if mode == "kept" and has_bottom_legend else 0.08
+    legend_ncol = int(style.get("legend_ncol", 4))
+    if has_bottom_legend:
+        legend_ncol = min(legend_ncol, max(1, len(legend_labels)))
+    bottom_margin = (
+        _legend_bottom_margin(len(legend_labels), legend_ncol)
+        if has_bottom_legend
+        else 0.08
     )
-    fig.subplots_adjust(hspace=0.26, bottom=bottom_margin, top=0.97)
+    fig.subplots_adjust(hspace=0.32, bottom=bottom_margin, top=0.97, left=0.10, right=0.98)
 
     y_label = "Cumulative keep after step" if mode == "kept" else "Evicted at ReAct step"
     empty_msg = (
@@ -549,7 +561,8 @@ def _plot_three_methods(
         for bd in boundaries:
             ax.axvline(float(bd["x"]), linestyle="--", linewidth=1.0, color="gray", alpha=0.7)
 
-        ax.set_ylabel(y_label, fontsize=style["axis_label"], labelpad=style["labelpad"])
+        if ax_idx == n_panels // 2:
+            ax.set_ylabel(y_label, fontsize=style["axis_label"], labelpad=style["labelpad"])
         ax.set_title(method_label, loc="left", fontsize=style["title"], pad=6)
         ax.tick_params(axis="both", which="major", labelsize=style["tick"], pad=3)
         ax.yaxis.set_major_locator(mticker.MultipleLocator(1))
@@ -568,20 +581,21 @@ def _plot_three_methods(
     if has_bottom_legend:
         legend_kwargs: Dict[str, Any] = {
             "loc": "upper center",
-            "bbox_to_anchor": (0.5, 0.01 if mode == "dropped" else 0.04),
-            "ncol": min(7 if mode == "dropped" else 4, max(1, len(legend_labels))),
+            "bbox_to_anchor": (0.5, 0.02),
+            "ncol": legend_ncol,
             "frameon": False,
             "fontsize": style["legend_font"],
-            "handlelength": 1.4,
-            "handletextpad": 0.5,
-            "columnspacing": 1.2,
+            "handlelength": 1.6,
+            "handletextpad": 0.6,
+            "columnspacing": 1.6,
+            "borderaxespad": 0.0,
         }
         if legend_title:
             legend_kwargs["title"] = legend_title
         fig.legend(legend_handles, legend_labels, **legend_kwargs)
 
     os.makedirs(os.path.dirname(output_pdf) or ".", exist_ok=True)
-    fig.savefig(output_pdf, bbox_inches="tight", pad_inches=0.06)
+    fig.savefig(output_pdf, bbox_inches="tight", pad_inches=0.10)
     plt.close(fig)
 
 
