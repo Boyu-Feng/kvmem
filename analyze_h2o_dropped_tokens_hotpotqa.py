@@ -350,17 +350,26 @@ def _point_y_value(point: Dict[str, Any], mode: str, step_key: str) -> int:
     )
 
 
-def _marker_size_for_count(n_points: int) -> float:
-    """Small solid markers; shrink only when there are many tokens."""
-    if n_points > 1500:
-        return 2.0
-    if n_points > 800:
-        return 3.0
-    if n_points > 400:
-        return 4.0
-    if n_points > 150:
-        return 5.0
-    return 6.0
+def _marker_size_for_panel(n_points: int, x_span: int) -> float:
+    """Scatter area (points^2). Use x-span density so markers can be larger when spread out."""
+    span = max(1, int(x_span))
+    avg_per_x = float(n_points) / span
+    if avg_per_x > 8:
+        return 10.0
+    if avg_per_x > 4:
+        return 18.0
+    if avg_per_x > 2:
+        return 28.0
+    if avg_per_x > 1:
+        return 38.0
+    return 50.0
+
+
+def _panel_x_span(points: Sequence[Dict[str, Any]]) -> int:
+    if not points:
+        return 1
+    xs = [int(p["x"]) for p in points]
+    return max(1, max(xs) - min(xs) + 1)
 
 
 def _max_react_step_in_plot_data(plot_data: Dict[str, Any], mode: str) -> int:
@@ -385,20 +394,22 @@ def _plot_three_methods(
 
     plt.rcParams.update(
         {
-            "font.size": 12,
-            "axes.labelsize": 15,
-            "axes.titlesize": 15,
-            "xtick.labelsize": 13,
-            "ytick.labelsize": 13,
-            "legend.fontsize": 12,
+            "font.size": 14,
+            "axes.labelsize": 20,
+            "axes.titlesize": 18,
+            "xtick.labelsize": 17,
+            "ytick.labelsize": 17,
+            "legend.fontsize": 14,
         }
     )
 
     all_owner_steps: set[int] = set()
+    panel_max_x = 0
     for _, plot_data in method_plot_data:
         points, step_key = _collect_plot_points(plot_data, mode)
         for p in points:
             all_owner_steps.add(_point_display_step(p, step_key))
+            panel_max_x = max(panel_max_x, int(p["x"]))
     owner_steps = sorted(s for s in all_owner_steps if s >= 1)
     cmap = plt.get_cmap("tab10")
     owner_to_color = {s: cmap(i % 10) for i, s in enumerate(owner_steps)}
@@ -409,7 +420,7 @@ def _plot_three_methods(
             marker="o",
             color="w",
             markerfacecolor=owner_to_color[s],
-            markersize=5,
+            markersize=9,
             linestyle="None",
         )
         for s in owner_steps
@@ -423,8 +434,13 @@ def _plot_three_methods(
     if max_react_steps is not None and int(max_react_steps) > 0:
         global_y_max = min(global_y_max, int(max_react_steps))
 
-    fig, axes = plt.subplots(3, 1, figsize=(14, 11), sharex=False)
-    fig.subplots_adjust(hspace=0.22, bottom=0.13, top=0.98)
+    fig_w = max(18.0, min(40.0, 14.0 + panel_max_x * 0.055))
+    fig_h = max(13.0, 4.8 * len(method_plot_data))
+    fig, axes = plt.subplots(len(method_plot_data), 1, figsize=(fig_w, fig_h), sharex=False)
+    if len(method_plot_data) == 1:
+        axes = [axes]
+    bottom_margin = 0.10 if mode == "kept" and legend_handles else 0.07
+    fig.subplots_adjust(hspace=0.24, bottom=bottom_margin, top=0.97)
 
     y_label = "Cumulative keep after step" if mode == "kept" else "Evicted at ReAct step"
     empty_msg = (
@@ -432,7 +448,7 @@ def _plot_three_methods(
         if mode == "kept"
         else "No dropped-token points under current config"
     )
-    legend_title = "Kept token origin" if mode == "kept" else "Dropped token origin"
+    legend_title = "Kept token origin"
 
     for ax_idx, (method_label, plot_data) in enumerate(method_plot_data):
         ax = axes[ax_idx]
@@ -448,7 +464,7 @@ def _plot_three_methods(
                 if not xs:
                     continue
                 x_vals.extend(int(x) for x in xs)
-                size = _marker_size_for_count(len(xs))
+                size = _marker_size_for_panel(len(xs), _panel_x_span(matched))
                 face = owner_to_color[owner_step]
                 if mode == "kept":
                     ax.scatter(
@@ -496,8 +512,8 @@ def _plot_three_methods(
         for bd in boundaries:
             ax.axvline(float(bd["x"]), linestyle="--", linewidth=1.0, color="gray", alpha=0.7)
 
-        ax.set_ylabel(y_label, fontsize=15)
-        ax.set_title(method_label, loc="left", fontsize=15, pad=6)
+        ax.set_ylabel(y_label, fontsize=20)
+        ax.set_title(method_label, loc="left", fontsize=18, pad=8)
         ax.yaxis.set_major_locator(mticker.MultipleLocator(1))
         ax.set_ylim(0.5, global_y_max + 0.5)
         ax.set_yticks(list(range(1, global_y_max + 1)))
@@ -505,21 +521,21 @@ def _plot_three_methods(
             ax.set_xlim(-0.5, max(x_vals) + 0.5)
         ax.grid(True, alpha=0.25)
 
-    axes[-1].set_xlabel("Key Position Index (No Prefill)", fontsize=15)
+    axes[-1].set_xlabel("Key Position Index (No Prefill)", fontsize=20)
 
-    if legend_handles:
+    if mode == "kept" and legend_handles:
         fig.legend(
             legend_handles,
             legend_labels,
             loc="upper center",
-            bbox_to_anchor=(0.5, 0.06),
+            bbox_to_anchor=(0.5, 0.04),
             ncol=min(4, max(1, len(legend_labels))),
             frameon=False,
             title=legend_title,
         )
 
     os.makedirs(os.path.dirname(output_pdf) or ".", exist_ok=True)
-    fig.savefig(output_pdf, bbox_inches="tight", pad_inches=0.08)
+    fig.savefig(output_pdf, bbox_inches="tight", pad_inches=0.12)
     plt.close(fig)
 
 
