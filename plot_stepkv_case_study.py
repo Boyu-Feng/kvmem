@@ -7,18 +7,14 @@ StepKV gap case study outputs (baseline fail / StepKV success):
   - *_global_heatmap.pdf  : full-decode causal score heatmap (log + percentile norm)
 
 Example:
-  # List selectable samples in the current subset
-  python plot_stepkv_case_study.py --dataset hotpotqa --list_samples
+  # Scan qualifying gap samples and save manifest (run once)
+  python plot_stepkv_case_study.py --dataset hotpotqa --scan_gap_only --scan_limit 100
 
-  # Pick by position in selected subset (recommended)
+  # Run case study from saved manifest (no rescan)
+  python plot_stepkv_case_study.py --dataset hotpotqa --gap_index 0
+
+  # Or pick by saved pos directly
   python plot_stepkv_case_study.py --dataset hotpotqa --sample_pos 12
-
-  # Pick by original dataset index or sample id
-  python plot_stepkv_case_study.py --dataset hotpotqa --orig_idx 42
-  python plot_stepkv_case_study.py --dataset hotpotqa --sample_id dev_123
-
-  # Auto-scan gap samples and pick the N-th one (baseline fail / StepKV success)
-  python plot_stepkv_case_study.py --dataset hotpotqa --gap_index 1 --scan_limit 50
 """
 
 from __future__ import annotations
@@ -27,6 +23,7 @@ import argparse
 import json
 import os
 from dataclasses import asdict, dataclass
+from datetime import datetime
 from typing import Any, Dict, List, Optional, Sequence, Tuple
 
 import matplotlib
@@ -529,9 +526,176 @@ def _print_gap_sample_catalog(
         print(f"{gap_idx:7d}  {pos:5d}  {orig_idx:8d}  {sid:<24}  {q}  | {' '.join(marks)}")
 
 
-def _load_success_gap_positions(path: str) -> List[int]:
+HEATMAP_MAX_LEN = 140
+DEFAULT_CASE_STUDY_DIR = os.path.join("results", "stepkv_case_study")
+
+
+def _gap_manifest_path(args, *, explicit: str = "") -> str:
+    if explicit:
+        return explicit
+    return os.path.join(
+        DEFAULT_CASE_STUDY_DIR,
+        f"{args.dataset}_seed{int(args.seed)}_ns{int(args.num_samples)}_gap_manifest.json",
+    )
+
+
+def _serialize_gap_sample(
+    gap_index: int,
+    pos: int,
+    orig_idx: int,
+    sample: Dict[str, Any],
+    row: Dict[str, Any],
+) -> Dict[str, Any]:
+    evals = row.get("evaluations", {}) or {}
+    diff = row.get("discard_diff", {}) or {}
+    counts = diff.get("counts", {}) or {}
+    question = str(sample.get("question", "") or "").replace("\n", " ").strip()
+    return {
+        "gap_index": int(gap_index),
+        "sample_pos": int(pos),
+        "orig_idx": int(orig_idx),
+        "sample_id": sample.get("id", ""),
+        "question": question,
+        "gold_answer": sample.get("answer", ""),
+        "category": row.get("category", ""),
+        "evaluations": evals,
+        "discard_diff_counts": counts,
+        "only_baseline_not_ours_count": int(counts.get("only_baseline_not_ours", 0)),
+    }
+
+
+def _build_gap_manifest(
+    args,
+    found: List[Tuple[int, int, Dict[str, Any], Dict[str, Any]]],
+    *,
+    scan_start: int,
+    scan_end: int,
+) -> Dict[str, Any]:
+    samples = [
+        _serialize_gap_sample(gap_idx, pos, orig_idx, sample, row)
+        for gap_idx, (pos, orig_idx, sample, row) in enumerate(found)
+    ]
+    positions = [int(s["sample_pos"]) for s in samples]
+    stamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    return {
+        "manifest_version": 1,
+        "created_at": stamp,
+        "updated_at": stamp,
+        "dataset": args.dataset,
+        "seed": int(args.seed),
+        "num_samples": int(args.num_samples),
+        "max_steps": str(args.max_steps),
+        "cache_ratio": float(args.cache_ratio),
+        "baseline_fail_mode": str(args.baseline_fail_mode),
+        "criteria": "baseline_fail_ours_success",
+        "scan": {
+            "scan_start": int(scan_start),
+            "scan_end": int(scan_end),
+            "scan_limit": int(args.scan_limit),
+            "found_count": len(samples),
+        },
+        "aggregate": {
+            "baseline_fail_ours_success_count": len(samples),
+            "baseline_fail_ours_success_positions": positions,
+        },
+        "samples": samples,
+    }
+
+
+def _save_gap_manifest(path: str, payload: Dict[str, Any]) -> None:
+    os.makedirs(os.path.dirname(path) or ".", exist_ok=True)
+    _save_json(path, payload)
+
+
+def _load_gap_manifest(path: str) -> Dict[str, Any]:
     with open(path, "r", encoding="utf-8") as f:
-        data = json.load(f)
+        return json.load(f)
+
+
+def _manifest_matches_args(manifest: Dict[str, Any], args) -> bool:
+    return (
+        str(manifest.get("dataset", "")) == str(args.dataset)
+        and int(manifest.get("seed", -1)) == int(args.seed)
+        and int(manifest.get("num_samples", -1)) == int(args.num_samples)
+    )
+
+
+def _resolve_gap_manifest_path(args) -> str:
+    if args.success_gap_json:
+        return args.success_gap_json
+    return _gap_manifest_path(args, explicit=args.gap_manifest)
+
+
+def _load_success_gap_positions(path: str) -> List[int]:
+    data = _load_gap_manifest(path)
+    positions = data.get("aggregate", {}).get("baseline_fail_ours_success_positions")
+    if positions:
+        return [int(p) for p in positions]
+    return [
+        int(row["sample_pos"])
+        for row in data.get("samples", []) or []
+        if row.get("category") == "baseline_fail_ours_success"
+    ]
+
+
+def _try_load_saved_gap_manifest(args) -> Optional[Dict[str, Any]]:
+    path = _resolve_gap_manifest_path(args)
+    if not os.path.isfile(path):
+        return None
+    manifest = _load_gap_manifest(path)
+    if not _manifest_matches_args(manifest, args):
+        print(
+            f"[WARN] Gap manifest exists but config mismatch, ignore: {path} "
+            f"(dataset/seed/num_samples differ from current args)."
+        )
+        return None
+    return manifest
+
+
+def _save_found_gap_manifest(
+    args,
+    found: List[Tuple[int, int, Dict[str, Any], Dict[str, Any]]],
+    *,
+    scan_start: int,
+    scan_end: int,
+) -> str:
+    path = _resolve_gap_manifest_path(args)
+    payload = _build_gap_manifest(args, found, scan_start=scan_start, scan_end=scan_end)
+    _save_gap_manifest(path, payload)
+    return path
+
+
+def _resolve_from_manifest(
+    manifest: Dict[str, Any],
+    gap_index: int,
+    selected: List[Tuple[int, Dict[str, Any]]],
+) -> Tuple[int, int, Dict[str, Any], Dict[str, Any]]:
+    samples = list(manifest.get("samples", []) or [])
+    if samples:
+        if gap_index < 0 or gap_index >= len(samples):
+            raise IndexError(f"gap_index={gap_index} out of range for {len(samples)} saved gap sample(s)")
+        entry = samples[gap_index]
+        pos = int(entry["sample_pos"])
+    else:
+        positions = _load_success_gap_positions_from_data(manifest)
+        if gap_index < 0 or gap_index >= len(positions):
+            raise IndexError(f"gap_index={gap_index} out of range for {len(positions)} saved gap sample(s)")
+        pos = int(positions[gap_index])
+        entry = {"sample_pos": pos, "category": "baseline_fail_ours_success"}
+
+    if pos < 0 or pos >= len(selected):
+        raise IndexError(f"sample_pos={pos} from manifest out of range (total {len(selected)})")
+    orig_idx, sample = selected[pos]
+    row = {
+        **entry,
+        "sample_pos": pos,
+        "orig_idx": orig_idx,
+        "discard_diff": {"counts": entry.get("discard_diff_counts", {})},
+    }
+    return pos, orig_idx, sample, row
+
+
+def _load_success_gap_positions_from_data(data: Dict[str, Any]) -> List[int]:
     positions = data.get("aggregate", {}).get("baseline_fail_ours_success_positions")
     if positions:
         return [int(p) for p in positions]
@@ -553,26 +717,10 @@ def _scan_success_gap_samples(selected, retriever, args):
         row = run_success_gap_one_sample(sample, retriever, args, pos, orig_idx)
         if row.get("category") == "baseline_fail_ours_success":
             found.append((pos, orig_idx, sample, row))
-    return found
+    return found, scan_start, end
 
 
 def _resolve_success_gap_sample(selected, retriever, args):
-    if args.success_gap_json:
-        positions = _load_success_gap_positions(args.success_gap_json)
-        if not positions:
-            raise RuntimeError(f"No gap samples in {args.success_gap_json}")
-        gap_index = int(args.gap_index)
-        if gap_index < 0 or gap_index >= len(positions):
-            raise IndexError(
-                f"gap_index={gap_index} out of range for {len(positions)} gap sample(s) in JSON"
-            )
-        pos = positions[gap_index]
-        if pos < 0 or pos >= len(selected):
-            raise IndexError(f"sample_pos={pos} from JSON out of range (total {len(selected)})")
-        orig_idx, sample = selected[pos]
-        row = run_success_gap_one_sample(sample, retriever, args, pos, orig_idx)
-        return pos, orig_idx, sample, row
-
     picked = _pick_case_study_sample(
         selected,
         sample_pos=args.sample_pos,
@@ -592,12 +740,27 @@ def _resolve_success_gap_sample(selected, retriever, args):
             )
         return pos, orig_idx, sample, row
 
-    found = _scan_success_gap_samples(selected, retriever, args)
+    manifest = None
+    if args.success_gap_json or args.use_saved_gap_manifest:
+        manifest = _try_load_saved_gap_manifest(args)
+    if manifest is not None:
+        gap_index = int(args.gap_index)
+        path = _resolve_gap_manifest_path(args)
+        pos, orig_idx, sample, row = _resolve_from_manifest(manifest, gap_index, selected)
+        print(
+            f"[INFO] using saved gap manifest gap_index={gap_index} -> pos={pos} "
+            f"orig_idx={orig_idx} id={sample.get('id', '')} ({path})"
+        )
+        return pos, orig_idx, sample, row
+
+    found, scan_start, scan_end = _scan_success_gap_samples(selected, retriever, args)
     if not found:
         raise RuntimeError(
             "No baseline_fail_ours_success sample found in scan range. "
-            "Increase --scan_limit or pick explicitly with --sample_pos / --orig_idx / --sample_id."
+            "Increase --scan_limit or run --scan_gap_only first to build a manifest."
         )
+    manifest_path = _save_found_gap_manifest(args, found, scan_start=scan_start, scan_end=scan_end)
+    print(f"[INFO] saved gap manifest ({len(found)} samples): {manifest_path}")
     gap_index = int(args.gap_index)
     if gap_index < 0 or gap_index >= len(found):
         raise IndexError(f"gap_index={gap_index} but only {len(found)} gap sample(s) found")
@@ -635,8 +798,8 @@ def main() -> None:
             "  --sample_id ID   dataset sample id string\n"
             "  --gap_index N    when auto-scanning, use the N-th gap sample (default 0)\n"
             "\n"
-            "If none of sample_pos/orig_idx/sample_id is given, the script scans forward\n"
-            "from --scan_start for baseline_fail_ours_success samples."
+            "If none of sample_pos/orig_idx/sample_id is given, the script uses a saved gap\n"
+            "manifest when available; otherwise it scans and writes one."
         ),
     )
     parser.add_argument("--dataset", choices=["hotpotqa", "2wiki", "musique"], default="hotpotqa")
@@ -667,7 +830,33 @@ def main() -> None:
     parser.add_argument(
         "--list_gap_samples",
         action="store_true",
-        help="Scan (or read --success_gap_json) and list gap samples, then exit.",
+        help="Scan (or read saved manifest) and list gap samples, then exit.",
+    )
+    parser.add_argument(
+        "--scan_gap_only",
+        action="store_true",
+        help="Only scan for gap samples, save manifest, and exit (no case study figures).",
+    )
+    parser.add_argument(
+        "--gap_manifest",
+        type=str,
+        default="",
+        help=(
+            "Path to gap manifest JSON. Default: "
+            "results/stepkv_case_study/{dataset}_seed{seed}_ns{num_samples}_gap_manifest.json"
+        ),
+    )
+    parser.add_argument(
+        "--use_saved_gap_manifest",
+        action="store_true",
+        default=True,
+        help="When no explicit sample is given, reuse saved gap manifest if present (default: on).",
+    )
+    parser.add_argument(
+        "--no_use_saved_gap_manifest",
+        action="store_false",
+        dest="use_saved_gap_manifest",
+        help="Force rescan instead of reading saved gap manifest.",
     )
     parser.add_argument("--num_samples", type=int, default=500)
     parser.add_argument("--seed", type=int, default=233)
@@ -689,7 +878,12 @@ def main() -> None:
         help="When auto-scanning or using --success_gap_json, pick the N-th gap sample.",
     )
     parser.add_argument("--baseline_fail_mode", choices=["all", "any"], default="all")
-    parser.add_argument("--success_gap_json", type=str, default="")
+    parser.add_argument(
+        "--success_gap_json",
+        type=str,
+        default="",
+        help="Alias of --gap_manifest (legacy). Path to gap manifest JSON.",
+    )
     parser.add_argument(
         "--output_prefix",
         type=str,
@@ -708,23 +902,46 @@ def main() -> None:
         _print_sample_catalog(selected, args)
         return
 
-    if args.list_gap_samples:
-        if args.success_gap_json:
-            positions = _load_success_gap_positions(args.success_gap_json)
+    if args.list_gap_samples or args.scan_gap_only:
+        manifest = _try_load_saved_gap_manifest(args) if args.use_saved_gap_manifest else None
+        if manifest is not None and not args.scan_gap_only:
             found = []
-            for pos in positions:
+            for entry in manifest.get("samples", []) or []:
+                pos = int(entry["sample_pos"])
                 if pos < 0 or pos >= len(selected):
                     continue
                 orig_idx, sample = selected[pos]
-                found.append((pos, orig_idx, sample, {"evaluations": {}}))
+                found.append((pos, orig_idx, sample, entry))
+            print(f"[INFO] loaded gap manifest: {_resolve_gap_manifest_path(args)}")
             _print_gap_sample_catalog(selected, found)
-        else:
-            print(
-                f"[INFO] scanning pos [{args.scan_start}, "
-                f"{min(len(selected), args.scan_start + args.scan_limit)}) for gap samples ..."
+            if found:
+                positions = [p for p, _, _, _ in found]
+                print(f"[INFO] qualifying sample_pos: {positions}")
+            return
+
+        print(
+            f"[INFO] scanning pos [{args.scan_start}, "
+            f"{min(len(selected), args.scan_start + args.scan_limit)}) for gap samples ..."
+        )
+        found, scan_start, scan_end = _scan_success_gap_samples(selected, retriever, args)
+        _print_gap_sample_catalog(selected, found)
+        if found:
+            manifest_path = _save_found_gap_manifest(
+                args, found, scan_start=scan_start, scan_end=scan_end
             )
-            found = _scan_success_gap_samples(selected, retriever, args)
-            _print_gap_sample_catalog(selected, found)
+            positions = [p for p, _, _, _ in found]
+            print(f"[INFO] saved gap manifest: {manifest_path}")
+            print(f"[INFO] qualifying sample_pos: {positions}")
+            print(
+                "[INFO] next: python plot_stepkv_case_study.py "
+                f"--dataset {args.dataset} --seed {args.seed} --gap_index 0"
+            )
+            print(
+                "[INFO]   or: python plot_stepkv_case_study.py "
+                f"--dataset {args.dataset} --seed {args.seed} --sample_pos {positions[0]}"
+            )
+        else:
+            print("[WARN] No qualifying gap samples found in scan range.")
         return
 
     pos, orig_idx, sample, gap_row = _resolve_success_gap_sample(selected, retriever, args)
@@ -747,8 +964,9 @@ def main() -> None:
     }
 
     tag = f"{args.dataset}_sample{pos}_gap"
-    out_dir = os.path.join("results", "stepkv_case_study")
+    out_dir = DEFAULT_CASE_STUDY_DIR
     prefix = args.output_prefix or os.path.join(out_dir, tag)
+    gap_manifest_path = _resolve_gap_manifest_path(args)
 
     outputs = save_case_study_outputs(
         gap_row,
@@ -765,8 +983,13 @@ def main() -> None:
 
     meta = {
         "dataset": args.dataset,
+        "seed": int(args.seed),
+        "num_samples": int(args.num_samples),
         "sample_pos": pos,
+        "orig_idx": orig_idx,
         "sample_id": sample.get("id", ""),
+        "gap_index": int(args.gap_index),
+        "gap_manifest": gap_manifest_path if os.path.isfile(gap_manifest_path) else "",
         "category": gap_row.get("category"),
         "evaluations": gap_row.get("evaluations"),
         "discard_diff_counts": gap_row.get("discard_diff", {}).get("counts", {}),

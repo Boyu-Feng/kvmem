@@ -355,14 +355,14 @@ def _marker_size_for_panel(n_points: int, x_span: int) -> float:
     span = max(1, int(x_span))
     avg_per_x = float(n_points) / span
     if avg_per_x > 8:
-        return 10.0
-    if avg_per_x > 4:
         return 18.0
+    if avg_per_x > 4:
+        return 30.0
     if avg_per_x > 2:
-        return 28.0
+        return 44.0
     if avg_per_x > 1:
-        return 38.0
-    return 50.0
+        return 58.0
+    return 72.0
 
 
 def _panel_x_span(points: Sequence[Dict[str, Any]]) -> int:
@@ -372,57 +372,26 @@ def _panel_x_span(points: Sequence[Dict[str, Any]]) -> int:
     return max(1, max(xs) - min(xs) + 1)
 
 
-def _draw_react_step_segment_labels(
-    ax: plt.Axes,
-    boundaries: Sequence[Dict[str, Any]],
-    x_left: float,
-    x_right: float,
-    *,
-    fontsize: float = 18,
-    y_offset: float = -0.035,
-) -> None:
-    """Label each ReAct step segment under the x-axis (Step 1, Step 2, ...)."""
-    bds = sorted(boundaries, key=lambda b: float(b["x"]))
-    if not bds:
-        return
-    prev = float(x_left)
-    for bd in bds:
-        right = float(bd["x"])
-        step = int(bd.get("step", 0))
-        if step >= 1 and right > prev:
-            cx = (prev + right) / 2.0
-            ax.text(
-                cx,
-                y_offset,
-                f"Step {step}",
-                transform=ax.get_xaxis_transform(),
-                ha="center",
-                va="top",
-                fontsize=fontsize,
-                clip_on=False,
-            )
-        prev = right
-
-
 def _plot_style(mode: str) -> Dict[str, float]:
     if mode == "dropped":
         return {
-            "axis_label": 26,
-            "tick": 22,
-            "title": 20,
-            "step_seg_label": 20,
-            "panel_h": 2.35,
-            "fig_w_min": 14.0,
-            "fig_w_max": 24.0,
-            "fig_w_scale": 0.032,
-            "labelpad": 3,
+            "axis_label": 22,
+            "tick": 18,
+            "title": 18,
+            "legend_font": 16,
+            "legend_marker": 11,
+            "panel_h": 3.4,
+            "fig_w": 14.0,
+            "labelpad": 4,
         }
     return {
         "axis_label": 20,
         "tick": 17,
         "title": 18,
-        "step_seg_label": 16,
+        "legend_font": 14,
+        "legend_marker": 9,
         "panel_h": 2.8,
+        "fig_w": 14.0,
         "fig_w_min": 16.0,
         "fig_w_max": 32.0,
         "fig_w_scale": 0.045,
@@ -458,7 +427,7 @@ def _plot_three_methods(
             "axes.titlesize": style["title"],
             "xtick.labelsize": style["tick"],
             "ytick.labelsize": style["tick"],
-            "legend.fontsize": 14,
+            "legend.fontsize": style["legend_font"],
         }
     )
 
@@ -472,6 +441,7 @@ def _plot_three_methods(
     owner_steps = sorted(s for s in all_owner_steps if s >= 1)
     cmap = plt.get_cmap("tab10")
     owner_to_color = {s: cmap(i % 10) for i, s in enumerate(owner_steps)}
+    legend_marker = style.get("legend_marker", 9)
     legend_handles = [
         plt.Line2D(
             [0],
@@ -479,7 +449,7 @@ def _plot_three_methods(
             marker="o",
             color="w",
             markerfacecolor=owner_to_color[s],
-            markersize=9,
+            markersize=legend_marker,
             linestyle="None",
         )
         for s in owner_steps
@@ -494,13 +464,20 @@ def _plot_three_methods(
         global_y_max = min(global_y_max, int(max_react_steps))
 
     n_panels = len(method_plot_data)
-    fig_w = max(style["fig_w_min"], min(style["fig_w_max"], 10.0 + panel_max_x * style["fig_w_scale"]))
-    fig_h = style["panel_h"] * n_panels
+    if mode == "dropped":
+        fig_w = float(style["fig_w"])
+        fig_h = style["panel_h"] * n_panels
+    else:
+        fig_w = max(style["fig_w_min"], min(style["fig_w_max"], 10.0 + panel_max_x * style["fig_w_scale"]))
+        fig_h = style["panel_h"] * n_panels
     fig, axes = plt.subplots(n_panels, 1, figsize=(fig_w, fig_h), sharex=False)
     if n_panels == 1:
         axes = [axes]
-    bottom_margin = 0.14 if mode == "dropped" else (0.10 if mode == "kept" and legend_handles else 0.08)
-    fig.subplots_adjust(hspace=0.30 if mode == "dropped" else 0.24, bottom=bottom_margin, top=0.96)
+    has_bottom_legend = bool(legend_handles) and mode in ("dropped", "kept")
+    bottom_margin = 0.11 if mode == "dropped" and has_bottom_legend else (
+        0.10 if mode == "kept" and has_bottom_legend else 0.08
+    )
+    fig.subplots_adjust(hspace=0.26, bottom=bottom_margin, top=0.97)
 
     y_label = "Cumulative keep after step" if mode == "kept" else "Evicted at ReAct step"
     empty_msg = (
@@ -508,15 +485,12 @@ def _plot_three_methods(
         if mode == "kept"
         else "No dropped-token points under current config"
     )
-    legend_title = "Kept token origin"
-    last_boundaries: List[Dict[str, Any]] = []
+    legend_title = "Kept token origin" if mode == "kept" else None
 
     for ax_idx, (method_label, plot_data) in enumerate(method_plot_data):
         ax = axes[ax_idx]
         points, step_key = _collect_plot_points(plot_data, mode)
         boundaries = plot_data.get("step_boundaries", []) or []
-        if ax_idx == n_panels - 1:
-            last_boundaries = boundaries
         x_vals: List[int] = []
 
         if points:
@@ -577,44 +551,34 @@ def _plot_three_methods(
 
         ax.set_ylabel(y_label, fontsize=style["axis_label"], labelpad=style["labelpad"])
         ax.set_title(method_label, loc="left", fontsize=style["title"], pad=6)
-        ax.tick_params(axis="both", which="major", pad=2)
+        ax.tick_params(axis="both", which="major", labelsize=style["tick"], pad=3)
         ax.yaxis.set_major_locator(mticker.MultipleLocator(1))
         ax.set_ylim(0.5, global_y_max + 0.5)
-        y_ticks = list(range(1, global_y_max + 1))
-        ax.set_yticks(y_ticks)
-        if mode == "dropped":
-            ax.set_yticklabels([f"Step {s}" for s in y_ticks])
+        ax.set_yticks(list(range(1, global_y_max + 1)))
         if x_vals:
             ax.set_xlim(-0.5, max(x_vals) + 0.5)
         ax.grid(True, alpha=0.25)
 
-    bottom_ax = axes[-1]
-    bottom_ax.set_xlabel(
+    axes[-1].set_xlabel(
         "Key Position Index (No Prefill)",
         fontsize=style["axis_label"],
         labelpad=style["labelpad"],
     )
-    if mode == "dropped" and last_boundaries:
-        x_left, x_right = bottom_ax.get_xlim()
-        _draw_react_step_segment_labels(
-            bottom_ax,
-            last_boundaries,
-            x_left,
-            x_right,
-            fontsize=style["step_seg_label"],
-            y_offset=-0.04,
-        )
 
-    if mode == "kept" and legend_handles:
-        fig.legend(
-            legend_handles,
-            legend_labels,
-            loc="upper center",
-            bbox_to_anchor=(0.5, 0.04),
-            ncol=min(4, max(1, len(legend_labels))),
-            frameon=False,
-            title=legend_title,
-        )
+    if has_bottom_legend:
+        legend_kwargs: Dict[str, Any] = {
+            "loc": "upper center",
+            "bbox_to_anchor": (0.5, 0.01 if mode == "dropped" else 0.04),
+            "ncol": min(7 if mode == "dropped" else 4, max(1, len(legend_labels))),
+            "frameon": False,
+            "fontsize": style["legend_font"],
+            "handlelength": 1.4,
+            "handletextpad": 0.5,
+            "columnspacing": 1.2,
+        }
+        if legend_title:
+            legend_kwargs["title"] = legend_title
+        fig.legend(legend_handles, legend_labels, **legend_kwargs)
 
     os.makedirs(os.path.dirname(output_pdf) or ".", exist_ok=True)
     fig.savefig(output_pdf, bbox_inches="tight", pad_inches=0.06)
