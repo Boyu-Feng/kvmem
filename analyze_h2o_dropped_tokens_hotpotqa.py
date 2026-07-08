@@ -357,6 +357,7 @@ def _plot_three_methods(
     method_plot_data: List[Tuple[str, Dict[str, Any]]],
     output_pdf: str,
     mode: str = "dropped",
+    max_react_steps: Optional[int] = None,
 ) -> None:
     """Three rows: H2O / TOVA / StepKV token scatter (per-method x-axis)."""
     if mode not in ("dropped", "kept"):
@@ -399,6 +400,8 @@ def _plot_three_methods(
         (_max_react_step_in_plot_data(plot_data, mode) for _, plot_data in method_plot_data),
         default=1,
     )
+    if max_react_steps is not None and int(max_react_steps) > 0:
+        global_y_max = min(global_y_max, int(max_react_steps))
 
     fig, axes = plt.subplots(3, 1, figsize=(14, 11), sharex=False)
     fig.subplots_adjust(hspace=0.22, bottom=0.13, top=0.98)
@@ -507,15 +510,17 @@ def _plot_three_methods(
 def _plot_dropped_three_methods(
     method_plot_data: List[Tuple[str, Dict[str, Any]]],
     output_pdf: str,
+    max_react_steps: Optional[int] = None,
 ) -> None:
-    _plot_three_methods(method_plot_data, output_pdf, mode="dropped")
+    _plot_three_methods(method_plot_data, output_pdf, mode="dropped", max_react_steps=max_react_steps)
 
 
 def _plot_kept_three_methods(
     method_plot_data: List[Tuple[str, Dict[str, Any]]],
     output_pdf: str,
+    max_react_steps: Optional[int] = None,
 ) -> None:
-    _plot_three_methods(method_plot_data, output_pdf, mode="kept")
+    _plot_three_methods(method_plot_data, output_pdf, mode="kept", max_react_steps=max_react_steps)
 
 
 def _run_one_method(
@@ -563,7 +568,12 @@ def main():
         default=20,
         help="Max samples to try when --auto_find_nonempty is set.",
     )
-    parser.add_argument("--max_steps", type=int, default=12)
+    parser.add_argument(
+        "--max_steps",
+        type=int,
+        default=int(base.MAX_STEPS),
+        help=f"Max ReAct steps per episode (default: {base.MAX_STEPS}, same as main experiments).",
+    )
     parser.add_argument("--num_samples", type=int, default=500)
     parser.add_argument("--seed", type=int, default=233)
     parser.add_argument("--bm25_top_k", type=int, default=5)
@@ -587,6 +597,7 @@ def main():
     args.model_path = resolve_local_model_path(args.model_path)
     base.MODEL_PATH = args.model_path
     print(f"[INFO] Analysis model (local): {base.MODEL_PATH}")
+    print(f"[INFO] Max ReAct steps: {base.format_max_steps(base.MAX_STEPS)}")
 
     if not os.path.exists(args.wiki_index_dir):
         raise FileNotFoundError(f"Wiki index not found: {args.wiki_index_dir}")
@@ -696,8 +707,8 @@ def main():
                 f.write(json.dumps({"method": display_name, **p}, ensure_ascii=False) + "\n")
 
     try:
-        _plot_dropped_three_methods(method_plot_data, dropped_pdf_path)
-        _plot_kept_three_methods(method_plot_data, kept_pdf_path)
+        _plot_dropped_three_methods(method_plot_data, dropped_pdf_path, max_react_steps=int(args.max_steps))
+        _plot_kept_three_methods(method_plot_data, kept_pdf_path, max_react_steps=int(args.max_steps))
     except Exception as e:
         with open(plot_error_path, "w", encoding="utf-8") as f:
             f.write(str(e))
