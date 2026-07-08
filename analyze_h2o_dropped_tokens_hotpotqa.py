@@ -192,7 +192,7 @@ def _plot_three_methods(
     legend_labels = [_step_label(s) for s in steps]
 
     fig, axes = plt.subplots(3, 1, figsize=(14, 11), sharex=True)
-    fig.subplots_adjust(hspace=0.22, bottom=0.16, top=0.90)
+    fig.subplots_adjust(hspace=0.22, bottom=0.11, top=0.98)
 
     for ax, (method_label, plot_data) in zip(axes, method_plot_data):
         points = plot_data.get("final_points", []) or plot_data.get("points", []) or []
@@ -225,24 +225,19 @@ def _plot_three_methods(
         ax.grid(True, alpha=0.25)
 
     axes[-1].set_xlabel("Key Position Index (No Prefill)", fontsize=15)
-    fig.suptitle(
-        "HotpotQA Dropped Tokens by Method (Step Boundaries as Dashed Lines)",
-        fontsize=16,
-        y=0.98,
-    )
 
     if legend_handles:
         fig.legend(
             legend_handles,
             legend_labels,
             loc="upper center",
-            bbox_to_anchor=(0.5, 0.02),
+            bbox_to_anchor=(0.5, 0.06),
             ncol=min(8, max(1, len(legend_labels))),
             frameon=False,
         )
 
     os.makedirs(os.path.dirname(output_pdf) or ".", exist_ok=True)
-    fig.savefig(output_pdf, bbox_inches="tight")
+    fig.savefig(output_pdf, bbox_inches="tight", pad_inches=0.08)
     plt.close(fig)
 
 
