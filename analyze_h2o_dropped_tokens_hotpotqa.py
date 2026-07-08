@@ -343,6 +343,16 @@ def _point_y_value(point: Dict[str, Any], mode: str, step_key: str) -> int:
     )
 
 
+def _max_react_step_in_plot_data(plot_data: Dict[str, Any], mode: str) -> int:
+    max_step = 1
+    for bd in plot_data.get("step_boundaries", []) or []:
+        max_step = max(max_step, int(bd.get("step", 1)))
+    points, step_key = _collect_plot_points(plot_data, mode)
+    for p in points:
+        max_step = max(max_step, _point_y_value(p, mode, step_key))
+    return max_step
+
+
 def _plot_three_methods(
     method_plot_data: List[Tuple[str, Dict[str, Any]]],
     output_pdf: str,
@@ -364,14 +374,11 @@ def _plot_three_methods(
     )
 
     all_owner_steps: set[int] = set()
-    all_y_steps: set[int] = set()
     for _, plot_data in method_plot_data:
         points, step_key = _collect_plot_points(plot_data, mode)
         for p in points:
             all_owner_steps.add(_point_display_step(p, step_key))
-            all_y_steps.add(_point_y_value(p, mode, step_key))
     owner_steps = sorted(s for s in all_owner_steps if s >= 1)
-    y_steps = sorted(s for s in all_y_steps if s >= 1)
     cmap = plt.get_cmap("tab10")
     owner_to_color = {s: cmap(i % 10) for i, s in enumerate(owner_steps)}
     legend_handles = [
@@ -388,8 +395,13 @@ def _plot_three_methods(
     ]
     legend_labels = [_step_label(s) for s in owner_steps]
 
+    global_y_max = max(
+        (_max_react_step_in_plot_data(plot_data, mode) for _, plot_data in method_plot_data),
+        default=1,
+    )
+
     fig, axes = plt.subplots(3, 1, figsize=(14, 11), sharex=False)
-    fig.subplots_adjust(hspace=0.22, bottom=0.16, top=0.98)
+    fig.subplots_adjust(hspace=0.22, bottom=0.13, top=0.98)
 
     y_label = "Retained after ReAct step" if mode == "kept" else "Evicted at ReAct step"
     empty_msg = (
@@ -407,7 +419,6 @@ def _plot_three_methods(
     for ax, (method_label, plot_data) in zip(axes, method_plot_data):
         points, step_key = _collect_plot_points(plot_data, mode)
         boundaries = plot_data.get("step_boundaries", []) or []
-        y_vals: List[int] = []
         x_vals: List[int] = []
 
         if points:
@@ -417,7 +428,6 @@ def _plot_three_methods(
                 ys = [_point_y_value(p, mode, step_key) for p in matched]
                 if not xs:
                     continue
-                y_vals.extend(int(y) for y in ys)
                 x_vals.extend(int(x) for x in xs)
                 if mode == "kept":
                     ax.scatter(
@@ -461,10 +471,8 @@ def _plot_three_methods(
         ax.set_ylabel(y_label, fontsize=15)
         ax.set_title(method_label, loc="left", fontsize=15, pad=6)
         ax.yaxis.set_major_locator(mticker.MultipleLocator(1))
-        if y_vals:
-            y_min, y_max = min(y_vals), max(y_vals)
-            pad = 1 if y_max > y_min else 0
-            ax.set_ylim(y_min - pad, y_max + pad)
+        ax.set_ylim(0.5, global_y_max + 0.5)
+        ax.set_yticks(list(range(1, global_y_max + 1)))
         if x_vals:
             ax.set_xlim(-0.5, max(x_vals) + 0.5)
         ax.grid(True, alpha=0.25)
@@ -476,21 +484,20 @@ def _plot_three_methods(
             legend_handles,
             legend_labels,
             loc="upper center",
-            bbox_to_anchor=(0.5, 0.04),
+            bbox_to_anchor=(0.5, 0.08),
             ncol=min(4, max(1, len(legend_labels))),
             frameon=False,
             title=legend_title,
         )
-        if y_steps:
-            fig.text(
-                0.5,
-                0.085,
-                footer,
-                ha="center",
-                va="center",
-                fontsize=11,
-                color="#555555",
-            )
+        fig.text(
+            0.5,
+            0.115,
+            footer,
+            ha="center",
+            va="center",
+            fontsize=11,
+            color="#555555",
+        )
 
     os.makedirs(os.path.dirname(output_pdf) or ".", exist_ok=True)
     fig.savefig(output_pdf, bbox_inches="tight", pad_inches=0.08)
