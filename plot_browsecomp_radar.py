@@ -579,15 +579,49 @@ def _fmt_cache_tokens(v: Optional[float]) -> str:
     return f"{iv} tok"
 
 
-def _tangent_label_rotation(theta_rad: float) -> float:
-    """Text rotation (deg) parallel to the radar axis tangent at angle theta."""
+def _tangent_label_rotation(theta_rad: float, axis_key: str) -> float:
+    """Text rotation parallel to the outer-circle tangent; EM stays horizontal."""
+    if axis_key == "em":
+        return 0.0
     deg = float(np.degrees(theta_rad))
-    rot = deg - 90.0
+    rot = deg
     if rot > 90.0:
         rot -= 180.0
     elif rot < -90.0:
         rot += 180.0
     return rot
+
+
+def _label_ha_va(theta_rad: float, axis_key: str) -> Tuple[str, str]:
+    """Anchor label on the outer side of the radar so text sits outside the plot."""
+    if axis_key == "em":
+        return "center", "bottom"
+    deg = (float(np.degrees(theta_rad)) + 360.0) % 360.0
+    if 155.0 <= deg <= 205.0:
+        return "center", "top"
+    if 25.0 <= deg <= 155.0:
+        return "left", "center"
+    if 205.0 <= deg <= 335.0:
+        return "right", "center"
+    return "center", "bottom"
+
+
+def _label_radius(
+    theta_rad: float,
+    radial_max: float,
+    *,
+    has_subline: bool,
+    axis_key: str,
+) -> float:
+    """Push labels outward; cost axes with a second line need more radial room."""
+    if axis_key == "em":
+        return float(radial_max) * 1.10
+    deg = (float(np.degrees(theta_rad)) + 360.0) % 360.0
+    if has_subline:
+        if 155.0 <= deg <= 205.0:
+            return float(radial_max) * 1.42
+        return float(radial_max) * 1.34
+    return float(radial_max) * 1.22
 
 
 def _outer_axis_label_text(
@@ -621,24 +655,27 @@ def _place_axis_labels_tangent(
     *,
     labelsize: int,
     axis_scales: Optional[Dict[str, float]] = None,
-    label_radius_factor: float = 1.10,
 ) -> None:
     ax.set_xticklabels([""] * len(angles))
-    label_r = float(radial_max) * float(label_radius_factor)
     scales = axis_scales or {}
     for angle, (key, display_name, _field, group) in zip(angles, AXIS_SPECS):
-        text = _outer_axis_label_text(display_name, key, group, scales.get(key))
-        rot = _tangent_label_rotation(angle)
+        scale = scales.get(key)
+        text = _outer_axis_label_text(display_name, key, group, scale)
+        has_subline = "\n" in text
+        rot = _tangent_label_rotation(angle, key)
+        ha, va = _label_ha_va(angle, key)
+        label_r = _label_radius(angle, radial_max, has_subline=has_subline, axis_key=key)
         ax.text(
             angle,
             label_r,
             text,
-            ha="center",
-            va="center",
+            ha=ha,
+            va=va,
             fontsize=labelsize,
             rotation=rot,
             rotation_mode="anchor",
             color="#222222",
+            clip_on=False,
             zorder=6,
         )
 
@@ -672,7 +709,8 @@ def plot_radar_single(
     angles = np.linspace(0, 2 * np.pi, n_axes, endpoint=False).tolist()
     angles_closed = angles + angles[:1]
 
-    fig, ax = plt.subplots(figsize=(7.2, 7.2), subplot_kw={"polar": True})
+    fig, ax = plt.subplots(figsize=(8.0, 8.0), subplot_kw={"polar": True})
+    fig.subplots_adjust(left=0.06, right=0.94, top=0.94, bottom=0.06)
     ax.set_theta_offset(np.pi / 2)
     ax.set_theta_direction(-1)
     ax.set_xticks(angles)
@@ -734,23 +772,21 @@ def plot_radar_single(
         radial_max,
         labelsize=labelsize,
         axis_scales=axis_scales,
-        label_radius_factor=1.12,
     )
 
     ax.legend(
         loc="upper right",
-        bbox_to_anchor=(1.28, 1.12),
+        bbox_to_anchor=(1.22, 1.10),
         frameon=False,
         fontsize=ticksize,
     )
 
     if title:
-        ax.set_title(title, fontsize=labelsize + 2, pad=20)
+        ax.set_title(title, fontsize=labelsize + 2, pad=24)
 
-    fig.tight_layout()
     for ext in ("pdf", "png"):
         out = f"{output_prefix}_radar.{ext}"
-        fig.savefig(out)
+        fig.savefig(out, pad_inches=0.18)
         print(f"[INFO] Saved figure: {out}")
     plt.close(fig)
 
