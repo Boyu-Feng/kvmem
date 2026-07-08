@@ -195,9 +195,11 @@ def _extract_plot_data(debug_payload: Dict[str, Any]) -> Dict[str, Any]:
         if end_shifted >= 0:
             step_boundaries.append({"step": sid, "x": float(end_shifted) + 0.5})
 
-    kept_points = _build_kept_points(
+    kept_points, kept_owner_counts_by_snapshot = _build_kept_points(
         prompt_token_count=prompt_token_count,
-        step_pruning_kept_events=(token_tracker.get("step_pruning_kept_events", {}) or {}),
+        step_ranges=step_ranges,
+        step_pruning_events=step_pruning_events,
+        token_tracker=token_tracker,
         owner_step_fn=_owner_step,
     )
 
@@ -208,6 +210,7 @@ def _extract_plot_data(debug_payload: Dict[str, Any]) -> Dict[str, Any]:
         "final_events": final_event_rows,
         "final_points": final_points,
         "kept_points": kept_points,
+        "kept_owner_counts_by_snapshot": kept_owner_counts_by_snapshot,
         "dropped_by_owner_step": [owner_rows[k] for k in sorted(owner_rows.keys(), key=lambda x: int(x))],
         "step_boundaries": step_boundaries,
     }
@@ -241,48 +244,74 @@ def _prune_step_sort_key(item: Tuple[Any, Any]) -> Tuple[int, int]:
 
 
 
+def _decode_end_global_id_through_step(
+    step_ranges: List[Tuple[int, int, int]],
+    through_step: int,
+    prompt_token_count: int,
+    next_global_id: int,
+) -> int:
+    """Last global token id generated after finishing the given ReAct step."""
+    end = int(prompt_token_count) - 1
+    for sid, _s, e in step_ranges:
+        if int(sid) <= int(through_step):
+            end = max(end, int(e))
+    return min(end, int(next_global_id) - 1)
+
+
 def _build_kept_points(
     prompt_token_count: int,
-    step_pruning_kept_events: Dict[str, Any],
+    step_ranges: List[Tuple[int, int, int]],
+    step_pruning_events: Dict[str, Any],
+    token_tracker: Dict[str, Any],
     owner_step_fn,
-) -> List[Dict[str, Any]]:
-    """Tokens kept in the prunable region at each ReAct step (symmetric to dropped)."""
-    init_kept, react_kept_events = _split_pruning_events(step_pruning_kept_events)
+) -> Tuple[List[Dict[str, Any]], Dict[str, Dict[str, int]]]:
+    """Cumulative cache snapshot: tokens still present after each ReAct step."""
+    next_global_id = int(token_tracker.get("next_global_id", prompt_token_count))
+    if next_global_id <= prompt_token_count:
+        return [], {}
+
+    init_dropped, react_pruning_events = _split_pruning_events(step_pruning_events)
+    prune_steps = sorted(react_pruning_events.keys())
+    max_range_step = max((sid for sid, _, _ in step_ranges), default=1)
+    max_step = max(max(prune_steps) if prune_steps else 1, max_range_step)
+
+    cumulative_dropped: set[int] = set(
+        int(x) for x in init_dropped if int(x) >= prompt_token_count
+    )
     kept_points: List[Dict[str, Any]] = []
-    event_id = 0
+    kept_owner_counts_by_snapshot: Dict[str, Dict[str, int]] = {}
 
-    init_decode = sorted(set(int(x) for x in init_kept if int(x) >= prompt_token_count))
-    if init_decode:
-        event_id += 1
-        for gid in init_decode:
-            kept_points.append(
-                {
-                    "event_id": int(event_id),
-                    "keep_step": 0,
-                    "owner_step": int(owner_step_fn(gid)),
-                    "x": int(gid - prompt_token_count),
-                    "global_id": int(gid),
-                }
-            )
+    for snapshot_step in range(1, max_step + 1):
+        dropped_now = react_pruning_events.get(snapshot_step, [])
+        cumulative_dropped.update(int(x) for x in dropped_now if int(x) >= prompt_token_count)
 
-    for keep_step, kept_ids in sorted(react_kept_events.items(), key=lambda kv: int(kv[0])):
-        kept_ids = sorted(set(int(x) for x in (kept_ids or [])))
-        kept_ids = [gid for gid in kept_ids if gid >= prompt_token_count]
-        if not kept_ids:
+        decode_end = _decode_end_global_id_through_step(
+            step_ranges,
+            snapshot_step,
+            prompt_token_count,
+            next_global_id,
+        )
+        if decode_end < prompt_token_count:
             continue
-        event_id += 1
-        for gid in kept_ids:
+
+        owner_counts: Dict[str, int] = {}
+        for gid in range(int(prompt_token_count), decode_end + 1):
+            if gid in cumulative_dropped:
+                continue
+            owner = int(owner_step_fn(gid))
+            owner_key = str(owner)
+            owner_counts[owner_key] = int(owner_counts.get(owner_key, 0) + 1)
             kept_points.append(
                 {
-                    "event_id": int(event_id),
-                    "keep_step": int(keep_step),
-                    "owner_step": int(owner_step_fn(gid)),
+                    "snapshot_step": int(snapshot_step),
+                    "owner_step": owner,
                     "x": int(gid - prompt_token_count),
                     "global_id": int(gid),
                 }
             )
+        kept_owner_counts_by_snapshot[str(snapshot_step)] = owner_counts
 
-    return kept_points
+    return kept_points, kept_owner_counts_by_snapshot
 
 
 def _step_label(step: int) -> str:
@@ -314,7 +343,7 @@ def _collect_plot_points(plot_data: Dict[str, Any], mode: str) -> Tuple[List[Dic
 
 def _point_y_value(point: Dict[str, Any], mode: str, step_key: str) -> int:
     if mode == "kept":
-        return max(1, int(point.get("keep_step", point.get("snapshot_step", 1)) or 1))
+        return max(1, int(point.get("snapshot_step", point.get("keep_step", 1)) or 1))
     return max(
         1,
         int(point.get("prune_step", point.get("react_step", point.get("event_id", 1))) or 1),
@@ -384,15 +413,16 @@ def _plot_three_methods(
     fig, axes = plt.subplots(3, 1, figsize=(14, 11), sharex=False)
     fig.subplots_adjust(hspace=0.22, bottom=0.13, top=0.98)
 
-    y_label = "Kept at ReAct step" if mode == "kept" else "Evicted at ReAct step"
+    y_label = "Cumulative keep after step" if mode == "kept" else "Evicted at ReAct step"
     empty_msg = (
-        "No prunable-region kept tokens under current config"
+        "No cumulative kept tokens under current config"
         if mode == "kept"
         else "No dropped-token points under current config"
     )
     legend_title = "Kept token origin" if mode == "kept" else "Dropped token origin"
     footer = (
-        "Y-axis = ReAct step when token was kept in the prunable region (symmetric to dropped plot)"
+        "Y-axis = cache snapshot after each ReAct step; color = token origin. "
+        "Fewer dots on higher rows means earlier-step tokens were evicted."
         if mode == "kept"
         else "Y-axis = when token was evicted; red ring = evicted earlier than token origin (cross-step drop)"
     )
