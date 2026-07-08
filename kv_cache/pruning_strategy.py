@@ -431,7 +431,9 @@ class PruningStrategy:
                 self.token_tracker.record_pruning_with_kept_indices(
                     step=None,  # Step number will be set by caller
                     kept_local_indices=kept_indices_list,
-                    old_cache_length=total_len
+                    old_cache_length=total_len,
+                    prune_start=prune_start,
+                    prune_end=prune_end,
                 )
             except Exception as e:
                 # Token tracking should never break pruning.
@@ -514,7 +516,9 @@ class PruningStrategy:
                 self.token_tracker.record_pruning_with_kept_indices(
                     step=None,
                     kept_local_indices=kept_indices_list,
-                    old_cache_length=total_len
+                    old_cache_length=total_len,
+                    prune_start=prune_start,
+                    prune_end=prune_end,
                 )
             except Exception as e:
                 print(f"[WARN] Token tracking failed during PyramidInfer prune: {e}")
@@ -592,7 +596,9 @@ class PruningStrategy:
                 self.token_tracker.record_pruning_with_kept_indices(
                     step=None,
                     kept_local_indices=kept_indices_list,
-                    old_cache_length=total_len
+                    old_cache_length=total_len,
+                    prune_start=prune_start,
+                    prune_end=prune_end,
                 )
             except Exception as e:
                 print(f"[WARN] Token tracking failed during TOVA prune: {e}")
@@ -676,7 +682,9 @@ class PruningStrategy:
                 self.token_tracker.record_pruning_with_kept_indices(
                     step=None,
                     kept_local_indices=kept_indices_list,
-                    old_cache_length=total_len
+                    old_cache_length=total_len,
+                    prune_start=prune_start,
+                    prune_end=prune_end,
                 )
             except Exception as e:
                 print(f"[WARN] Token tracking failed during Step-Anchor H2O prune: {e}")
@@ -954,7 +962,9 @@ class PruningStrategy:
                 self.token_tracker.record_pruning_with_kept_indices(
                     step=None,
                     kept_local_indices=kept_indices_list,
-                    old_cache_length=total_len
+                    old_cache_length=total_len,
+                    prune_start=prune_start,
+                    prune_end=prune_end,
                 )
             except Exception as e:
                 print(f"[WARN] Token tracking failed during Step-aware H2O prune: {e}")

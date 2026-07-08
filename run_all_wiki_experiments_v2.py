@@ -2126,6 +2126,10 @@ def _run_react_kv_episode(
                     ("init" if k is None else str(int(k))): sorted(set(int(x) for x in (v or [])))
                     for k, v in getattr(tracker, "step_pruning_events", {}).items()
                 },
+                "step_pruning_kept_events": {
+                    ("init" if k is None else str(int(k))): sorted(set(int(x) for x in (v or [])))
+                    for k, v in getattr(tracker, "step_pruning_kept_events", {}).items()
+                },
             }
         if llm is not None and hasattr(llm, "get_global_token_id_log"):
             try:

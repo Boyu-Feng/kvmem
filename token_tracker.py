@@ -23,6 +23,7 @@ class TokenTracker:
     def __init__(self):
         """Initialize tracker."""
         self.step_pruning_events = {}  # step -> list of discarded GLOBAL token IDs
+        self.step_pruning_kept_events = {}  # step -> prunable-region kept GLOBAL token IDs
         self.total_discarded = 0
         self.cache_length = 0
         
@@ -42,6 +43,7 @@ class TokenTracker:
         """
         # Start a fresh episode/sample-level accounting.
         self.step_pruning_events = {}
+        self.step_pruning_kept_events = {}
         self.total_discarded = 0
         self.current_step = None
         self.cache_length = initial_len
@@ -61,7 +63,14 @@ class TokenTracker:
         self.next_global_id += num_new_tokens
         self.cache_length = len(self.global_id_mapper)
     
-    def record_pruning_with_kept_indices(self, step, kept_local_indices, old_cache_length):
+    def record_pruning_with_kept_indices(
+        self,
+        step,
+        kept_local_indices,
+        old_cache_length,
+        prune_start=None,
+        prune_end=None,
+    ):
         """
         Record pruning by specifying which local indices were KEPT.
         
@@ -98,6 +107,18 @@ class TokenTracker:
             self.step_pruning_events[step] = []
         self.step_pruning_events[step].extend(discarded_global_ids)
         self.total_discarded += len(discarded_global_ids)
+
+        if prune_start is not None and prune_end is not None:
+            ps, pe = int(prune_start), int(prune_end)
+            kept_prunable_global = [
+                self.global_id_mapper[i]
+                for i in sorted(kept_set)
+                if ps <= int(i) < pe
+            ]
+            if kept_prunable_global:
+                if step not in self.step_pruning_kept_events:
+                    self.step_pruning_kept_events[step] = []
+                self.step_pruning_kept_events[step].extend(kept_prunable_global)
 
     def get_step_discarded_tokens(self, step):
         """Return sorted global token IDs discarded in this step."""
