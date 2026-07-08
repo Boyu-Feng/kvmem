@@ -579,49 +579,21 @@ def _fmt_cache_tokens(v: Optional[float]) -> str:
     return f"{iv} tok"
 
 
-def _tangent_label_rotation(theta_rad: float, axis_key: str) -> float:
-    """Text rotation parallel to the outer-circle tangent; EM stays horizontal."""
-    if axis_key == "em":
-        return 0.0
-    deg = float(np.degrees(theta_rad))
-    rot = deg
-    if rot > 90.0:
-        rot -= 180.0
-    elif rot < -90.0:
-        rot += 180.0
-    return rot
+def _inward_tangent_label_rotation(theta_rad: float) -> float:
+    """
+    Rotation so text follows the outer-circle tangent and the text box bottom
+    (center-bottom) points toward the radar origin.
+
+    Polar setup: theta_offset=pi/2, theta_direction=-1 (clockwise from north).
+    """
+    phi_out = np.pi / 2.0 - float(theta_rad)
+    return float(np.degrees(phi_out) - 90.0)
 
 
-def _label_ha_va(theta_rad: float, axis_key: str) -> Tuple[str, str]:
-    """Anchor label on the outer side of the radar so text sits outside the plot."""
-    if axis_key == "em":
-        return "center", "bottom"
-    deg = (float(np.degrees(theta_rad)) + 360.0) % 360.0
-    if 155.0 <= deg <= 205.0:
-        return "center", "top"
-    if 25.0 <= deg <= 155.0:
-        return "left", "center"
-    if 205.0 <= deg <= 335.0:
-        return "right", "center"
-    return "center", "bottom"
-
-
-def _label_radius(
-    theta_rad: float,
-    radial_max: float,
-    *,
-    has_subline: bool,
-    axis_key: str,
-) -> float:
-    """Push labels outward; cost axes with a second line need more radial room."""
-    if axis_key == "em":
-        return float(radial_max) * 1.10
-    deg = (float(np.degrees(theta_rad)) + 360.0) % 360.0
-    if has_subline:
-        if 155.0 <= deg <= 205.0:
-            return float(radial_max) * 1.42
-        return float(radial_max) * 1.34
-    return float(radial_max) * 1.22
+def _label_radius_on_circle(radial_max: float, *, has_subline: bool) -> float:
+    """Anchor on the outer ring; multiline labels use the same ring."""
+    _ = has_subline
+    return float(radial_max)
 
 
 def _outer_axis_label_text(
@@ -662,15 +634,14 @@ def _place_axis_labels_tangent(
         scale = scales.get(key)
         text = _outer_axis_label_text(display_name, key, group, scale)
         has_subline = "\n" in text
-        rot = _tangent_label_rotation(angle, key)
-        ha, va = _label_ha_va(angle, key)
-        label_r = _label_radius(angle, radial_max, has_subline=has_subline, axis_key=key)
+        label_r = _label_radius_on_circle(radial_max, has_subline=has_subline)
+        rot = _inward_tangent_label_rotation(angle)
         ax.text(
             angle,
             label_r,
             text,
-            ha=ha,
-            va=va,
+            ha="center",
+            va="bottom",
             fontsize=labelsize,
             rotation=rot,
             rotation_mode="anchor",
