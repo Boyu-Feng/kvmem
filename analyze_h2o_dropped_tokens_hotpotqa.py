@@ -810,6 +810,121 @@ def _plot_three_methods(
     plt.close(fig)
 
 
+def _extract_final_survival_series(
+    plot_data: Dict[str, Any],
+) -> List[Dict[str, Any]]:
+    """Per owner step: fraction of decode tokens still present after final inference."""
+    rows = (plot_data.get("eviction_stats", {}) or {}).get("per_owner", []) or []
+    series: List[Dict[str, Any]] = []
+    for row in rows:
+        owner = int(row.get("owner_step", 0))
+        if owner < 1:
+            continue
+        total = int(row.get("total_tokens", 0))
+        evicted = int(row.get("total_evicted", 0))
+        survived = max(0, total - evicted)
+        survived_frac = row.get("survived_frac")
+        if survived_frac is None and total > 0:
+            survived_frac = float(survived) / float(total)
+        series.append(
+            {
+                "owner_step": owner,
+                "total_tokens": total,
+                "survived_tokens": survived,
+                "survived_frac": float(survived_frac) if survived_frac is not None else None,
+            }
+        )
+    return sorted(series, key=lambda r: int(r["owner_step"]))
+
+
+def _plot_final_survival_line(
+    method_plot_data: List[Tuple[str, Dict[str, Any]]],
+    output_pdf: str,
+    max_react_steps: Optional[int] = None,
+) -> None:
+    """Line chart: after full inference, remaining token fraction per ReAct step."""
+    method_colors = {
+        "H2O": "#1f77b4",
+        "TOVA": "#ff7f0e",
+        "StepKV": "#2ca02c",
+    }
+    fallback_cmap = plt.get_cmap("tab10")
+
+    all_steps: set[int] = set()
+    method_series: List[Tuple[str, List[Dict[str, Any]]]] = []
+    for idx, (method_label, plot_data) in enumerate(method_plot_data):
+        series = _extract_final_survival_series(plot_data)
+        method_series.append((method_label, series))
+        for row in series:
+            all_steps.add(int(row["owner_step"]))
+
+    if not all_steps:
+        fig, ax = plt.subplots(figsize=(8.0, 5.0))
+        ax.text(
+            0.5,
+            0.5,
+            "No survival data under current config",
+            ha="center",
+            va="center",
+            transform=ax.transAxes,
+            fontsize=13,
+            color="gray",
+        )
+        os.makedirs(os.path.dirname(output_pdf) or ".", exist_ok=True)
+        fig.savefig(output_pdf, bbox_inches="tight", pad_inches=0.10)
+        plt.close(fig)
+        return
+
+    x_max = max(all_steps)
+    if max_react_steps is not None and int(max_react_steps) > 0:
+        x_max = min(x_max, int(max_react_steps))
+    x_ticks = list(range(1, x_max + 1))
+
+    fig, ax = plt.subplots(figsize=(9.0, 5.5))
+    for idx, (method_label, series) in enumerate(method_series):
+        by_step = {int(r["owner_step"]): r for r in series}
+        xs: List[int] = []
+        ys: List[float] = []
+        for step in x_ticks:
+            row = by_step.get(step)
+            if not row or row.get("survived_frac") is None:
+                continue
+            xs.append(step)
+            ys.append(float(row["survived_frac"]))
+        if not xs:
+            continue
+        color = method_colors.get(method_label, fallback_cmap(idx % 10))
+        ax.plot(
+            xs,
+            ys,
+            marker="o",
+            markersize=7,
+            linewidth=2.0,
+            label=method_label,
+            color=color,
+        )
+
+    ax.set_xlabel("ReAct step (token origin)", fontsize=18, labelpad=6)
+    ax.set_ylabel("Remaining fraction at episode end", fontsize=18, labelpad=6)
+    ax.set_title(
+        "Decode-token survival by step after full inference",
+        fontsize=18,
+        pad=10,
+    )
+    ax.set_xticks(x_ticks)
+    ax.set_xlim(0.5, x_max + 0.5)
+    ax.set_ylim(0.0, 1.05)
+    ax.yaxis.set_major_formatter(mticker.PercentFormatter(xmax=1.0, decimals=0))
+    ax.grid(True, alpha=0.3)
+    ax.tick_params(axis="both", which="major", labelsize=15)
+    ax.legend(loc="best", frameon=False, fontsize=14)
+    fig.subplots_adjust(left=0.10, right=0.98, top=0.90, bottom=0.14)
+
+    os.makedirs(os.path.dirname(output_pdf) or ".", exist_ok=True)
+    fig.savefig(output_pdf, bbox_inches="tight", pad_inches=0.10)
+    plt.close(fig)
+
+
 def _plot_dropped_three_methods(
     method_plot_data: List[Tuple[str, Dict[str, Any]]],
     output_pdf: str,
@@ -953,6 +1068,7 @@ def main():
                 "plot_data": plot_data,
                 "eviction_stats": plot_data.get("eviction_stats", {}),
                 "owner_step_totals": plot_data.get("owner_step_totals", {}),
+                "final_survival_by_step": _extract_final_survival_series(plot_data),
             }
             method_plot_data.append((display_name, plot_data))
             if _has_dropped_points(plot_data):
@@ -980,6 +1096,7 @@ def main():
     json_path = os.path.join(args.output_dir, f"{prefix}.json")
     dropped_pdf_path = os.path.join(args.output_dir, f"{prefix}_dropped.pdf")
     kept_pdf_path = os.path.join(args.output_dir, f"{prefix}_kept.pdf")
+    survival_pdf_path = os.path.join(args.output_dir, f"{prefix}_final_survival.pdf")
     eviction_stats_path = os.path.join(args.output_dir, f"{prefix}_eviction_stats.txt")
     dropped_points_jsonl_path = os.path.join(args.output_dir, f"{prefix}_dropped_points.jsonl")
     kept_points_jsonl_path = os.path.join(args.output_dir, f"{prefix}_kept_points.jsonl")
@@ -1031,6 +1148,11 @@ def main():
     try:
         _plot_dropped_three_methods(method_plot_data, dropped_pdf_path, max_react_steps=int(args.max_steps))
         _plot_kept_three_methods(method_plot_data, kept_pdf_path, max_react_steps=int(args.max_steps))
+        _plot_final_survival_line(
+            method_plot_data,
+            survival_pdf_path,
+            max_react_steps=int(args.max_steps),
+        )
     except Exception as e:
         with open(plot_error_path, "w", encoding="utf-8") as f:
             f.write(str(e))
@@ -1043,6 +1165,7 @@ def main():
     print(f"[DONE] Kept points saved: {kept_points_jsonl_path}")
     print(f"[DONE] Dropped figure saved: {dropped_pdf_path}")
     print(f"[DONE] Kept figure saved: {kept_pdf_path}")
+    print(f"[DONE] Final survival figure saved: {survival_pdf_path}")
 
 
 if __name__ == "__main__":
