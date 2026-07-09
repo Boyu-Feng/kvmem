@@ -203,6 +203,10 @@ def _extract_plot_data(debug_payload: Dict[str, Any]) -> Dict[str, Any]:
         owner_step_fn=_owner_step,
     )
 
+    next_global_id = int(token_tracker.get("next_global_id", prompt_token_count))
+    owner_step_totals = _count_owner_step_totals(step_ranges, prompt_token_count, next_global_id)
+    eviction_stats = _build_eviction_stats(final_points, owner_step_totals)
+
     return {
         "prompt_token_count": prompt_token_count,
         "events": event_rows,
@@ -213,7 +217,214 @@ def _extract_plot_data(debug_payload: Dict[str, Any]) -> Dict[str, Any]:
         "kept_owner_counts_by_snapshot": kept_owner_counts_by_snapshot,
         "dropped_by_owner_step": [owner_rows[k] for k in sorted(owner_rows.keys(), key=lambda x: int(x))],
         "step_boundaries": step_boundaries,
+        "owner_step_totals": owner_step_totals,
+        "eviction_stats": eviction_stats,
     }
+
+
+def _count_owner_step_totals(
+    step_ranges: List[Tuple[int, int, int]],
+    prompt_token_count: int,
+    next_global_id: int,
+) -> Dict[int, int]:
+    """Decode tokens generated per ReAct owner step (Think+Action+Observation span)."""
+    totals: Dict[int, int] = {}
+    decode_end = int(next_global_id) - 1
+    for sid, start_abs, end_abs in step_ranges:
+        start_abs = max(int(start_abs), int(prompt_token_count))
+        end_abs = min(int(end_abs), decode_end)
+        if end_abs < start_abs:
+            continue
+        totals[int(sid)] = int(totals.get(int(sid), 0) + (end_abs - start_abs + 1))
+    return totals
+
+
+def _build_eviction_stats(
+    final_points: Sequence[Dict[str, Any]],
+    owner_step_totals: Dict[int, int],
+) -> Dict[str, Any]:
+    """
+    Quantify (prune_step, owner_step) evictions vs each owner step's total decode tokens.
+
+    Helps separate global cache_ratio budget effects from cross-step score competition.
+    """
+    matrix: Dict[str, int] = {}
+    evicted_global_ids: set[int] = set()
+    evicted_by_owner: Dict[int, int] = {}
+
+    for point in final_points or []:
+        owner = _display_step_from_point(point)
+        if owner < 1:
+            continue
+        prune_step = max(0, int(point.get("prune_step", point.get("react_step", 0)) or 0))
+        matrix_key = f"{int(prune_step)}:{int(owner)}"
+        matrix[matrix_key] = int(matrix.get(matrix_key, 0) + 1)
+        evicted_by_owner[int(owner)] = int(evicted_by_owner.get(int(owner), 0) + 1)
+        gid = point.get("global_id")
+        if gid is not None:
+            evicted_global_ids.add(int(gid))
+
+    owner_steps = sorted(
+        set(owner_step_totals.keys()) | set(evicted_by_owner.keys()),
+        key=lambda x: int(x),
+    )
+    prune_steps = sorted(
+        set(
+            max(0, int(p.get("prune_step", p.get("react_step", 0)) or 0))
+            for p in (final_points or [])
+        )
+        | set(int(s) for s in owner_steps)
+    )
+
+    cross_tab: List[Dict[str, Any]] = []
+    for prune_step in prune_steps:
+        for owner in owner_steps:
+            count = int(matrix.get(f"{int(prune_step)}:{int(owner)}", 0))
+            if count <= 0:
+                continue
+            owner_total = int(owner_step_totals.get(int(owner), 0))
+            cross_tab.append(
+                {
+                    "prune_step": int(prune_step),
+                    "owner_step": int(owner),
+                    "evicted": int(count),
+                    "owner_total_tokens": int(owner_total),
+                    "evicted_frac_of_owner_total": (
+                        float(count) / float(owner_total) if owner_total > 0 else None
+                    ),
+                    "same_owner_as_prune": bool(int(owner) == int(prune_step)),
+                }
+            )
+
+    per_owner: List[Dict[str, Any]] = []
+    for owner in owner_steps:
+        owner_total = int(owner_step_totals.get(int(owner), 0))
+        evicted = int(evicted_by_owner.get(int(owner), 0))
+        per_owner.append(
+            {
+                "owner_step": int(owner),
+                "total_tokens": int(owner_total),
+                "total_evicted": int(evicted),
+                "evicted_frac": (float(evicted) / float(owner_total) if owner_total > 0 else None),
+                "survived_frac": (
+                    float(owner_total - evicted) / float(owner_total) if owner_total > 0 else None
+                ),
+            }
+        )
+
+    per_prune: List[Dict[str, Any]] = []
+    prune_totals: Dict[int, int] = {}
+    for row in cross_tab:
+        ps = int(row["prune_step"])
+        prune_totals[ps] = int(prune_totals.get(ps, 0) + int(row["evicted"]))
+    for prune_step in prune_steps:
+        total_evicted = int(prune_totals.get(int(prune_step), 0))
+        same_owner = int(matrix.get(f"{int(prune_step)}:{int(prune_step)}", 0))
+        cross_owner = int(total_evicted - same_owner)
+        owner_total = int(owner_step_totals.get(int(prune_step), 0))
+        per_prune.append(
+            {
+                "prune_step": int(prune_step),
+                "total_evicted": int(total_evicted),
+                "same_owner_evicted": int(same_owner),
+                "cross_owner_evicted": int(cross_owner),
+                "same_owner_frac_of_event": (
+                    float(same_owner) / float(total_evicted) if total_evicted > 0 else None
+                ),
+                "cross_owner_frac_of_event": (
+                    float(cross_owner) / float(total_evicted) if total_evicted > 0 else None
+                ),
+                "same_owner_evicted_frac_of_owner_total": (
+                    float(same_owner) / float(owner_total) if owner_total > 0 else None
+                ),
+            }
+        )
+
+    return {
+        "cross_tab": cross_tab,
+        "per_owner": per_owner,
+        "per_prune_step": per_prune,
+        "owner_steps": [int(s) for s in owner_steps],
+        "prune_steps": [int(s) for s in prune_steps],
+        "unique_evicted_tokens": int(len(evicted_global_ids) if evicted_global_ids else sum(evicted_by_owner.values())),
+    }
+
+
+def _annotate_expected_budget_evict_frac(
+    eviction_stats: Dict[str, Any],
+    cache_ratio: float,
+) -> None:
+    expected = float(max(0.0, min(1.0, 1.0 - float(cache_ratio))))
+    for row in eviction_stats.get("per_prune_step", []) or []:
+        row["expected_budget_evict_frac"] = expected
+
+
+def _format_eviction_stats_text(
+    method_label: str,
+    eviction_stats: Dict[str, Any],
+    cache_ratio: float,
+) -> str:
+    """Render human-readable tables for console / txt export."""
+    lines: List[str] = []
+    lines.append(f"=== Eviction stats: {method_label} (cache_ratio={cache_ratio:.3f}) ===")
+    lines.append("")
+
+    lines.append("Table A: (prune_step x owner_step) evicted count / owner total / frac")
+    lines.append("prune | owner | evicted | owner_total | evicted/owner | same?")
+    lines.append("------+-------+---------+-------------+---------------+------")
+    for row in sorted(
+        eviction_stats.get("cross_tab", []) or [],
+        key=lambda r: (int(r["prune_step"]), int(r["owner_step"])),
+    ):
+        frac = row.get("evicted_frac_of_owner_total")
+        frac_s = f"{float(frac):.3f}" if frac is not None else "n/a"
+        same = "Y" if row.get("same_owner_as_prune") else "N"
+        lines.append(
+            f"{int(row['prune_step']):5d} | {int(row['owner_step']):5d} | "
+            f"{int(row['evicted']):7d} | {int(row['owner_total_tokens']):11d} | "
+            f"{frac_s:13s} | {same:4s}"
+        )
+    lines.append("")
+
+    lines.append("Table B: per owner_step cumulative evicted vs total decode tokens")
+    lines.append("owner | total | evicted | evicted_frac | survived_frac")
+    lines.append("------+-------+---------+--------------+--------------")
+    for row in eviction_stats.get("per_owner", []) or []:
+        ev_frac = row.get("evicted_frac")
+        sv_frac = row.get("survived_frac")
+        ev_s = f"{float(ev_frac):.3f}" if ev_frac is not None else "n/a"
+        sv_s = f"{float(sv_frac):.3f}" if sv_frac is not None else "n/a"
+        lines.append(
+            f"{int(row['owner_step']):5d} | {int(row['total_tokens']):5d} | "
+            f"{int(row['total_evicted']):7d} | {ev_s:12s} | {sv_s:12s}"
+        )
+    lines.append("")
+
+    expected = float(max(0.0, min(1.0, 1.0 - float(cache_ratio))))
+    lines.append(
+        "Table C: per prune_step — same-owner vs cross-owner evictions "
+        f"(expected same/owner_total ~{expected:.3f} if budget-only)"
+    )
+    lines.append(
+        "prune | total | same_owner | cross_owner | same/event | same/owner_total | expected"
+    )
+    lines.append(
+        "------+-------+------------+-------------+------------+----------------+----------"
+    )
+    for row in eviction_stats.get("per_prune_step", []) or []:
+        same_event = row.get("same_owner_frac_of_event")
+        same_owner_total = row.get("same_owner_evicted_frac_of_owner_total")
+        expected_row = row.get("expected_budget_evict_frac", expected)
+        se_s = f"{float(same_event):.3f}" if same_event is not None else "n/a"
+        so_s = f"{float(same_owner_total):.3f}" if same_owner_total is not None else "n/a"
+        ex_s = f"{float(expected_row):.3f}" if expected_row is not None else "n/a"
+        lines.append(
+            f"{int(row['prune_step']):5d} | {int(row['total_evicted']):5d} | "
+            f"{int(row['same_owner_evicted']):10d} | {int(row['cross_owner_evicted']):11d} | "
+            f"{se_s:10s} | {so_s:14s} | {ex_s:8s}"
+        )
+    lines.append("")
+    return "\n".join(lines)
 
 
 def _split_pruning_events(step_pruning_events: Dict[str, Any]) -> Tuple[List[int], Dict[int, List[int]]]:
@@ -730,12 +941,18 @@ def main():
                 max_steps=int(args.max_steps),
             )
             plot_data = _extract_plot_data(debug_payload)
+            _annotate_expected_budget_evict_frac(
+                plot_data.get("eviction_stats", {}),
+                cache_ratio=float(args.cache_ratio),
+            )
             method_results[pruning_mode] = {
                 "display_name": display_name,
                 "predicted_answer": pred,
                 "trajectory": traj,
                 "step_timings": timings,
                 "plot_data": plot_data,
+                "eviction_stats": plot_data.get("eviction_stats", {}),
+                "owner_step_totals": plot_data.get("owner_step_totals", {}),
             }
             method_plot_data.append((display_name, plot_data))
             if _has_dropped_points(plot_data):
@@ -763,6 +980,7 @@ def main():
     json_path = os.path.join(args.output_dir, f"{prefix}.json")
     dropped_pdf_path = os.path.join(args.output_dir, f"{prefix}_dropped.pdf")
     kept_pdf_path = os.path.join(args.output_dir, f"{prefix}_kept.pdf")
+    eviction_stats_path = os.path.join(args.output_dir, f"{prefix}_eviction_stats.txt")
     dropped_points_jsonl_path = os.path.join(args.output_dir, f"{prefix}_dropped_points.jsonl")
     kept_points_jsonl_path = os.path.join(args.output_dir, f"{prefix}_kept_points.jsonl")
     plot_error_path = os.path.join(args.output_dir, f"{prefix}_plot_error.txt")
@@ -788,6 +1006,18 @@ def main():
     with open(json_path, "w", encoding="utf-8") as f:
         json.dump(output_blob, f, ensure_ascii=False, indent=2)
 
+    stats_lines: List[str] = []
+    for display_name, plot_data in method_plot_data:
+        stats = plot_data.get("eviction_stats", {}) or {}
+        _annotate_expected_budget_evict_frac(stats, cache_ratio=float(args.cache_ratio))
+        stats_lines.append(
+            _format_eviction_stats_text(display_name, stats, cache_ratio=float(args.cache_ratio))
+        )
+    stats_text = "\n".join(stats_lines).rstrip() + "\n"
+    with open(eviction_stats_path, "w", encoding="utf-8") as f:
+        f.write(stats_text)
+    print(stats_text)
+
     with open(dropped_points_jsonl_path, "w", encoding="utf-8") as f:
         for display_name, plot_data in method_plot_data:
             for p in plot_data.get("final_points", []) or plot_data.get("points", []) or []:
@@ -808,6 +1038,7 @@ def main():
         raise
 
     print(f"[DONE] Data saved: {json_path}")
+    print(f"[DONE] Eviction stats saved: {eviction_stats_path}")
     print(f"[DONE] Dropped points saved: {dropped_points_jsonl_path}")
     print(f"[DONE] Kept points saved: {kept_points_jsonl_path}")
     print(f"[DONE] Dropped figure saved: {dropped_pdf_path}")
