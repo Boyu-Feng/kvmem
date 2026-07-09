@@ -9,6 +9,8 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import matplotlib.ticker as mticker
+from matplotlib.lines import Line2D
+from matplotlib.patches import Patch
 
 import run_all_wiki_experiments_v2 as base
 from analyze_stepkv_discarded_tokens import _build_kv_config
@@ -708,7 +710,52 @@ def _plot_style(mode: str) -> Dict[str, float]:
 
 def _legend_bottom_margin(n_items: int, ncol: int) -> float:
     rows = max(1, (int(n_items) + int(ncol) - 1) // int(ncol))
-    return 0.08 + 0.045 * rows
+    return 0.06 + 0.038 * rows
+
+
+def _bottom_axis_labelpad() -> int:
+    return 2
+
+
+def _global_react_step_count(
+    method_plot_data: List[Tuple[str, Dict[str, Any]]],
+    max_react_steps: Optional[int] = None,
+) -> int:
+    """Max ReAct step count across all methods (for shared axes/legends)."""
+    max_step = 1
+    for _, plot_data in method_plot_data:
+        owner_totals = plot_data.get("owner_step_totals") or {}
+        if owner_totals:
+            max_step = max(max_step, max(int(k) for k in owner_totals.keys()))
+        for bd in plot_data.get("step_boundaries", []) or []:
+            max_step = max(max_step, int(bd.get("step", 1)))
+        for row in plot_data.get("cohort_survival", []) or []:
+            max_step = max(
+                max_step,
+                int(row.get("snapshot_step", 1)),
+                int(row.get("owner_step", 1)),
+            )
+        for row in plot_data.get("survival_dynamics", []) or []:
+            max_step = max(max_step, int(row.get("snapshot_step", 1)))
+    if max_react_steps is not None and int(max_react_steps) > 0:
+        max_step = min(max_step, int(max_react_steps))
+    return max(1, int(max_step))
+
+
+def _global_owner_steps(
+    method_plot_data: List[Tuple[str, Dict[str, Any]]],
+    max_react_steps: Optional[int] = None,
+) -> List[int]:
+    """Union of owner steps across methods, up to the global max step count."""
+    steps: set[int] = set()
+    for _, plot_data in method_plot_data:
+        owner_totals = plot_data.get("owner_step_totals") or {}
+        steps.update(int(k) for k in owner_totals.keys())
+    max_step = _global_react_step_count(method_plot_data, max_react_steps)
+    if not steps:
+        steps = set(range(1, max_step + 1))
+    steps = {s for s in steps if 1 <= s <= max_step}
+    return sorted(steps) if steps else list(range(1, max_step + 1))
 
 
 def _max_react_step_in_plot_data(plot_data: Dict[str, Any], mode: str) -> int:
@@ -750,12 +797,12 @@ def _plot_three_methods(
         for p in points:
             all_owner_steps.add(_point_display_step(p, step_key))
             panel_max_x = max(panel_max_x, int(p["x"]))
-    owner_steps = sorted(s for s in all_owner_steps if s >= 1)
+    owner_steps = _global_owner_steps(method_plot_data, max_react_steps)
     cmap = plt.get_cmap("tab10")
-    owner_to_color = {s: cmap(i % 10) for i, s in enumerate(owner_steps)}
+    owner_to_color = {s: cmap((s - 1) % 10) for s in owner_steps}
     legend_marker = style.get("legend_marker", 9)
     legend_handles = [
-        plt.Line2D(
+        Line2D(
             [0],
             [0],
             marker="o",
@@ -768,12 +815,14 @@ def _plot_three_methods(
     ]
     legend_labels = [_step_label(s) for s in owner_steps]
 
+    global_y_max = _global_react_step_count(method_plot_data, max_react_steps)
     global_y_max = max(
-        (_max_react_step_in_plot_data(plot_data, mode) for _, plot_data in method_plot_data),
-        default=1,
+        global_y_max,
+        max(
+            (_max_react_step_in_plot_data(plot_data, mode) for _, plot_data in method_plot_data),
+            default=1,
+        ),
     )
-    if max_react_steps is not None and int(max_react_steps) > 0:
-        global_y_max = min(global_y_max, int(max_react_steps))
 
     n_panels = len(method_plot_data)
     if mode == "dropped":
@@ -785,16 +834,16 @@ def _plot_three_methods(
     fig, axes = plt.subplots(n_panels, 1, figsize=(fig_w, fig_h), sharex=False)
     if n_panels == 1:
         axes = [axes]
-    has_bottom_legend = bool(legend_handles) and mode in ("dropped", "kept")
+    has_bottom_legend = bool(legend_handles) and mode == "kept"
     legend_ncol = int(style.get("legend_ncol", 4))
     if has_bottom_legend:
-        legend_ncol = min(legend_ncol, max(1, len(legend_labels)))
+        legend_ncol = max(1, len(legend_labels))
     bottom_margin = (
         _legend_bottom_margin(len(legend_labels), legend_ncol)
         if has_bottom_legend
-        else 0.08
+        else 0.07
     )
-    fig.subplots_adjust(hspace=0.32, bottom=bottom_margin, top=0.97, left=0.10, right=0.98)
+    fig.subplots_adjust(hspace=0.32, bottom=bottom_margin, top=0.98, left=0.10, right=0.98)
 
     y_label = "Cumulative keep after step" if mode == "kept" else "Evicted at ReAct step"
     empty_msg = (
@@ -802,7 +851,7 @@ def _plot_three_methods(
         if mode == "kept"
         else "No dropped-token points under current config"
     )
-    legend_title = "Kept token origin" if mode == "kept" else None
+    x_labelpad = _bottom_axis_labelpad()
 
     for ax_idx, (method_label, plot_data) in enumerate(method_plot_data):
         ax = axes[ax_idx]
@@ -868,7 +917,6 @@ def _plot_three_methods(
 
         if ax_idx == n_panels // 2:
             ax.set_ylabel(y_label, fontsize=style["axis_label"], labelpad=style["labelpad"])
-        ax.set_title(method_label, loc="left", fontsize=style["title"], pad=6)
         ax.tick_params(axis="both", which="major", labelsize=style["tick"], pad=3)
         ax.yaxis.set_major_locator(mticker.MultipleLocator(1))
         ax.set_ylim(0.5, global_y_max + 0.5)
@@ -880,24 +928,23 @@ def _plot_three_methods(
     axes[-1].set_xlabel(
         "Key Position Index (No Prefill)",
         fontsize=style["axis_label"],
-        labelpad=style["labelpad"],
+        labelpad=x_labelpad,
     )
 
     if has_bottom_legend:
-        legend_kwargs: Dict[str, Any] = {
-            "loc": "upper center",
-            "bbox_to_anchor": (0.5, 0.02),
-            "ncol": legend_ncol,
-            "frameon": False,
-            "fontsize": style["legend_font"],
-            "handlelength": 1.6,
-            "handletextpad": 0.6,
-            "columnspacing": 1.6,
-            "borderaxespad": 0.0,
-        }
-        if legend_title:
-            legend_kwargs["title"] = legend_title
-        fig.legend(legend_handles, legend_labels, **legend_kwargs)
+        fig.legend(
+            legend_handles,
+            legend_labels,
+            loc="upper center",
+            bbox_to_anchor=(0.5, 0.01),
+            ncol=legend_ncol,
+            frameon=False,
+            fontsize=style["legend_font"],
+            handlelength=1.6,
+            handletextpad=0.6,
+            columnspacing=1.6,
+            borderaxespad=0.0,
+        )
 
     os.makedirs(os.path.dirname(output_pdf) or ".", exist_ok=True)
     fig.savefig(output_pdf, bbox_inches="tight", pad_inches=0.10)
@@ -944,7 +991,7 @@ def _plot_final_survival_line(
     }
     fallback_cmap = plt.get_cmap("tab10")
 
-    all_steps: set[int] = set()
+    all_steps = set(_global_owner_steps(method_plot_data, max_react_steps))
     method_series: List[Tuple[str, List[Dict[str, Any]]]] = []
     for idx, (method_label, plot_data) in enumerate(method_plot_data):
         series = _extract_final_survival_series(plot_data)
@@ -969,9 +1016,7 @@ def _plot_final_survival_line(
         plt.close(fig)
         return
 
-    x_max = max(all_steps)
-    if max_react_steps is not None and int(max_react_steps) > 0:
-        x_max = min(x_max, int(max_react_steps))
+    x_max = _global_react_step_count(method_plot_data, max_react_steps)
     x_ticks = list(range(1, x_max + 1))
 
     fig, ax = plt.subplots(figsize=(9.0, 5.5))
@@ -998,21 +1043,29 @@ def _plot_final_survival_line(
             color=color,
         )
 
-    ax.set_xlabel("ReAct step (token origin)", fontsize=18, labelpad=6)
+    x_labelpad = _bottom_axis_labelpad()
+    ax.set_xlabel("ReAct step (token origin)", fontsize=18, labelpad=x_labelpad)
     ax.set_ylabel("Remaining fraction at episode end", fontsize=18, labelpad=6)
-    ax.set_title(
-        "Decode-token survival by step after full inference",
-        fontsize=18,
-        pad=10,
-    )
     ax.set_xticks(x_ticks)
     ax.set_xlim(0.5, x_max + 0.5)
     ax.set_ylim(0.0, 1.05)
     ax.yaxis.set_major_formatter(mticker.PercentFormatter(xmax=1.0, decimals=0))
     ax.grid(True, alpha=0.3)
     ax.tick_params(axis="both", which="major", labelsize=15)
-    ax.legend(loc="best", frameon=False, fontsize=14)
-    fig.subplots_adjust(left=0.10, right=0.98, top=0.90, bottom=0.14)
+    handles, labels = ax.get_legend_handles_labels()
+    legend_ncol = max(1, len(labels))
+    bottom = _legend_bottom_margin(len(labels), legend_ncol) if labels else 0.07
+    fig.subplots_adjust(left=0.10, right=0.98, top=0.98, bottom=bottom)
+    if handles:
+        fig.legend(
+            handles,
+            labels,
+            loc="upper center",
+            bbox_to_anchor=(0.5, 0.01),
+            ncol=legend_ncol,
+            frameon=False,
+            fontsize=14,
+        )
 
     os.makedirs(os.path.dirname(output_pdf) or ".", exist_ok=True)
     fig.savefig(output_pdf, bbox_inches="tight", pad_inches=0.10)
@@ -1053,10 +1106,35 @@ def _plot_survival_dynamics(
     if n_panels == 1:
         axes = [axes]
 
-    global_x_max = 1
+    global_x_max = _global_react_step_count(method_plot_data, max_react_steps)
+    x_labelpad = _bottom_axis_labelpad()
     has_any = False
+    dynamics_legend = [
+        Patch(facecolor=prior_color, alpha=0.78, label="Prior steps in cache"),
+        Patch(facecolor=current_color, alpha=0.78, label="Current step in cache"),
+        Line2D(
+            [0],
+            [0],
+            color=prior_color,
+            linewidth=3.0,
+            marker="s",
+            markersize=8,
+            linestyle="--",
+            label="Prior steps kept %",
+        ),
+        Line2D(
+            [0],
+            [0],
+            color=current_color,
+            linewidth=3.0,
+            marker="o",
+            markersize=9,
+            linestyle="-",
+            label="Current step kept %",
+        ),
+    ]
 
-    for ax, (method_label, plot_data) in zip(axes, method_plot_data):
+    for ax, (_method_label, plot_data) in zip(axes, method_plot_data):
         rows = list(plot_data.get("survival_dynamics", []) or [])
         if not rows:
             ax.text(
@@ -1069,42 +1147,44 @@ def _plot_survival_dynamics(
                 fontsize=13,
                 color="gray",
             )
-            ax.set_title(method_label, loc="left", fontsize=style["title"], pad=6)
             continue
 
         has_any = True
-        xs = [int(r["snapshot_step"]) for r in rows]
-        global_x_max = max(global_x_max, max(xs))
-        prior_kept = [int(r["prior_kept"]) for r in rows]
-        current_kept = [int(r["current_kept"]) for r in rows]
-        total_kept = [int(r["total_kept"]) for r in rows]
+        row_by_step = {int(r["snapshot_step"]): r for r in rows}
+        xs = list(range(1, global_x_max + 1))
+        prior_kept = [int(row_by_step[x]["prior_kept"]) if x in row_by_step else 0 for x in xs]
+        current_kept = [int(row_by_step[x]["current_kept"]) if x in row_by_step else 0 for x in xs]
+        total_kept = [int(row_by_step[x]["total_kept"]) if x in row_by_step else 0 for x in xs]
         prior_frac = [
-            float(r["prior_kept_frac"]) if r.get("prior_kept_frac") is not None else float("nan")
-            for r in rows
+            float(row_by_step[x]["prior_kept_frac"]) if x in row_by_step and row_by_step[x].get("prior_kept_frac") is not None else float("nan")
+            for x in xs
         ]
         current_frac = [
-            float(r["current_kept_frac"]) if r.get("current_kept_frac") is not None else float("nan")
-            for r in rows
+            float(row_by_step[x]["current_kept_frac"]) if x in row_by_step and row_by_step[x].get("current_kept_frac") is not None else float("nan")
+            for x in xs
         ]
 
+        plotted_xs = [x for x in xs if x in row_by_step]
+        if not plotted_xs:
+            continue
+
         ax.stackplot(
-            xs,
-            prior_kept,
-            current_kept,
-            labels=["Prior steps in cache", "Current step in cache"],
+            plotted_xs,
+            [prior_kept[xs.index(x)] for x in plotted_xs],
+            [current_kept[xs.index(x)] for x in plotted_xs],
             colors=[prior_color, current_color],
             alpha=0.78,
         )
         ax.set_ylabel("Kept tokens in cache", fontsize=style["axis_label"], labelpad=6)
-        ax.set_title(method_label, loc="left", fontsize=style["title"], pad=6)
         ax.grid(True, axis="y", alpha=0.25)
         ax.tick_params(axis="both", which="major", labelsize=style["tick"])
 
-        for x, total in zip(xs, total_kept):
+        plotted_totals = [total_kept[xs.index(x)] for x in plotted_xs]
+        for x, total in zip(plotted_xs, plotted_totals):
             if total > 0:
                 ax.text(
                     x,
-                    total + max(1, 0.02 * max(total_kept)),
+                    total + max(1, 0.02 * max(plotted_totals)),
                     f"{total}",
                     ha="center",
                     va="bottom",
@@ -1114,62 +1194,45 @@ def _plot_survival_dynamics(
 
         ax2 = ax.twinx()
         ax2.plot(
-            xs,
-            prior_frac,
+            plotted_xs,
+            [prior_frac[xs.index(x)] for x in plotted_xs],
             color=prior_color,
             linewidth=3.0,
             marker="s",
             markersize=8,
             linestyle="--",
-            label="Prior steps kept %",
         )
         ax2.plot(
-            xs,
-            current_frac,
+            plotted_xs,
+            [current_frac[xs.index(x)] for x in plotted_xs],
             color=current_color,
             linewidth=3.0,
             marker="o",
             markersize=9,
             linestyle="-",
-            label="Current step kept %",
         )
         ax2.set_ylim(0.0, 1.05)
         ax2.yaxis.set_major_formatter(mticker.PercentFormatter(xmax=1.0, decimals=0))
         ax2.set_ylabel("Remaining fraction", fontsize=style["axis_label"], labelpad=10)
         ax2.tick_params(axis="y", which="major", labelsize=style["tick"])
 
-        lines1, labels1 = ax.get_legend_handles_labels()
-        lines2, labels2 = ax2.get_legend_handles_labels()
-        ax2.legend(
-            lines1 + lines2,
-            labels1 + labels2,
-            loc="upper right",
-            frameon=True,
-            framealpha=0.92,
-            fontsize=style["legend"],
-        )
-
-    if max_react_steps is not None and int(max_react_steps) > 0:
-        global_x_max = min(global_x_max, int(max_react_steps))
-
     for ax in axes:
         ax.set_xlim(0.5, global_x_max + 0.5)
         ax.set_xticks(list(range(1, global_x_max + 1)))
 
-    axes[-1].set_xlabel(
-        "After ReAct step k (snapshot right after step-k prune)",
-        fontsize=style["axis_label"],
-        labelpad=8,
-    )
+    axes[-1].set_xlabel("ReAct step", fontsize=style["axis_label"], labelpad=x_labelpad)
 
+    bottom = _legend_bottom_margin(len(dynamics_legend), len(dynamics_legend)) if has_any else 0.07
+    fig.subplots_adjust(hspace=0.28, top=0.98, bottom=bottom, left=0.08, right=0.90)
     if has_any:
-        fig.suptitle(
-            "Prior vs current step tokens kept in cache over ReAct steps",
-            fontsize=style["title"] + 2,
-            y=0.995,
+        fig.legend(
+            handles=dynamics_legend,
+            loc="upper center",
+            bbox_to_anchor=(0.5, 0.01),
+            ncol=len(dynamics_legend),
+            frameon=False,
+            fontsize=style["legend"],
         )
-
-    fig.subplots_adjust(hspace=0.28, top=0.94, bottom=0.10, left=0.08, right=0.90)
     os.makedirs(os.path.dirname(output_pdf) or ".", exist_ok=True)
     fig.savefig(output_pdf, bbox_inches="tight", pad_inches=0.12)
     plt.close(fig)
@@ -1208,10 +1271,13 @@ def _plot_cohort_survival(
         axes = [axes]
 
     cmap = plt.get_cmap("tab10")
-    global_x_max = 1
+    global_x_max = _global_react_step_count(method_plot_data, max_react_steps)
+    global_owner_steps = _global_owner_steps(method_plot_data, max_react_steps)
+    owner_to_color = {s: cmap((s - 1) % 10) for s in global_owner_steps}
+    x_labelpad = _bottom_axis_labelpad()
     has_any = False
 
-    for ax, (method_label, plot_data) in zip(axes, method_plot_data):
+    for ax, (_method_label, plot_data) in zip(axes, method_plot_data):
         rows = list(plot_data.get("cohort_survival", []) or [])
         if not rows:
             ax.text(
@@ -1224,7 +1290,6 @@ def _plot_cohort_survival(
                 fontsize=13,
                 color="gray",
             )
-            ax.set_title(method_label, loc="left", fontsize=style["title"], pad=6)
             continue
 
         has_any = True
@@ -1233,14 +1298,13 @@ def _plot_cohort_survival(
             owner = int(row["owner_step"])
             by_owner.setdefault(owner, []).append(row)
 
-        owner_steps = sorted(by_owner.keys())
-        global_x_max = max(global_x_max, max(int(r["snapshot_step"]) for r in rows))
-
-        for owner in owner_steps:
-            series = sorted(by_owner[owner], key=lambda r: int(r["snapshot_step"]))
+        for owner in global_owner_steps:
+            series = sorted(by_owner.get(owner, []), key=lambda r: int(r["snapshot_step"]))
+            if not series:
+                continue
             xs = [int(r["snapshot_step"]) for r in series]
             ys = [float(r["kept_frac"]) for r in series]
-            color = cmap((owner - 1) % 10)
+            color = owner_to_color[owner]
             ax.plot(
                 xs,
                 ys,
@@ -1248,7 +1312,6 @@ def _plot_cohort_survival(
                 linewidth=2.8,
                 marker="o",
                 markersize=8,
-                label=f"Step {owner}",
             )
             if xs and ys:
                 ax.annotate(
@@ -1264,46 +1327,41 @@ def _plot_cohort_survival(
                 )
 
         ax.set_ylabel("Cohort remaining %", fontsize=style["axis_label"], labelpad=6)
-        ax.set_title(method_label, loc="left", fontsize=style["title"], pad=6)
         ax.set_ylim(0.0, 1.08)
         ax.yaxis.set_major_formatter(mticker.PercentFormatter(xmax=1.0, decimals=0))
         ax.grid(True, alpha=0.3)
         ax.tick_params(axis="both", which="major", labelsize=style["tick"])
 
-    if max_react_steps is not None and int(max_react_steps) > 0:
-        global_x_max = min(global_x_max, int(max_react_steps))
-
     for ax in axes:
         ax.set_xlim(0.5, global_x_max + 0.5)
         ax.set_xticks(list(range(1, global_x_max + 1)))
 
-    axes[-1].set_xlabel(
-        "Snapshot after ReAct step k prune",
-        fontsize=style["axis_label"],
-        labelpad=8,
-    )
+    axes[-1].set_xlabel("ReAct step", fontsize=style["axis_label"], labelpad=x_labelpad)
 
-    legend_labels: List[str] = []
-    if has_any:
-        fig.suptitle(
-            "Per-step token cohort survival across subsequent prunes",
-            fontsize=style["title"] + 2,
-            y=0.995,
+    legend_handles = [
+        Line2D(
+            [0],
+            [0],
+            color=owner_to_color[s],
+            linewidth=2.8,
+            marker="o",
+            markersize=8,
+            label=f"Step {s}",
         )
-        handles, legend_labels = axes[0].get_legend_handles_labels()
-        if handles:
-            fig.legend(
-                handles,
-                legend_labels,
-                loc="upper center",
-                bbox_to_anchor=(0.5, 0.02),
-                ncol=min(7, max(1, len(legend_labels))),
-                frameon=False,
-                fontsize=style["legend"],
-            )
-
-    bottom = 0.16 if legend_labels else 0.10
-    fig.subplots_adjust(hspace=0.30, top=0.93, bottom=bottom, left=0.10, right=0.97)
+        for s in global_owner_steps
+    ]
+    legend_ncol = max(1, len(global_owner_steps))
+    bottom = _legend_bottom_margin(len(global_owner_steps), legend_ncol) if has_any else 0.07
+    fig.subplots_adjust(hspace=0.30, top=0.98, bottom=bottom, left=0.10, right=0.97)
+    if has_any:
+        fig.legend(
+            handles=legend_handles,
+            loc="upper center",
+            bbox_to_anchor=(0.5, 0.01),
+            ncol=legend_ncol,
+            frameon=False,
+            fontsize=style["legend"],
+        )
     os.makedirs(os.path.dirname(output_pdf) or ".", exist_ok=True)
     fig.savefig(output_pdf, bbox_inches="tight", pad_inches=0.12)
     plt.close(fig)
