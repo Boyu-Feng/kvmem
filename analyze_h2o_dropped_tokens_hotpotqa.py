@@ -210,6 +210,10 @@ def _extract_plot_data(debug_payload: Dict[str, Any]) -> Dict[str, Any]:
         kept_owner_counts_by_snapshot,
         owner_step_totals,
     )
+    cohort_survival = _build_cohort_survival_dynamics(
+        kept_owner_counts_by_snapshot,
+        owner_step_totals,
+    )
 
     return {
         "prompt_token_count": prompt_token_count,
@@ -224,6 +228,7 @@ def _extract_plot_data(debug_payload: Dict[str, Any]) -> Dict[str, Any]:
         "owner_step_totals": owner_step_totals,
         "eviction_stats": eviction_stats,
         "survival_dynamics": survival_dynamics,
+        "cohort_survival": cohort_survival,
     }
 
 
@@ -293,6 +298,38 @@ def _build_survival_dynamics(
                 "current_share_of_cache": current_share,
             }
         )
+    return rows
+
+
+def _build_cohort_survival_dynamics(
+    kept_owner_counts_by_snapshot: Dict[str, Dict[str, int]],
+    owner_step_totals: Dict[int, int],
+) -> List[Dict[str, Any]]:
+    """
+    Track each owner-step cohort separately across later snapshots.
+
+    Example: step-2 tokens may survive step-2 prune but keep dropping at steps 3..7.
+    """
+    owner_steps = sorted(int(s) for s in owner_step_totals.keys())
+    rows: List[Dict[str, Any]] = []
+    for owner_step in owner_steps:
+        total = int(owner_step_totals.get(owner_step, 0))
+        if total <= 0:
+            continue
+        for snapshot_step in owner_steps:
+            if int(snapshot_step) < int(owner_step):
+                continue
+            counts = kept_owner_counts_by_snapshot.get(str(snapshot_step), {}) or {}
+            kept = int(counts.get(str(owner_step), counts.get(owner_step, 0)) or 0)
+            rows.append(
+                {
+                    "owner_step": int(owner_step),
+                    "snapshot_step": int(snapshot_step),
+                    "kept": int(kept),
+                    "total": int(total),
+                    "kept_frac": float(kept) / float(total),
+                }
+            )
     return rows
 
 
@@ -1138,6 +1175,140 @@ def _plot_survival_dynamics(
     plt.close(fig)
 
 
+def _plot_cohort_survival(
+    method_plot_data: List[Tuple[str, Dict[str, Any]]],
+    output_pdf: str,
+    max_react_steps: Optional[int] = None,
+) -> None:
+    """
+    One line per owner-step cohort: how much of that step's tokens survive each later prune.
+
+    Unlike the aggregated prior/current chart, this reveals late cross-step evictions
+    (e.g., step-2 tokens dropping to ~20% by episode end).
+    """
+    style = {
+        "axis_label": 20,
+        "tick": 16,
+        "title": 18,
+        "legend": 13,
+        "panel_h": 4.5,
+    }
+    plt.rcParams.update(
+        {
+            "font.size": style["tick"],
+            "axes.labelsize": style["axis_label"],
+            "axes.titlesize": style["title"],
+            "legend.fontsize": style["legend"],
+        }
+    )
+
+    n_panels = len(method_plot_data)
+    fig, axes = plt.subplots(n_panels, 1, figsize=(14.0, style["panel_h"] * n_panels), sharex=True)
+    if n_panels == 1:
+        axes = [axes]
+
+    cmap = plt.get_cmap("tab10")
+    global_x_max = 1
+    has_any = False
+
+    for ax, (method_label, plot_data) in zip(axes, method_plot_data):
+        rows = list(plot_data.get("cohort_survival", []) or [])
+        if not rows:
+            ax.text(
+                0.5,
+                0.5,
+                "No cohort survival data under current config",
+                ha="center",
+                va="center",
+                transform=ax.transAxes,
+                fontsize=13,
+                color="gray",
+            )
+            ax.set_title(method_label, loc="left", fontsize=style["title"], pad=6)
+            continue
+
+        has_any = True
+        by_owner: Dict[int, List[Dict[str, Any]]] = {}
+        for row in rows:
+            owner = int(row["owner_step"])
+            by_owner.setdefault(owner, []).append(row)
+
+        owner_steps = sorted(by_owner.keys())
+        global_x_max = max(global_x_max, max(int(r["snapshot_step"]) for r in rows))
+
+        for owner in owner_steps:
+            series = sorted(by_owner[owner], key=lambda r: int(r["snapshot_step"]))
+            xs = [int(r["snapshot_step"]) for r in series]
+            ys = [float(r["kept_frac"]) for r in series]
+            color = cmap((owner - 1) % 10)
+            ax.plot(
+                xs,
+                ys,
+                color=color,
+                linewidth=2.8,
+                marker="o",
+                markersize=8,
+                label=f"Step {owner}",
+            )
+            if xs and ys:
+                ax.annotate(
+                    f"{ys[-1] * 100.0:.0f}%",
+                    xy=(xs[-1], ys[-1]),
+                    xytext=(6, 0),
+                    textcoords="offset points",
+                    ha="left",
+                    va="center",
+                    fontsize=11,
+                    color=color,
+                    fontweight="bold",
+                )
+
+        ax.set_ylabel("Cohort remaining %", fontsize=style["axis_label"], labelpad=6)
+        ax.set_title(method_label, loc="left", fontsize=style["title"], pad=6)
+        ax.set_ylim(0.0, 1.08)
+        ax.yaxis.set_major_formatter(mticker.PercentFormatter(xmax=1.0, decimals=0))
+        ax.grid(True, alpha=0.3)
+        ax.tick_params(axis="both", which="major", labelsize=style["tick"])
+
+    if max_react_steps is not None and int(max_react_steps) > 0:
+        global_x_max = min(global_x_max, int(max_react_steps))
+
+    for ax in axes:
+        ax.set_xlim(0.5, global_x_max + 0.5)
+        ax.set_xticks(list(range(1, global_x_max + 1)))
+
+    axes[-1].set_xlabel(
+        "Snapshot after ReAct step k prune",
+        fontsize=style["axis_label"],
+        labelpad=8,
+    )
+
+    legend_labels: List[str] = []
+    if has_any:
+        fig.suptitle(
+            "Per-step token cohort survival across subsequent prunes",
+            fontsize=style["title"] + 2,
+            y=0.995,
+        )
+        handles, legend_labels = axes[0].get_legend_handles_labels()
+        if handles:
+            fig.legend(
+                handles,
+                legend_labels,
+                loc="upper center",
+                bbox_to_anchor=(0.5, 0.02),
+                ncol=min(7, max(1, len(legend_labels))),
+                frameon=False,
+                fontsize=style["legend"],
+            )
+
+    bottom = 0.16 if legend_labels else 0.10
+    fig.subplots_adjust(hspace=0.30, top=0.93, bottom=bottom, left=0.10, right=0.97)
+    os.makedirs(os.path.dirname(output_pdf) or ".", exist_ok=True)
+    fig.savefig(output_pdf, bbox_inches="tight", pad_inches=0.12)
+    plt.close(fig)
+
+
 def _plot_dropped_three_methods(
     method_plot_data: List[Tuple[str, Dict[str, Any]]],
     output_pdf: str,
@@ -1283,6 +1454,7 @@ def main():
                 "owner_step_totals": plot_data.get("owner_step_totals", {}),
                 "final_survival_by_step": _extract_final_survival_series(plot_data),
                 "survival_dynamics": plot_data.get("survival_dynamics", []),
+                "cohort_survival": plot_data.get("cohort_survival", []),
             }
             method_plot_data.append((display_name, plot_data))
             if _has_dropped_points(plot_data):
@@ -1312,6 +1484,7 @@ def main():
     kept_pdf_path = os.path.join(args.output_dir, f"{prefix}_kept.pdf")
     survival_pdf_path = os.path.join(args.output_dir, f"{prefix}_final_survival.pdf")
     dynamics_pdf_path = os.path.join(args.output_dir, f"{prefix}_survival_dynamics.pdf")
+    cohort_pdf_path = os.path.join(args.output_dir, f"{prefix}_cohort_survival.pdf")
     eviction_stats_path = os.path.join(args.output_dir, f"{prefix}_eviction_stats.txt")
     dropped_points_jsonl_path = os.path.join(args.output_dir, f"{prefix}_dropped_points.jsonl")
     kept_points_jsonl_path = os.path.join(args.output_dir, f"{prefix}_kept_points.jsonl")
@@ -1373,6 +1546,11 @@ def main():
             dynamics_pdf_path,
             max_react_steps=int(args.max_steps),
         )
+        _plot_cohort_survival(
+            method_plot_data,
+            cohort_pdf_path,
+            max_react_steps=int(args.max_steps),
+        )
     except Exception as e:
         with open(plot_error_path, "w", encoding="utf-8") as f:
             f.write(str(e))
@@ -1387,6 +1565,7 @@ def main():
     print(f"[DONE] Kept figure saved: {kept_pdf_path}")
     print(f"[DONE] Final survival figure saved: {survival_pdf_path}")
     print(f"[DONE] Survival dynamics figure saved: {dynamics_pdf_path}")
+    print(f"[DONE] Cohort survival figure saved: {cohort_pdf_path}")
 
 
 if __name__ == "__main__":
