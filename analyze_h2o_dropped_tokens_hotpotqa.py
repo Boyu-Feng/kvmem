@@ -1082,7 +1082,7 @@ def _plot_final_survival_line(
 
     x_labelpad = _bottom_axis_labelpad()
     ax.set_xlabel("ReAct step (token origin)", fontsize=22, labelpad=x_labelpad)
-    ax.set_ylabel("Remaining fraction at episode end", fontsize=22, labelpad=6)
+    ax.set_ylabel("Remain tokens", fontsize=22, labelpad=6)
     ax.set_xticks(x_ticks)
     ax.set_xlim(0.5, x_max + 0.5)
     ax.set_ylim(0.0, 1.05)
@@ -1090,15 +1090,15 @@ def _plot_final_survival_line(
     ax.grid(True, alpha=0.3)
     ax.tick_params(axis="both", which="major", labelsize=20)
     handles, labels = ax.get_legend_handles_labels()
-    legend_ncol = max(1, len(labels))
-    bottom = _legend_bottom_margin(len(labels), legend_ncol) if labels else 0.06
+    legend_ncol = 2 if len(labels) > 2 else max(1, len(labels))
+    bottom = _legend_bottom_margin(len(labels), legend_ncol) + 0.015 if labels else 0.06
     fig.subplots_adjust(left=0.10, right=0.98, top=0.98, bottom=bottom)
     if handles:
         fig.legend(
             handles,
             labels,
             loc="upper center",
-            bbox_to_anchor=(0.5, 0.008),
+            bbox_to_anchor=(0.5, -0.03),
             ncol=legend_ncol,
             frameon=False,
             fontsize=17,
