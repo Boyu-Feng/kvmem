@@ -206,6 +206,10 @@ def _extract_plot_data(debug_payload: Dict[str, Any]) -> Dict[str, Any]:
     next_global_id = int(token_tracker.get("next_global_id", prompt_token_count))
     owner_step_totals = _count_owner_step_totals(step_ranges, prompt_token_count, next_global_id)
     eviction_stats = _build_eviction_stats(final_points, owner_step_totals)
+    survival_dynamics = _build_survival_dynamics(
+        kept_owner_counts_by_snapshot,
+        owner_step_totals,
+    )
 
     return {
         "prompt_token_count": prompt_token_count,
@@ -219,6 +223,7 @@ def _extract_plot_data(debug_payload: Dict[str, Any]) -> Dict[str, Any]:
         "step_boundaries": step_boundaries,
         "owner_step_totals": owner_step_totals,
         "eviction_stats": eviction_stats,
+        "survival_dynamics": survival_dynamics,
     }
 
 
@@ -237,6 +242,58 @@ def _count_owner_step_totals(
             continue
         totals[int(sid)] = int(totals.get(int(sid), 0) + (end_abs - start_abs + 1))
     return totals
+
+
+def _build_survival_dynamics(
+    kept_owner_counts_by_snapshot: Dict[str, Dict[str, int]],
+    owner_step_totals: Dict[int, int],
+) -> List[Dict[str, Any]]:
+    """
+    After each ReAct step k, track how many tokens remain from:
+    - prior steps (1..k-1)
+    - the current/new step k
+    """
+    owner_steps = sorted(int(s) for s in owner_step_totals.keys())
+    if not owner_steps:
+        return []
+
+    rows: List[Dict[str, Any]] = []
+    for snapshot_step in owner_steps:
+        counts = kept_owner_counts_by_snapshot.get(str(snapshot_step), {}) or {}
+        prior_kept = 0
+        for owner_key, kept_n in counts.items():
+            try:
+                owner = int(owner_key)
+            except (TypeError, ValueError):
+                continue
+            if owner < int(snapshot_step):
+                prior_kept += int(kept_n)
+
+        current_kept = int(counts.get(str(snapshot_step), counts.get(int(snapshot_step), 0)) or 0)
+        prior_total = sum(int(owner_step_totals.get(step, 0)) for step in owner_steps if step < snapshot_step)
+        current_total = int(owner_step_totals.get(int(snapshot_step), 0))
+        total_kept = int(prior_kept + current_kept)
+
+        prior_frac = (float(prior_kept) / float(prior_total)) if prior_total > 0 else None
+        current_frac = (float(current_kept) / float(current_total)) if current_total > 0 else None
+        prior_share = (float(prior_kept) / float(total_kept)) if total_kept > 0 else None
+        current_share = (float(current_kept) / float(total_kept)) if total_kept > 0 else None
+
+        rows.append(
+            {
+                "snapshot_step": int(snapshot_step),
+                "prior_kept": int(prior_kept),
+                "current_kept": int(current_kept),
+                "total_kept": int(total_kept),
+                "prior_total": int(prior_total),
+                "current_total": int(current_total),
+                "prior_kept_frac": prior_frac,
+                "current_kept_frac": current_frac,
+                "prior_share_of_cache": prior_share,
+                "current_share_of_cache": current_share,
+            }
+        )
+    return rows
 
 
 def _build_eviction_stats(
@@ -925,6 +982,162 @@ def _plot_final_survival_line(
     plt.close(fig)
 
 
+def _plot_survival_dynamics(
+    method_plot_data: List[Tuple[str, Dict[str, Any]]],
+    output_pdf: str,
+    max_react_steps: Optional[int] = None,
+) -> None:
+    """
+    Dynamic view after each ReAct step:
+    - stacked area: prior-step vs current-step tokens still in cache (counts)
+    - overlaid lines: remaining fraction for prior steps and current step
+    """
+    prior_color = "#4C72B0"
+    current_color = "#DD8452"
+    style = {
+        "axis_label": 20,
+        "tick": 16,
+        "title": 18,
+        "legend": 14,
+        "panel_h": 4.2,
+    }
+
+    plt.rcParams.update(
+        {
+            "font.size": style["tick"],
+            "axes.labelsize": style["axis_label"],
+            "axes.titlesize": style["title"],
+            "legend.fontsize": style["legend"],
+        }
+    )
+
+    n_panels = len(method_plot_data)
+    fig, axes = plt.subplots(n_panels, 1, figsize=(14.0, style["panel_h"] * n_panels), sharex=True)
+    if n_panels == 1:
+        axes = [axes]
+
+    global_x_max = 1
+    has_any = False
+
+    for ax, (method_label, plot_data) in zip(axes, method_plot_data):
+        rows = list(plot_data.get("survival_dynamics", []) or [])
+        if not rows:
+            ax.text(
+                0.5,
+                0.5,
+                "No survival dynamics under current config",
+                ha="center",
+                va="center",
+                transform=ax.transAxes,
+                fontsize=13,
+                color="gray",
+            )
+            ax.set_title(method_label, loc="left", fontsize=style["title"], pad=6)
+            continue
+
+        has_any = True
+        xs = [int(r["snapshot_step"]) for r in rows]
+        global_x_max = max(global_x_max, max(xs))
+        prior_kept = [int(r["prior_kept"]) for r in rows]
+        current_kept = [int(r["current_kept"]) for r in rows]
+        total_kept = [int(r["total_kept"]) for r in rows]
+        prior_frac = [
+            float(r["prior_kept_frac"]) if r.get("prior_kept_frac") is not None else float("nan")
+            for r in rows
+        ]
+        current_frac = [
+            float(r["current_kept_frac"]) if r.get("current_kept_frac") is not None else float("nan")
+            for r in rows
+        ]
+
+        ax.stackplot(
+            xs,
+            prior_kept,
+            current_kept,
+            labels=["Prior steps in cache", "Current step in cache"],
+            colors=[prior_color, current_color],
+            alpha=0.78,
+        )
+        ax.set_ylabel("Kept tokens in cache", fontsize=style["axis_label"], labelpad=6)
+        ax.set_title(method_label, loc="left", fontsize=style["title"], pad=6)
+        ax.grid(True, axis="y", alpha=0.25)
+        ax.tick_params(axis="both", which="major", labelsize=style["tick"])
+
+        for x, total in zip(xs, total_kept):
+            if total > 0:
+                ax.text(
+                    x,
+                    total + max(1, 0.02 * max(total_kept)),
+                    f"{total}",
+                    ha="center",
+                    va="bottom",
+                    fontsize=11,
+                    color="#333333",
+                )
+
+        ax2 = ax.twinx()
+        ax2.plot(
+            xs,
+            prior_frac,
+            color=prior_color,
+            linewidth=3.0,
+            marker="s",
+            markersize=8,
+            linestyle="--",
+            label="Prior steps kept %",
+        )
+        ax2.plot(
+            xs,
+            current_frac,
+            color=current_color,
+            linewidth=3.0,
+            marker="o",
+            markersize=9,
+            linestyle="-",
+            label="Current step kept %",
+        )
+        ax2.set_ylim(0.0, 1.05)
+        ax2.yaxis.set_major_formatter(mticker.PercentFormatter(xmax=1.0, decimals=0))
+        ax2.set_ylabel("Remaining fraction", fontsize=style["axis_label"], labelpad=10)
+        ax2.tick_params(axis="y", which="major", labelsize=style["tick"])
+
+        lines1, labels1 = ax.get_legend_handles_labels()
+        lines2, labels2 = ax2.get_legend_handles_labels()
+        ax2.legend(
+            lines1 + lines2,
+            labels1 + labels2,
+            loc="upper right",
+            frameon=True,
+            framealpha=0.92,
+            fontsize=style["legend"],
+        )
+
+    if max_react_steps is not None and int(max_react_steps) > 0:
+        global_x_max = min(global_x_max, int(max_react_steps))
+
+    for ax in axes:
+        ax.set_xlim(0.5, global_x_max + 0.5)
+        ax.set_xticks(list(range(1, global_x_max + 1)))
+
+    axes[-1].set_xlabel(
+        "After ReAct step k (snapshot right after step-k prune)",
+        fontsize=style["axis_label"],
+        labelpad=8,
+    )
+
+    if has_any:
+        fig.suptitle(
+            "Prior vs current step tokens kept in cache over ReAct steps",
+            fontsize=style["title"] + 2,
+            y=0.995,
+        )
+
+    fig.subplots_adjust(hspace=0.28, top=0.94, bottom=0.10, left=0.08, right=0.90)
+    os.makedirs(os.path.dirname(output_pdf) or ".", exist_ok=True)
+    fig.savefig(output_pdf, bbox_inches="tight", pad_inches=0.12)
+    plt.close(fig)
+
+
 def _plot_dropped_three_methods(
     method_plot_data: List[Tuple[str, Dict[str, Any]]],
     output_pdf: str,
@@ -1069,6 +1282,7 @@ def main():
                 "eviction_stats": plot_data.get("eviction_stats", {}),
                 "owner_step_totals": plot_data.get("owner_step_totals", {}),
                 "final_survival_by_step": _extract_final_survival_series(plot_data),
+                "survival_dynamics": plot_data.get("survival_dynamics", []),
             }
             method_plot_data.append((display_name, plot_data))
             if _has_dropped_points(plot_data):
@@ -1097,6 +1311,7 @@ def main():
     dropped_pdf_path = os.path.join(args.output_dir, f"{prefix}_dropped.pdf")
     kept_pdf_path = os.path.join(args.output_dir, f"{prefix}_kept.pdf")
     survival_pdf_path = os.path.join(args.output_dir, f"{prefix}_final_survival.pdf")
+    dynamics_pdf_path = os.path.join(args.output_dir, f"{prefix}_survival_dynamics.pdf")
     eviction_stats_path = os.path.join(args.output_dir, f"{prefix}_eviction_stats.txt")
     dropped_points_jsonl_path = os.path.join(args.output_dir, f"{prefix}_dropped_points.jsonl")
     kept_points_jsonl_path = os.path.join(args.output_dir, f"{prefix}_kept_points.jsonl")
@@ -1153,6 +1368,11 @@ def main():
             survival_pdf_path,
             max_react_steps=int(args.max_steps),
         )
+        _plot_survival_dynamics(
+            method_plot_data,
+            dynamics_pdf_path,
+            max_react_steps=int(args.max_steps),
+        )
     except Exception as e:
         with open(plot_error_path, "w", encoding="utf-8") as f:
             f.write(str(e))
@@ -1166,6 +1386,7 @@ def main():
     print(f"[DONE] Dropped figure saved: {dropped_pdf_path}")
     print(f"[DONE] Kept figure saved: {kept_pdf_path}")
     print(f"[DONE] Final survival figure saved: {survival_pdf_path}")
+    print(f"[DONE] Survival dynamics figure saved: {dynamics_pdf_path}")
 
 
 if __name__ == "__main__":
