@@ -682,39 +682,65 @@ def _panel_x_span(points: Sequence[Dict[str, Any]]) -> int:
 def _plot_style(mode: str) -> Dict[str, float]:
     if mode == "dropped":
         return {
-            "axis_label": 22,
-            "tick": 18,
+            "axis_label": 24,
+            "tick": 20,
             "title": 18,
-            "legend_font": 16,
-            "legend_marker": 11,
+            "legend_font": 17,
+            "legend_marker": 12,
             "legend_ncol": 4,
-            "panel_h": 4.0,
+            "panel_h": 3.6,
             "fig_w": 16.0,
             "labelpad": 6,
+            "hspace": 0.12,
         }
     return {
-        "axis_label": 20,
-        "tick": 17,
+        "axis_label": 22,
+        "tick": 19,
         "title": 18,
-        "legend_font": 14,
-        "legend_marker": 9,
+        "legend_font": 16,
+        "legend_marker": 10,
         "legend_ncol": 4,
-        "panel_h": 2.8,
+        "panel_h": 2.6,
         "fig_w": 14.0,
         "fig_w_min": 16.0,
         "fig_w_max": 32.0,
         "fig_w_scale": 0.045,
         "labelpad": 4,
+        "hspace": 0.12,
     }
 
 
 def _legend_bottom_margin(n_items: int, ncol: int) -> float:
     rows = max(1, (int(n_items) + int(ncol) - 1) // int(ncol))
-    return 0.06 + 0.038 * rows
+    return 0.035 + 0.028 * rows
 
 
 def _bottom_axis_labelpad() -> int:
     return 2
+
+
+def _multi_panel_chart_style() -> Dict[str, float]:
+    return {
+        "axis_label": 24,
+        "tick": 20,
+        "legend": 17,
+        "panel_h": 3.5,
+        "hspace": 0.12,
+        "labelpad": 6,
+    }
+
+
+def _set_middle_ylabel(
+    axes: Sequence[Any],
+    ax_idx: int,
+    label: str,
+    fontsize: float,
+    labelpad: float = 6,
+) -> None:
+    if ax_idx == len(axes) // 2:
+        axes[ax_idx].set_ylabel(label, fontsize=fontsize, labelpad=labelpad)
+    else:
+        axes[ax_idx].set_ylabel("")
 
 
 def _global_react_step_count(
@@ -834,16 +860,23 @@ def _plot_three_methods(
     fig, axes = plt.subplots(n_panels, 1, figsize=(fig_w, fig_h), sharex=False)
     if n_panels == 1:
         axes = [axes]
-    has_bottom_legend = bool(legend_handles) and mode == "kept"
+    has_bottom_legend = bool(legend_handles)
     legend_ncol = int(style.get("legend_ncol", 4))
     if has_bottom_legend:
         legend_ncol = max(1, len(legend_labels))
     bottom_margin = (
         _legend_bottom_margin(len(legend_labels), legend_ncol)
         if has_bottom_legend
-        else 0.07
+        else 0.06
     )
-    fig.subplots_adjust(hspace=0.32, bottom=bottom_margin, top=0.98, left=0.10, right=0.98)
+    panel_hspace = float(style.get("hspace", 0.12))
+    fig.subplots_adjust(
+        hspace=panel_hspace,
+        bottom=bottom_margin,
+        top=0.98,
+        left=0.10,
+        right=0.98,
+    )
 
     y_label = "Cumulative keep after step" if mode == "kept" else "Evicted at ReAct step"
     empty_msg = (
@@ -915,8 +948,10 @@ def _plot_three_methods(
         for bd in boundaries:
             ax.axvline(float(bd["x"]), linestyle="--", linewidth=1.0, color="gray", alpha=0.7)
 
-        if ax_idx == n_panels // 2:
+        if ax_idx == len(axes) // 2:
             ax.set_ylabel(y_label, fontsize=style["axis_label"], labelpad=style["labelpad"])
+        else:
+            ax.set_ylabel("")
         ax.tick_params(axis="both", which="major", labelsize=style["tick"], pad=3)
         ax.yaxis.set_major_locator(mticker.MultipleLocator(1))
         ax.set_ylim(0.5, global_y_max + 0.5)
@@ -925,18 +960,20 @@ def _plot_three_methods(
             ax.set_xlim(-0.5, max(x_vals) + 0.5)
         ax.grid(True, alpha=0.25)
 
+    x_labelpad = _bottom_axis_labelpad()
     axes[-1].set_xlabel(
         "Key Position Index (No Prefill)",
         fontsize=style["axis_label"],
         labelpad=x_labelpad,
     )
+    axes[-1].tick_params(axis="x", which="major", labelsize=style["tick"], pad=3)
 
     if has_bottom_legend:
         fig.legend(
             legend_handles,
             legend_labels,
             loc="upper center",
-            bbox_to_anchor=(0.5, 0.01),
+            bbox_to_anchor=(0.5, 0.008),
             ncol=legend_ncol,
             frameon=False,
             fontsize=style["legend_font"],
@@ -1044,27 +1081,27 @@ def _plot_final_survival_line(
         )
 
     x_labelpad = _bottom_axis_labelpad()
-    ax.set_xlabel("ReAct step (token origin)", fontsize=18, labelpad=x_labelpad)
-    ax.set_ylabel("Remaining fraction at episode end", fontsize=18, labelpad=6)
+    ax.set_xlabel("ReAct step (token origin)", fontsize=22, labelpad=x_labelpad)
+    ax.set_ylabel("Remaining fraction at episode end", fontsize=22, labelpad=6)
     ax.set_xticks(x_ticks)
     ax.set_xlim(0.5, x_max + 0.5)
     ax.set_ylim(0.0, 1.05)
     ax.yaxis.set_major_formatter(mticker.PercentFormatter(xmax=1.0, decimals=0))
     ax.grid(True, alpha=0.3)
-    ax.tick_params(axis="both", which="major", labelsize=15)
+    ax.tick_params(axis="both", which="major", labelsize=20)
     handles, labels = ax.get_legend_handles_labels()
     legend_ncol = max(1, len(labels))
-    bottom = _legend_bottom_margin(len(labels), legend_ncol) if labels else 0.07
+    bottom = _legend_bottom_margin(len(labels), legend_ncol) if labels else 0.06
     fig.subplots_adjust(left=0.10, right=0.98, top=0.98, bottom=bottom)
     if handles:
         fig.legend(
             handles,
             labels,
             loc="upper center",
-            bbox_to_anchor=(0.5, 0.01),
+            bbox_to_anchor=(0.5, 0.008),
             ncol=legend_ncol,
             frameon=False,
-            fontsize=14,
+            fontsize=17,
         )
 
     os.makedirs(os.path.dirname(output_pdf) or ".", exist_ok=True)
@@ -1077,26 +1114,15 @@ def _plot_survival_dynamics(
     output_pdf: str,
     max_react_steps: Optional[int] = None,
 ) -> None:
-    """
-    Dynamic view after each ReAct step:
-    - stacked area: prior-step vs current-step tokens still in cache (counts)
-    - overlaid lines: remaining fraction for prior steps and current step
-    """
+    """Stacked area: prior-step vs current-step tokens still in cache after each prune."""
     prior_color = "#4C72B0"
     current_color = "#DD8452"
-    style = {
-        "axis_label": 20,
-        "tick": 16,
-        "title": 18,
-        "legend": 14,
-        "panel_h": 4.2,
-    }
+    style = _multi_panel_chart_style()
 
     plt.rcParams.update(
         {
             "font.size": style["tick"],
             "axes.labelsize": style["axis_label"],
-            "axes.titlesize": style["title"],
             "legend.fontsize": style["legend"],
         }
     )
@@ -1112,29 +1138,9 @@ def _plot_survival_dynamics(
     dynamics_legend = [
         Patch(facecolor=prior_color, alpha=0.78, label="Prior steps in cache"),
         Patch(facecolor=current_color, alpha=0.78, label="Current step in cache"),
-        Line2D(
-            [0],
-            [0],
-            color=prior_color,
-            linewidth=3.0,
-            marker="s",
-            markersize=8,
-            linestyle="--",
-            label="Prior steps kept %",
-        ),
-        Line2D(
-            [0],
-            [0],
-            color=current_color,
-            linewidth=3.0,
-            marker="o",
-            markersize=9,
-            linestyle="-",
-            label="Current step kept %",
-        ),
     ]
 
-    for ax, (_method_label, plot_data) in zip(axes, method_plot_data):
+    for ax_idx, (ax, (_method_label, plot_data)) in enumerate(zip(axes, method_plot_data)):
         rows = list(plot_data.get("survival_dynamics", []) or [])
         if not rows:
             ax.text(
@@ -1147,6 +1153,13 @@ def _plot_survival_dynamics(
                 fontsize=13,
                 color="gray",
             )
+            _set_middle_ylabel(
+                axes,
+                ax_idx,
+                "Kept tokens in cache",
+                style["axis_label"],
+                style["labelpad"],
+            )
             continue
 
         has_any = True
@@ -1155,14 +1168,6 @@ def _plot_survival_dynamics(
         prior_kept = [int(row_by_step[x]["prior_kept"]) if x in row_by_step else 0 for x in xs]
         current_kept = [int(row_by_step[x]["current_kept"]) if x in row_by_step else 0 for x in xs]
         total_kept = [int(row_by_step[x]["total_kept"]) if x in row_by_step else 0 for x in xs]
-        prior_frac = [
-            float(row_by_step[x]["prior_kept_frac"]) if x in row_by_step and row_by_step[x].get("prior_kept_frac") is not None else float("nan")
-            for x in xs
-        ]
-        current_frac = [
-            float(row_by_step[x]["current_kept_frac"]) if x in row_by_step and row_by_step[x].get("current_kept_frac") is not None else float("nan")
-            for x in xs
-        ]
 
         plotted_xs = [x for x in xs if x in row_by_step]
         if not plotted_xs:
@@ -1175,7 +1180,13 @@ def _plot_survival_dynamics(
             colors=[prior_color, current_color],
             alpha=0.78,
         )
-        ax.set_ylabel("Kept tokens in cache", fontsize=style["axis_label"], labelpad=6)
+        _set_middle_ylabel(
+            axes,
+            ax_idx,
+            "Kept tokens in cache",
+            style["axis_label"],
+            style["labelpad"],
+        )
         ax.grid(True, axis="y", alpha=0.25)
         ax.tick_params(axis="both", which="major", labelsize=style["tick"])
 
@@ -1188,33 +1199,9 @@ def _plot_survival_dynamics(
                     f"{total}",
                     ha="center",
                     va="bottom",
-                    fontsize=11,
+                    fontsize=12,
                     color="#333333",
                 )
-
-        ax2 = ax.twinx()
-        ax2.plot(
-            plotted_xs,
-            [prior_frac[xs.index(x)] for x in plotted_xs],
-            color=prior_color,
-            linewidth=3.0,
-            marker="s",
-            markersize=8,
-            linestyle="--",
-        )
-        ax2.plot(
-            plotted_xs,
-            [current_frac[xs.index(x)] for x in plotted_xs],
-            color=current_color,
-            linewidth=3.0,
-            marker="o",
-            markersize=9,
-            linestyle="-",
-        )
-        ax2.set_ylim(0.0, 1.05)
-        ax2.yaxis.set_major_formatter(mticker.PercentFormatter(xmax=1.0, decimals=0))
-        ax2.set_ylabel("Remaining fraction", fontsize=style["axis_label"], labelpad=10)
-        ax2.tick_params(axis="y", which="major", labelsize=style["tick"])
 
     for ax in axes:
         ax.set_xlim(0.5, global_x_max + 0.5)
@@ -1222,13 +1209,19 @@ def _plot_survival_dynamics(
 
     axes[-1].set_xlabel("ReAct step", fontsize=style["axis_label"], labelpad=x_labelpad)
 
-    bottom = _legend_bottom_margin(len(dynamics_legend), len(dynamics_legend)) if has_any else 0.07
-    fig.subplots_adjust(hspace=0.28, top=0.98, bottom=bottom, left=0.08, right=0.90)
+    bottom = _legend_bottom_margin(len(dynamics_legend), len(dynamics_legend)) if has_any else 0.06
+    fig.subplots_adjust(
+        hspace=style["hspace"],
+        top=0.98,
+        bottom=bottom,
+        left=0.10,
+        right=0.98,
+    )
     if has_any:
         fig.legend(
             handles=dynamics_legend,
             loc="upper center",
-            bbox_to_anchor=(0.5, 0.01),
+            bbox_to_anchor=(0.5, 0.008),
             ncol=len(dynamics_legend),
             frameon=False,
             fontsize=style["legend"],
@@ -1243,24 +1236,12 @@ def _plot_cohort_survival(
     output_pdf: str,
     max_react_steps: Optional[int] = None,
 ) -> None:
-    """
-    One line per owner-step cohort: how much of that step's tokens survive each later prune.
-
-    Unlike the aggregated prior/current chart, this reveals late cross-step evictions
-    (e.g., step-2 tokens dropping to ~20% by episode end).
-    """
-    style = {
-        "axis_label": 20,
-        "tick": 16,
-        "title": 18,
-        "legend": 13,
-        "panel_h": 4.5,
-    }
+    """One line per owner-step cohort: survival fraction after each subsequent prune."""
+    style = _multi_panel_chart_style()
     plt.rcParams.update(
         {
             "font.size": style["tick"],
             "axes.labelsize": style["axis_label"],
-            "axes.titlesize": style["title"],
             "legend.fontsize": style["legend"],
         }
     )
@@ -1277,7 +1258,7 @@ def _plot_cohort_survival(
     x_labelpad = _bottom_axis_labelpad()
     has_any = False
 
-    for ax, (_method_label, plot_data) in zip(axes, method_plot_data):
+    for ax_idx, (ax, (_method_label, plot_data)) in enumerate(zip(axes, method_plot_data)):
         rows = list(plot_data.get("cohort_survival", []) or [])
         if not rows:
             ax.text(
@@ -1289,6 +1270,13 @@ def _plot_cohort_survival(
                 transform=ax.transAxes,
                 fontsize=13,
                 color="gray",
+            )
+            _set_middle_ylabel(
+                axes,
+                ax_idx,
+                "Cohort remaining %",
+                style["axis_label"],
+                style["labelpad"],
             )
             continue
 
@@ -1321,12 +1309,18 @@ def _plot_cohort_survival(
                     textcoords="offset points",
                     ha="left",
                     va="center",
-                    fontsize=11,
+                    fontsize=12,
                     color=color,
                     fontweight="bold",
                 )
 
-        ax.set_ylabel("Cohort remaining %", fontsize=style["axis_label"], labelpad=6)
+        _set_middle_ylabel(
+            axes,
+            ax_idx,
+            "Cohort remaining %",
+            style["axis_label"],
+            style["labelpad"],
+        )
         ax.set_ylim(0.0, 1.08)
         ax.yaxis.set_major_formatter(mticker.PercentFormatter(xmax=1.0, decimals=0))
         ax.grid(True, alpha=0.3)
@@ -1351,13 +1345,19 @@ def _plot_cohort_survival(
         for s in global_owner_steps
     ]
     legend_ncol = max(1, len(global_owner_steps))
-    bottom = _legend_bottom_margin(len(global_owner_steps), legend_ncol) if has_any else 0.07
-    fig.subplots_adjust(hspace=0.30, top=0.98, bottom=bottom, left=0.10, right=0.97)
+    bottom = _legend_bottom_margin(len(global_owner_steps), legend_ncol) if has_any else 0.06
+    fig.subplots_adjust(
+        hspace=style["hspace"],
+        top=0.98,
+        bottom=bottom,
+        left=0.10,
+        right=0.97,
+    )
     if has_any:
         fig.legend(
             handles=legend_handles,
             loc="upper center",
-            bbox_to_anchor=(0.5, 0.01),
+            bbox_to_anchor=(0.5, 0.008),
             ncol=legend_ncol,
             frameon=False,
             fontsize=style["legend"],
