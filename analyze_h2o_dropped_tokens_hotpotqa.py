@@ -54,10 +54,74 @@ def _resolve_owner_step(
     return -1
 
 
+def _max_global_id_at_prune_step(
+    step_token_ranges: Dict[str, Any],
+    prune_step: int,
+    next_global_id: int,
+) -> int:
+    """
+    Last global token id present in cache when step ``prune_step`` finishes pruning.
+
+    Loop k+1 always starts at step_token_ranges[k+1][0] (obs prefill + new decode),
+    so the cache at the end of step k ends one token before that.
+    """
+    cap = int(prune_step)
+    if cap <= 0:
+        rng2 = step_token_ranges.get("2") or step_token_ranges.get(2)
+        if isinstance(rng2, (list, tuple)) and len(rng2) == 2:
+            return int(rng2[0]) - 1
+        rng1 = step_token_ranges.get("1") or step_token_ranges.get(1)
+        if isinstance(rng1, (list, tuple)) and len(rng1) == 2:
+            return int(rng1[1])
+        return int(next_global_id) - 1
+
+    next_sid = cap + 1
+    rng = step_token_ranges.get(str(next_sid)) or step_token_ranges.get(next_sid)
+    if isinstance(rng, (list, tuple)) and len(rng) == 2:
+        return int(rng[0]) - 1
+    rng = step_token_ranges.get(str(cap)) or step_token_ranges.get(cap)
+    if isinstance(rng, (list, tuple)) and len(rng) == 2:
+        return int(rng[1])
+    return int(next_global_id) - 1
+
+
+def _resolve_owner_step_at_prune(
+    global_id: int,
+    step_ranges: List[Tuple[int, int, int]],
+    obs_step_ranges: Dict[str, Any],
+    prune_step: int,
+) -> int:
+    """
+    Owner step for a token evicted at ``prune_step``.
+
+    Only steps that have already generated tokens by that prune can own the token
+    (owner_step <= prune_step). This avoids labeling step-3/4 tokens on y=2.
+    """
+    gid = int(global_id)
+    cap = max(0, int(prune_step))
+    for sid, s, e in step_ranges:
+        if int(sid) > cap:
+            break
+        if s <= gid <= e:
+            return int(sid)
+    for obs_step_str, rng in sorted(obs_step_ranges.items(), key=lambda kv: int(kv[0])):
+        if not isinstance(rng, (list, tuple)) or len(rng) != 2:
+            continue
+        obs_at_loop_step = int(obs_step_str)
+        owner = max(1, obs_at_loop_step - 1)
+        if owner > cap:
+            continue
+        s, e = int(rng[0]), int(rng[1])
+        if s <= gid <= e:
+            return owner
+    return -1
+
+
 def _extract_plot_data(debug_payload: Dict[str, Any]) -> Dict[str, Any]:
     prompt_token_count = int(debug_payload.get("prompt_token_count", 0))
     pruning_history = debug_payload.get("pruning_history", []) or []
     step_token_ranges = debug_payload.get("step_token_ranges", {}) or {}
+    obs_step_ranges = debug_payload.get("obs_step_ranges", {}) or {}
     token_tracker = debug_payload.get("token_tracker", {}) or {}
     step_pruning_events = token_tracker.get("step_pruning_events", {}) or {}
 
@@ -67,9 +131,18 @@ def _extract_plot_data(debug_payload: Dict[str, Any]) -> Dict[str, Any]:
     owner_rows: Dict[str, Dict[str, Any]] = {}
 
     step_ranges = _step_ranges_from_token_ranges(step_token_ranges)
+    next_global_id = int(token_tracker.get("next_global_id", prompt_token_count))
 
     def _owner_step(global_id: int) -> int:
         return _resolve_owner_step(global_id, step_ranges)
+
+    def _owner_step_when_pruned(global_id: int, prune_step: int) -> int:
+        return _resolve_owner_step_at_prune(
+            global_id,
+            step_ranges,
+            obs_step_ranges,
+            prune_step,
+        )
 
     for ev in pruning_history:
         if not isinstance(ev, dict):
@@ -118,8 +191,17 @@ def _extract_plot_data(debug_payload: Dict[str, Any]) -> Dict[str, Any]:
             shifted_ids = []
             for gid in init_decode:
                 shifted_x = int(gid - prompt_token_count)
+                max_gid = _max_global_id_at_prune_step(
+                    step_token_ranges,
+                    0,
+                    next_global_id,
+                )
+                if int(gid) > int(max_gid):
+                    continue
+                owner = int(_owner_step_when_pruned(gid, 0))
+                if owner < 1:
+                    continue
                 shifted_ids.append(shifted_x)
-                owner = int(_owner_step(gid))
                 owner_counts[owner] = int(owner_counts.get(owner, 0) + 1)
                 final_points.append(
                     {
@@ -130,15 +212,18 @@ def _extract_plot_data(debug_payload: Dict[str, Any]) -> Dict[str, Any]:
                         "global_id": int(gid),
                     }
                 )
-            final_event_rows.append(
-                {
-                    "event_id": int(final_event_id),
-                    "prune_step": 0,
-                    "tokens_evicted": int(len(shifted_ids)),
-                    "evicted_abs_indices_no_prefill": shifted_ids,
-                    "owner_step_counts": {str(int(k)): int(v) for k, v in sorted(owner_counts.items())},
-                }
-            )
+            if shifted_ids:
+                final_event_rows.append(
+                    {
+                        "event_id": int(final_event_id),
+                        "prune_step": 0,
+                        "tokens_evicted": int(len(shifted_ids)),
+                        "evicted_abs_indices_no_prefill": shifted_ids,
+                        "owner_step_counts": {str(int(k)): int(v) for k, v in sorted(owner_counts.items())},
+                    }
+                )
+            else:
+                final_event_id -= 1
 
     for prune_step, dropped_ids in sorted(react_pruning_events.items(), key=lambda kv: int(kv[0])):
         dropped_ids = sorted(set(int(x) for x in (dropped_ids or [])))
@@ -150,8 +235,17 @@ def _extract_plot_data(debug_payload: Dict[str, Any]) -> Dict[str, Any]:
         shifted_ids = []
         for gid in dropped_ids:
             shifted_x = int(gid - prompt_token_count)
+            max_gid = _max_global_id_at_prune_step(
+                step_token_ranges,
+                int(prune_step),
+                next_global_id,
+            )
+            if int(gid) > int(max_gid):
+                continue
+            owner = int(_owner_step_when_pruned(gid, int(prune_step)))
+            if owner < 1:
+                continue
             shifted_ids.append(shifted_x)
-            owner = int(_owner_step(gid))
             owner_counts[owner] = int(owner_counts.get(owner, 0) + 1)
             key = str(owner)
             if key not in owner_rows:
@@ -166,6 +260,9 @@ def _extract_plot_data(debug_payload: Dict[str, Any]) -> Dict[str, Any]:
                     "global_id": int(gid),
                 }
             )
+        if not shifted_ids:
+            final_event_id -= 1
+            continue
         final_event_rows.append(
             {
                 "event_id": int(final_event_id),
@@ -184,13 +281,13 @@ def _extract_plot_data(debug_payload: Dict[str, Any]) -> Dict[str, Any]:
 
     kept_points, kept_owner_counts_by_snapshot = _build_kept_points(
         prompt_token_count=prompt_token_count,
+        step_token_ranges=step_token_ranges,
         step_ranges=step_ranges,
+        obs_step_ranges=obs_step_ranges,
         step_pruning_events=step_pruning_events,
         token_tracker=token_tracker,
-        owner_step_fn=_owner_step,
     )
 
-    next_global_id = int(token_tracker.get("next_global_id", prompt_token_count))
     owner_step_totals = _count_owner_step_totals(step_ranges, prompt_token_count, next_global_id)
     eviction_stats = _build_eviction_stats(final_points, owner_step_totals)
     survival_dynamics = _build_survival_dynamics(
@@ -552,10 +649,11 @@ def _decode_end_global_id_through_step(
 
 def _build_kept_points(
     prompt_token_count: int,
+    step_token_ranges: Dict[str, Any],
     step_ranges: List[Tuple[int, int, int]],
+    obs_step_ranges: Dict[str, Any],
     step_pruning_events: Dict[str, Any],
     token_tracker: Dict[str, Any],
-    owner_step_fn,
 ) -> Tuple[List[Dict[str, Any]], Dict[str, Dict[str, int]]]:
     """Cumulative cache snapshot: tokens still present after each ReAct step."""
     next_global_id = int(token_tracker.get("next_global_id", prompt_token_count))
@@ -577,10 +675,9 @@ def _build_kept_points(
         dropped_now = react_pruning_events.get(snapshot_step, [])
         cumulative_dropped.update(int(x) for x in dropped_now if int(x) >= prompt_token_count)
 
-        decode_end = _decode_end_global_id_through_step(
-            step_ranges,
-            snapshot_step,
-            prompt_token_count,
+        decode_end = _max_global_id_at_prune_step(
+            step_token_ranges,
+            int(snapshot_step),
             next_global_id,
         )
         if decode_end < prompt_token_count:
@@ -590,7 +687,16 @@ def _build_kept_points(
         for gid in range(int(prompt_token_count), decode_end + 1):
             if gid in cumulative_dropped:
                 continue
-            owner = int(owner_step_fn(gid))
+            owner = int(
+                _resolve_owner_step_at_prune(
+                    gid,
+                    step_ranges,
+                    obs_step_ranges,
+                    int(snapshot_step),
+                )
+            )
+            if owner < 1:
+                continue
             owner_key = str(owner)
             owner_counts[owner_key] = int(owner_counts.get(owner_key, 0) + 1)
             kept_points.append(
