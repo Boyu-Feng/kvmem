@@ -26,45 +26,31 @@ METHOD_SERIES: List[Tuple[str, str]] = [
 ]
 
 
-def _build_full_step_ranges(
+def _step_ranges_from_token_ranges(
     step_token_ranges: Dict[str, Any],
-    obs_step_ranges: Dict[str, Any],
 ) -> List[Tuple[int, int, int]]:
-    """Merge Think+Action with the following Observation into one ReAct step span."""
-    full_ranges: List[Tuple[int, int, int]] = []
-    step_ids = sorted(int(k) for k in step_token_ranges.keys())
-    for sid in step_ids:
+    """Use raw step_token_ranges from the episode debug payload."""
+    out: List[Tuple[int, int, int]] = []
+    for sid in sorted(int(k) for k in step_token_ranges.keys()):
         rng = step_token_ranges.get(str(sid)) or step_token_ranges.get(sid)
         if not isinstance(rng, (list, tuple)) or len(rng) != 2:
             continue
         s, e = int(rng[0]), int(rng[1])
         if e < s:
             continue
-        obs_rng = obs_step_ranges.get(str(sid + 1)) or obs_step_ranges.get(sid + 1)
-        if isinstance(obs_rng, (list, tuple)) and len(obs_rng) == 2:
-            e = max(e, int(obs_rng[1]))
-        full_ranges.append((sid, s, e))
-    return full_ranges
+        out.append((sid, s, e))
+    return out
 
 
 def _resolve_owner_step(
     global_id: int,
     step_ranges: List[Tuple[int, int, int]],
-    obs_step_ranges: Dict[str, Any],
 ) -> int:
-    """Map a global token id to the ReAct step that produced it."""
+    """Map a global token id to the ReAct step span in step_token_ranges."""
     gid = int(global_id)
     for sid, s, e in step_ranges:
         if s <= gid <= e:
             return sid
-    for obs_step_str, rng in sorted(obs_step_ranges.items(), key=lambda kv: int(kv[0])):
-        if not isinstance(rng, (list, tuple)) or len(rng) != 2:
-            continue
-        obs_at_loop_step = int(obs_step_str)
-        s, e = int(rng[0]), int(rng[1])
-        if s <= gid <= e:
-            # Observation {k} is prefilled at loop step k+1.
-            return max(1, obs_at_loop_step - 1)
     return -1
 
 
@@ -72,7 +58,6 @@ def _extract_plot_data(debug_payload: Dict[str, Any]) -> Dict[str, Any]:
     prompt_token_count = int(debug_payload.get("prompt_token_count", 0))
     pruning_history = debug_payload.get("pruning_history", []) or []
     step_token_ranges = debug_payload.get("step_token_ranges", {}) or {}
-    obs_step_ranges = debug_payload.get("obs_step_ranges", {}) or {}
     token_tracker = debug_payload.get("token_tracker", {}) or {}
     step_pruning_events = token_tracker.get("step_pruning_events", {}) or {}
 
@@ -81,10 +66,10 @@ def _extract_plot_data(debug_payload: Dict[str, Any]) -> Dict[str, Any]:
     event_id = 0
     owner_rows: Dict[str, Dict[str, Any]] = {}
 
-    step_ranges = _build_full_step_ranges(step_token_ranges, obs_step_ranges)
+    step_ranges = _step_ranges_from_token_ranges(step_token_ranges)
 
     def _owner_step(global_id: int) -> int:
-        return _resolve_owner_step(global_id, step_ranges, obs_step_ranges)
+        return _resolve_owner_step(global_id, step_ranges)
 
     for ev in pruning_history:
         if not isinstance(ev, dict):
@@ -239,7 +224,7 @@ def _count_owner_step_totals(
     prompt_token_count: int,
     next_global_id: int,
 ) -> Dict[int, int]:
-    """Decode tokens generated per ReAct owner step (Think+Action+Observation span)."""
+    """Decode tokens per ReAct owner step (raw step_token_ranges span)."""
     totals: Dict[int, int] = {}
     decode_end = int(next_global_id) - 1
     for sid, start_abs, end_abs in step_ranges:
@@ -626,12 +611,8 @@ def _step_label(step: int) -> str:
 
 
 def _display_step_from_point(point: Dict[str, Any]) -> int:
-    """Map orphan tokens (owner_step=-1) to a valid ReAct step id starting at 1."""
-    owner = int(point.get("owner_step", -1))
-    if owner >= 1:
-        return owner
-    prune = int(point.get("prune_step", 0) or 0)
-    return max(1, prune)
+    """Return owner_step as recorded; orphans stay at -1 (not remapped)."""
+    return int(point.get("owner_step", -1))
 
 
 def _point_display_step(point: Dict[str, Any], step_key: str) -> int:
