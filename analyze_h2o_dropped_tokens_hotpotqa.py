@@ -682,11 +682,12 @@ def _panel_x_span(points: Sequence[Dict[str, Any]]) -> int:
 def _plot_style(mode: str) -> Dict[str, float]:
     if mode == "dropped":
         return {
-            "axis_label": 24,
-            "tick": 20,
+            "axis_label": 26,
+            "tick": 22,
             "title": 18,
-            "legend_font": 17,
-            "legend_marker": 12,
+            "method_title": 24,
+            "legend_font": 21,
+            "legend_marker": 14,
             "legend_ncol": 4,
             "panel_h": 3.6,
             "fig_w": 16.0,
@@ -694,11 +695,12 @@ def _plot_style(mode: str) -> Dict[str, float]:
             "hspace": 0.12,
         }
     return {
-        "axis_label": 22,
-        "tick": 19,
+        "axis_label": 24,
+        "tick": 21,
         "title": 18,
-        "legend_font": 16,
-        "legend_marker": 10,
+        "method_title": 22,
+        "legend_font": 19,
+        "legend_marker": 12,
         "legend_ncol": 4,
         "panel_h": 2.6,
         "fig_w": 14.0,
@@ -712,7 +714,7 @@ def _plot_style(mode: str) -> Dict[str, float]:
 
 def _legend_bottom_margin(n_items: int, ncol: int) -> float:
     rows = max(1, (int(n_items) + int(ncol) - 1) // int(ncol))
-    return 0.035 + 0.028 * rows
+    return 0.04 + 0.032 * rows
 
 
 def _bottom_axis_labelpad() -> int:
@@ -721,9 +723,9 @@ def _bottom_axis_labelpad() -> int:
 
 def _multi_panel_chart_style() -> Dict[str, float]:
     return {
-        "axis_label": 24,
-        "tick": 20,
-        "legend": 17,
+        "axis_label": 26,
+        "tick": 22,
+        "legend": 21,
         "panel_h": 3.5,
         "hspace": 0.12,
         "labelpad": 6,
@@ -958,6 +960,12 @@ def _plot_three_methods(
             ax.set_ylabel(y_label, fontsize=style["axis_label"], labelpad=style["labelpad"])
         else:
             ax.set_ylabel("")
+        ax.set_title(
+            method_label,
+            loc="left",
+            fontsize=float(style.get("method_title", style["axis_label"])),
+            pad=4,
+        )
         ax.tick_params(axis="both", which="major", labelsize=style["tick"], pad=3)
         ax.yaxis.set_major_locator(mticker.MultipleLocator(1))
         ax.set_ylim(0.5, global_y_max + 0.5)
@@ -983,9 +991,9 @@ def _plot_three_methods(
             ncol=legend_ncol,
             frameon=False,
             fontsize=style["legend_font"],
-            handlelength=1.6,
-            handletextpad=0.6,
-            columnspacing=1.6,
+            handlelength=2.0,
+            handletextpad=0.8,
+            columnspacing=1.8,
             borderaxespad=0.0,
         )
 
@@ -1087,14 +1095,14 @@ def _plot_final_survival_line(
         )
 
     x_labelpad = _bottom_axis_labelpad()
-    ax.set_xlabel("ReAct step (token origin)", fontsize=22, labelpad=x_labelpad)
-    ax.set_ylabel("Remain tokens", fontsize=22, labelpad=6)
+    ax.set_xlabel("ReAct step (token origin)", fontsize=24, labelpad=x_labelpad)
+    ax.set_ylabel("Remain tokens", fontsize=24, labelpad=6)
     ax.set_xticks(x_ticks)
     ax.set_xlim(0.5, x_max + 0.5)
     ax.set_ylim(0.0, 1.05)
     ax.yaxis.set_major_formatter(mticker.PercentFormatter(xmax=1.0, decimals=0))
     ax.grid(True, alpha=0.3)
-    ax.tick_params(axis="both", which="major", labelsize=20)
+    ax.tick_params(axis="both", which="major", labelsize=22)
     handles, labels = ax.get_legend_handles_labels()
     legend_ncol = max(1, len(labels))
     bottom = _legend_bottom_margin(len(labels), legend_ncol) + 0.01 if labels else 0.06
@@ -1107,7 +1115,9 @@ def _plot_final_survival_line(
             bbox_to_anchor=(0.5, -0.02),
             ncol=legend_ncol,
             frameon=False,
-            fontsize=17,
+            fontsize=21,
+            handlelength=2.0,
+            handletextpad=0.8,
         )
 
     os.makedirs(os.path.dirname(output_pdf) or ".", exist_ok=True)
@@ -1333,6 +1343,9 @@ def _plot_survival_dynamics(
             ncol=legend_ncol,
             frameon=False,
             fontsize=style["legend"],
+            handlelength=2.0,
+            handletextpad=0.8,
+            columnspacing=1.8,
         )
     os.makedirs(os.path.dirname(output_pdf) or ".", exist_ok=True)
     fig.savefig(output_pdf, bbox_inches="tight", pad_inches=0.12)
@@ -1469,6 +1482,9 @@ def _plot_cohort_survival(
             ncol=legend_ncol,
             frameon=False,
             fontsize=style["legend"],
+            handlelength=2.0,
+            handletextpad=0.8,
+            columnspacing=1.8,
         )
     os.makedirs(os.path.dirname(output_pdf) or ".", exist_ok=True)
     fig.savefig(output_pdf, bbox_inches="tight", pad_inches=0.12)
