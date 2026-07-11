@@ -689,10 +689,10 @@ def _plot_style(mode: str) -> Dict[str, float]:
             "legend_font": 21,
             "legend_marker": 14,
             "legend_ncol": 4,
-            "panel_h": 3.6,
+            "panel_h": 3.8,
             "fig_w": 16.0,
             "labelpad": 6,
-            "hspace": 0.12,
+            "hspace": 0.38,
         }
     return {
         "axis_label": 24,
@@ -726,8 +726,9 @@ def _multi_panel_chart_style() -> Dict[str, float]:
         "axis_label": 26,
         "tick": 22,
         "legend": 21,
-        "panel_h": 3.5,
-        "hspace": 0.12,
+        "method_title": 24,
+        "panel_h": 3.8,
+        "hspace": 0.28,
         "labelpad": 6,
     }
 
@@ -881,7 +882,7 @@ def _plot_three_methods(
     fig.subplots_adjust(
         hspace=panel_hspace,
         bottom=bottom_margin,
-        top=0.98,
+        top=0.96,
         left=0.10,
         right=0.98,
     )
@@ -1379,7 +1380,7 @@ def _plot_cohort_survival(
     x_labelpad = _bottom_axis_labelpad()
     has_any = False
 
-    for ax_idx, (ax, (_method_label, plot_data)) in enumerate(zip(axes, method_plot_data)):
+    for ax_idx, (ax, (method_label, plot_data)) in enumerate(zip(axes, method_plot_data)):
         rows = list(plot_data.get("cohort_survival", []) or [])
         if not rows:
             ax.text(
@@ -1398,6 +1399,12 @@ def _plot_cohort_survival(
                 "Cohort remaining %",
                 style["axis_label"],
                 style["labelpad"],
+            )
+            ax.set_title(
+                method_label,
+                loc="left",
+                fontsize=float(style.get("method_title", style["axis_label"])),
+                pad=4,
             )
             continue
 
@@ -1442,6 +1449,12 @@ def _plot_cohort_survival(
             style["axis_label"],
             style["labelpad"],
         )
+        ax.set_title(
+            method_label,
+            loc="left",
+            fontsize=float(style.get("method_title", style["axis_label"])),
+            pad=4,
+        )
         ax.set_ylim(0.0, 1.08)
         ax.yaxis.set_major_formatter(mticker.PercentFormatter(xmax=1.0, decimals=0))
         ax.grid(True, alpha=0.3)
@@ -1469,7 +1482,7 @@ def _plot_cohort_survival(
     bottom = _legend_bottom_margin(len(global_owner_steps), legend_ncol) + 0.01 if has_any else 0.06
     fig.subplots_adjust(
         hspace=style["hspace"],
-        top=0.98,
+        top=0.96,
         bottom=bottom,
         left=0.10,
         right=0.97,
