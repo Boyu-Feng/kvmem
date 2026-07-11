@@ -42,6 +42,20 @@ def _step_ranges_from_token_ranges(
     return out
 
 
+def _build_full_step_ranges(
+    step_token_ranges: Dict[str, Any],
+    obs_step_ranges: Dict[str, Any],
+) -> List[Tuple[int, int, int]]:
+    """Merge Think+Action with the following Observation into one ReAct step span."""
+    full_ranges: List[Tuple[int, int, int]] = []
+    for sid, s, e in _step_ranges_from_token_ranges(step_token_ranges):
+        obs_rng = obs_step_ranges.get(str(sid + 1)) or obs_step_ranges.get(sid + 1)
+        if isinstance(obs_rng, (list, tuple)) and len(obs_rng) == 2:
+            e = max(e, int(obs_rng[1]))
+        full_ranges.append((sid, s, e))
+    return full_ranges
+
+
 def _resolve_owner_step(
     global_id: int,
     step_ranges: List[Tuple[int, int, int]],
@@ -88,7 +102,6 @@ def _max_global_id_at_prune_step(
 def _resolve_owner_step_at_prune(
     global_id: int,
     step_ranges: List[Tuple[int, int, int]],
-    obs_step_ranges: Dict[str, Any],
     prune_step: int,
 ) -> int:
     """
@@ -104,16 +117,6 @@ def _resolve_owner_step_at_prune(
             break
         if s <= gid <= e:
             return int(sid)
-    for obs_step_str, rng in sorted(obs_step_ranges.items(), key=lambda kv: int(kv[0])):
-        if not isinstance(rng, (list, tuple)) or len(rng) != 2:
-            continue
-        obs_at_loop_step = int(obs_step_str)
-        owner = max(1, obs_at_loop_step - 1)
-        if owner > cap:
-            continue
-        s, e = int(rng[0]), int(rng[1])
-        if s <= gid <= e:
-            return owner
     return -1
 
 
@@ -130,19 +133,14 @@ def _extract_plot_data(debug_payload: Dict[str, Any]) -> Dict[str, Any]:
     event_id = 0
     owner_rows: Dict[str, Dict[str, Any]] = {}
 
-    step_ranges = _step_ranges_from_token_ranges(step_token_ranges)
+    step_ranges = _build_full_step_ranges(step_token_ranges, obs_step_ranges)
     next_global_id = int(token_tracker.get("next_global_id", prompt_token_count))
 
     def _owner_step(global_id: int) -> int:
         return _resolve_owner_step(global_id, step_ranges)
 
     def _owner_step_when_pruned(global_id: int, prune_step: int) -> int:
-        return _resolve_owner_step_at_prune(
-            global_id,
-            step_ranges,
-            obs_step_ranges,
-            prune_step,
-        )
+        return _resolve_owner_step_at_prune(global_id, step_ranges, prune_step)
 
     for ev in pruning_history:
         if not isinstance(ev, dict):
@@ -283,7 +281,6 @@ def _extract_plot_data(debug_payload: Dict[str, Any]) -> Dict[str, Any]:
         prompt_token_count=prompt_token_count,
         step_token_ranges=step_token_ranges,
         step_ranges=step_ranges,
-        obs_step_ranges=obs_step_ranges,
         step_pruning_events=step_pruning_events,
         token_tracker=token_tracker,
     )
@@ -321,7 +318,7 @@ def _count_owner_step_totals(
     prompt_token_count: int,
     next_global_id: int,
 ) -> Dict[int, int]:
-    """Decode tokens per ReAct owner step (raw step_token_ranges span)."""
+    """Decode tokens per ReAct owner step (Think+Action+Observation span)."""
     totals: Dict[int, int] = {}
     decode_end = int(next_global_id) - 1
     for sid, start_abs, end_abs in step_ranges:
@@ -651,7 +648,6 @@ def _build_kept_points(
     prompt_token_count: int,
     step_token_ranges: Dict[str, Any],
     step_ranges: List[Tuple[int, int, int]],
-    obs_step_ranges: Dict[str, Any],
     step_pruning_events: Dict[str, Any],
     token_tracker: Dict[str, Any],
 ) -> Tuple[List[Dict[str, Any]], Dict[str, Dict[str, int]]]:
@@ -691,7 +687,6 @@ def _build_kept_points(
                 _resolve_owner_step_at_prune(
                     gid,
                     step_ranges,
-                    obs_step_ranges,
                     int(snapshot_step),
                 )
             )
