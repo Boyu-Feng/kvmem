@@ -35,50 +35,7 @@ def normalize_answer(s: str) -> str:
     return s
 
 
-def _extract_anchor_terms(text: str) -> Set[str]:
-    if not text:
-        return set()
-    text = text.replace("\n", " ")
-    raw_tokens = re.findall(r"[A-Za-z0-9][A-Za-z0-9\\-_/]{1,}", text)
-    stop = {
-        "the",
-        "and",
-        "for",
-        "with",
-        "that",
-        "this",
-        "from",
-        "were",
-        "was",
-        "are",
-        "who",
-        "what",
-        "when",
-        "where",
-        "which",
-        "into",
-        "after",
-        "before",
-        "have",
-        "has",
-        "had",
-        "not",
-        "but",
-        "about",
-        "search",
-        "lookup",
-        "finish",
-        "observation",
-        "thought",
-        "action",
-    }
-    terms = set()
-    for t in raw_tokens:
-        tt = t.lower().strip("_-/")
-        if len(tt) < 3 or tt in stop:
-            continue
-        terms.add(tt)
-    return terms
+from kv_cache.anchor_utils import extract_anchor_terms as _extract_anchor_terms
 
 
 def _normalize_action_arg(action_arg: str) -> str:

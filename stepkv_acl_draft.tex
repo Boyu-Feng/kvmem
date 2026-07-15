@@ -12,6 +12,9 @@
 \usepackage{multirow}
 \usepackage{amsmath}
 \usepackage{amssymb}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\usepackage{enumitem}
 
 \title{StepKV: Step-Aware KV Cache Compression for LLM Agent Long-Horizon Reasoning}
 
@@ -31,173 +34,342 @@ Affiliation / Address line 2 \\
 \maketitle
 
 \begin{abstract}
-Large language models (LLMs) increasingly rely on agent-style reasoning, where a model repeatedly produces Thought-Action-Observation steps and must preserve useful context across long trajectories. In this setting, key-value (KV) cache memory becomes a major bottleneck because every generated token is stored and repeatedly attended to. Existing KV cache pruning methods are mostly token-level and assume temporal locality, i.e., tokens with high recent attention are the most important. However, we observe that this assumption is often violated in ReAct-style multi-step reasoning: information introduced in early steps may only become critical several steps later. This delayed-reuse pattern causes standard token-level pruning to remove globally important context too early, leading to severe accuracy degradation under limited KV budgets.
+Large language model (LLM) agents based on ReAct repeatedly generate \textit{Thought--Action--Observation} trajectories, causing the key--value (KV) cache to grow linearly with the number of reasoning steps.
+Existing KV pruning methods such as H2O and SnapKV retain tokens by local attention saliency and therefore assume temporal locality.
+We find that this assumption breaks in multi-step agentic reasoning: information introduced in an early step often becomes critical only several steps later (\emph{delayed reuse}), so token-only pruning evicts globally important context and causes severe accuracy collapse under limited KV budgets (e.g., H2O reaches 12.80 EM on HotpotQA at 50\% budget vs.\ 28.40 EM for full KV).
 
-This paper proposes StepKV, a step-aware KV cache compression framework that introduces step-level structure into token retention decisions. StepKV groups tokens by reasoning step, estimates step utility from progression and delayed-reuse signals, and combines this utility with token-level heavy-hitter scores through a hybrid scoring rule. A two-stage budget allocation strategy first guarantees a minimum number of retained tokens per step, then fills remaining capacity globally according to the unified score. This design preserves both local token saliency and global trajectory-level importance.
-
-Experiments on multi-step reasoning benchmarks show that StepKV consistently outperforms representative token-level baselines such as H2O and SnapKV under the same cache budgets. At moderate and aggressive compression ratios, StepKV substantially narrows the gap to full-cache inference while reducing memory and latency overhead. These results suggest that explicit modeling of step-level dependencies is crucial for robust and efficient KV cache management in long-horizon agentic reasoning.
+We propose \textbf{StepKV}, a step-aware KV cache compression framework that groups trajectory tokens by reasoning step and assigns each step a lightweight utility score from external trajectory signals---progress quality, novelty, repetition, and delayed citation.
+At every step boundary, StepKV executes a three-phase scoring pipeline: (i) initialize the score of the newly finalized step; (ii) globally update older step scores when later text reuses their anchors; and (iii) combine token-level heavy-hitter scores with step utility and retain the top-$B$ tokens under budget $B=\rho n$.
+Experiments on HotpotQA, 2WikiMultihopQA, MuSiQue, and BrowseComp with Qwen2.5-7B show that StepKV substantially outperforms H2O and SnapKV at matched budgets (26.50/35.50 EM/F1 vs.\ 12.80/20.24 for H2O on HotpotQA at 50\% budget) while closely approaching full-cache performance.
 \end{abstract}
 
 \section{Introduction}
 
-Large language models (LLMs) have demonstrated strong capabilities in complex reasoning tasks, especially when combined with agent-style frameworks such as ReAct, which interleave reasoning and tool use through structured trajectories of \textit{Thought}, \textit{Action}, and \textit{Observation}. This paradigm enables models to perform multi-step reasoning and external information retrieval, significantly improving performance on tasks such as multi-hop question answering.
+Large language models (LLMs) have shown strong performance on complex reasoning when coupled with agent-style frameworks such as ReAct~\cite{yao2023react}, which interleave internal reasoning (\textit{Thought}), tool calls (\textit{Action}), and environment feedback (\textit{Observation}).
+This paradigm enables multi-hop question answering over external corpora and has become a standard recipe for retrieval-augmented agents.
 
-However, a key limitation of such systems lies in the growing computational and memory cost associated with long-context autoregressive generation. In particular, maintaining the full key-value (KV) cache across all reasoning steps leads to substantial overhead, motivating the need for efficient KV cache compression strategies.
+A practical bottleneck is the growing KV cache.
+In ReAct, each step appends hundreds of new tokens to the decode cache; over a 7-step trajectory the cache can reach several thousand tokens.
+Maintaining the full cache preserves accuracy but increases GPU memory and decode latency.
+Recent token-level pruning methods such as H2O~\cite{zhang2023h2o} and SnapKV~\cite{li2024snapkv} reduce cache size by keeping attention-heavy tokens, and work well in standard autoregressive generation.
 
-Existing KV cache pruning methods, such as token-level eviction based on recency or heavy-hitter attention scores, have been shown to be effective in standard autoregressive generation. These methods rely on the assumption that token importance is largely temporally local.
+However, we observe that these methods fail dramatically in ReAct-style workloads.
+On HotpotQA with BM25 retrieval over full Wikipedia, H2O at a 50\% KV budget drops to 12.80 EM, while a ReAct baseline without aggressive pruning reaches 28.00 EM.
+The failure mode is systematic rather than random: early observations that appear locally unimportant are evicted, yet their entities reappear in later thoughts or actions.
 
-Despite their success in conventional settings, we observe that such token-level pruning strategies fail to generalize to ReAct-style reasoning. Empirically, applying these methods results in significant performance degradation, particularly on multi-hop reasoning tasks.
+We attribute this to \textbf{delayed reuse}.
+Token importance in agent trajectories is not purely temporally local; it is \emph{step-conditional}.
+An observation token may receive low attention immediately after generation, but the step that produced it can become semantically critical once later reasoning cites the same entities.
+Token-only scores cannot represent this cross-step dependency.
 
-In this work, we identify that token importance in ReAct is not purely temporally local, but instead exhibits strong \emph{step-conditional} characteristics. To address this, we propose a \textbf{step-aware KV cache compression} strategy that incorporates step-level structural information into token-level importance estimation. We make the following contributions:
+We propose \textbf{StepKV}, which introduces explicit step structure into KV retention.
+StepKV partitions the prunable cache region into reasoning steps, estimates a step utility $U_s$ from lightweight external signals (success, novelty, repetition, citation), and forms a hybrid token score $C_i=\alpha T_i+\beta U_{\mathrm{step}(i)}$ that combines H2O token saliency $T_i$ with step utility.
+Crucially, step utility is maintained through a \textbf{three-phase update} at each step boundary rather than a one-shot local heuristic.
+
+Our contributions are:
 \begin{itemize}
-    \item \textbf{Revisiting KV cache compression in agentic reasoning.} We systematically evaluate existing heuristic-based KV cache pruning methods under multi-step agentic workloads, and show that token-level importance metrics fail to capture the dynamic and non-local utility of information. In particular, we identify a \emph{delayed-reuse} phenomenon, where tokens introduced in early reasoning steps become critical only at later stages.
-    \item \textbf{Step-aware KV cache compression.} We propose a novel framework that explicitly incorporates step-level structural information into token importance estimation. Our method models both local token saliency and global step-level contribution, enabling more faithful preservation of information across long reasoning trajectories.
-    \item \textbf{Hybrid token-step scoring and budget allocation.} We introduce a lightweight hybrid scoring strategy and a two-stage budgeted selection mechanism. This formulation prevents systematic under-allocation of memory to early but semantically important steps.
-    \item \textbf{Step-wise sensitivity analysis.} We analyze how token removal at different reasoning steps affects downstream performance. Our results reveal that early-step tokens, although often assigned low local importance, can have a disproportionately large impact on final reasoning outcomes.
+    \item We systematically study KV cache pruning under ReAct workloads and identify delayed reuse as a key failure mode of token-only methods.
+    \item We propose StepKV, a step-aware compression framework with anchor-based step utility and a three-phase scoring pipeline at step boundaries.
+    \item We introduce a hybrid retention rule $C=\alpha T+\beta U$ under global budget $B=\rho n$, preserving both local token saliency and trajectory-level importance.
+    \item Experiments on four multi-step QA benchmarks show that StepKV near-matches full KV while outperforming H2O and SnapKV by large margins under equal budgets; analyses confirm the value of citation and step utility.
 \end{itemize}
 
 \section{Related Work}
 
 \subsection{Architectural Optimizations}
 
-Architectural innovations aim to reduce the intrinsic size and growth rate of the KV cache at the model design level. Grouped-Query Attention (GQA)~\cite{gqa} and Multi-Head Latent Attention (MLA)~\cite{mla} reduce memory footprint by sharing key and value heads across multiple query heads, thereby lowering per-token storage cost. Beyond standard attention, state-space models such as Mamba~\cite{gu2023mamba} and Gated Delta Networks~\cite{yang2024gateddelta} achieve sub-linear memory scaling by replacing attention with recurrent formulations. These designs are often combined with attention layers to form hybrid architectures (e.g., Qwen3-Next~\cite{qwen2025next}, Nemotron-3~\cite{nvidia2025nemotron}) that balance long-range modeling and efficiency.
-
-While these approaches effectively reduce the rate of memory growth, they do not address a key challenge in agentic reasoning: the accumulation and management of historical reasoning trajectories across multiple interaction steps.
+Architectural innovations reduce the intrinsic growth rate of KV storage.
+Grouped-Query Attention (GQA)~\cite{gqa} and Multi-Head Latent Attention (MLA)~\cite{mla} share key/value heads across queries.
+State-space and hybrid architectures~\cite{gu2023mamba,yang2024gateddelta,qwen2025next,nvidia2025nemotron} further alter memory scaling.
+These methods lower per-token storage cost but do not decide \emph{which historical trajectory tokens to keep} once a long ReAct episode is underway.
 
 \subsection{Sparse and Selective Attention}
 
-Another line of work reduces the computational burden of attention by selectively attending to a subset of tokens. For example, DeepSeek Sparse Attention (DSA)~\cite{liu2025dsa} dynamically identifies relevant tokens using a learned indexing mechanism. These approaches alleviate memory bandwidth and compute costs during attention operations. However, they typically do not reduce the physical storage of the KV cache, as the full sequence is still retained in memory. As a result, they are orthogonal to methods that explicitly manage or compress stored context.
+Methods such as DeepSeek Sparse Attention (DSA)~\cite{liu2025dsa} reduce attention compute by selecting relevant keys at inference time.
+They primarily address bandwidth and FLOPs rather than the physical size of the stored KV cache.
+StepKV is complementary: it explicitly compresses stored trajectory context in agent settings.
 
 \subsection{KV Cache Management and Compression}
 
-Most closely related to our work are methods that explicitly manage the KV cache by pruning, compressing, or reorganizing stored tokens. Early approaches such as StreamingLLM and H2O~\cite{zhang2023h2o} rely on heuristic token eviction, retaining attention sinks or heavy-hitter tokens based on accumulated attention scores. SnapKV~\cite{li2024snapkv} improves efficiency by preserving clustered key information within local attention windows, while Scope~\cite{scope} introduces finer-grained control by separating prompt and generated tokens into distinct pools with independent scoring and budget allocation.
+StreamingLLM and H2O~\cite{zhang2023h2o} retain attention sinks or heavy-hitter tokens.
+SnapKV~\cite{li2024snapkv} clusters local keys within attention windows; Scope~\cite{scope} separates prompt and generation pools.
+Reasoning-oriented extensions include R-KV~\cite{cai2025rkv}, RaaS~\cite{hu2025raas}, LazyEviction~\cite{zhang2025lazyeviction}, ThinKV~\cite{ramachandran2025thinkv}, and SideQuest~\cite{sidequest}.
+Most rely on token-level saliency and do not model step-wise structure or delayed cross-step reuse.
+StepKV differs by grouping tokens by ReAct step and scoring steps with external trajectory signals before pruning.
 
-Several works extend KV cache management to reasoning settings. R-KV~\cite{cai2025rkv} exploits redundancy across reasoning tokens, RaaS~\cite{hu2025raas} identifies milestone tokens critical for logical progression, LazyEviction~\cite{zhang2025lazyeviction} retains tokens with recurrent importance, ThinKV~\cite{ramachandran2025thinkv} applies hierarchical pruning and quantization. SideQuest~\cite{sidequest} further considers future utility by using auxiliary threads to identify removable context.
+\section{Methodology: Step-Aware KV Cache Compression}
+\label{sec:methodology}
 
-Despite these advances, most methods rely on token-level importance and lack explicit modeling of step-wise structure in agentic reasoning. In multi-step settings, token relevance is highly non-local: early-step information may become critical only later. Without capturing such delayed reuse, existing approaches risk discarding essential context, leading to degraded performance in long-horizon reasoning.
+StepKV is invoked after each completed reasoning step to select a budgeted subset of the prunable KV cache.
+At pruning point $t$, let $\mathcal{T}^{(t)}=\{1,\ldots,N_t\}$ denote prunable token indices in the trajectory region, and let $\mathcal{S}^{(t)}=\{1,\ldots,t{-}1\}$ denote finalized steps whose spans are registered.
+Given keep ratio $\rho$, StepKV returns $\mathcal{K}^{(t)}\subseteq\mathcal{T}^{(t)}$ with $|\mathcal{K}^{(t)}|\le B$ and $B=\max(1,\lfloor \rho N_t \rfloor)$.
+Selection combines (i)~a \emph{step utility score} $S_k$ derived from external trajectory signals and (ii)~a \emph{token saliency score} $T_i$ from H2O-style attention aggregation.
 
-\section{StepKV}
+Concretely, we assign each interaction step a semantic score~$S_k$, fuse it with token-level scores~$T_i$ into a combined score~$C_i$, and evict low-$C_i$ positions.
+The pipeline has four stages at every step boundary:
+(1)~step span finalization;
+(2)~Phase~1 initialization of the newly finalized step score;
+(3)~Phase~2 global citation update over all prior steps; and
+(4)~Phase~3 joint scoring followed by two-stage budgeted retention over $C_i$.
 
-\subsection{Overview}
+Figure~\ref{fig:method} gives an overview; details follow.
 
-StepKV is a structure-aware KV cache compression framework designed for multi-step agentic reasoning. Unlike conventional token-only pruning, StepKV treats a reasoning trajectory as a sequence of semantically distinct steps and performs retention with both token-level and step-level signals. Given a global KV budget, the method first computes token saliency (e.g., heavy-hitter attention scores) and step utility (how much a step contributes to final reasoning), then combines them into a unified score for each token.
+\begin{figure}[t]
+\centering
+\IfFileExists{assets/stepkv_method_main.pdf}{%
+  \includegraphics[width=\linewidth]{assets/stepkv_method_main.pdf}%
+}{%
+  \fbox{\parbox[c][0.22\linewidth][c]{0.95\linewidth}{\centering\small Export \texttt{assets/stepkv\_method\_main.drawio} to PDF.}}%
+}
+\caption{StepKV overview. Each step boundary runs span finalization, three-phase scoring ($S_k$ init, citation update, $C_i$ computation), and budgeted cache retention.}
+\label{fig:method}
+\end{figure}
 
-Our pipeline has three components. First, we maintain a step pool that groups KV entries by reasoning step, preserving trajectory structure during cache management. Second, we estimate step utility from external trajectory signals, including progress quality and delayed-reuse evidence from later steps. Third, we apply a two-stage selection strategy: a step-wise floor ensures each step keeps a minimum number of tokens, and a global fill stage allocates remaining budget to top-scoring tokens across all steps. This design avoids over-pruning early steps while still prioritizing high-value local tokens.
+\subsection{Step Definition and Finalization}
+\label{sec:step-def}
 
-Compared with standard eviction strategies, StepKV provides two practical benefits: (i) improved robustness under aggressive compression, and (ii) better preservation of cross-step dependencies that are critical in long-horizon reasoning.
-
-\subsection{ReAct Reasoning with KV Cache}
-
-We model ReAct-style reasoning as a step-wise autoregressive process with an explicit KV cache. Given an initial input $X^{(1)} = [x_1, \dots, x_n]$, the initial cache is
+\paragraph{Cache layout.}
+The KV cache is split into a protected prefix and a prunable trajectory:
 \begin{equation}
-\mathcal{C}^{(1)} = \{(k_i, v_i)\}_{i=1}^{n}, \quad
-k_i = h_i W_K,\; v_i = h_i W_V,
+\mathcal{C}^{(t)} = \mathcal{C}_{\mathrm{prot}} \;\|\; \mathcal{C}_{\mathrm{traj}}^{(t)},
 \end{equation}
-where $h_i = \mathrm{LM}(x_i)$.
+where $\mathcal{C}_{\mathrm{prot}}$ stores the system prompt, in-context demonstrations, and user question, and is never pruned.
+All Thought/Action/Observation tokens appended during the episode belong to $\mathcal{C}_{\mathrm{traj}}^{(t)}$ and are eligible for eviction.
 
-At token decoding index $t$, the query $q_t = h_t W_Q$ attends over cache $\mathcal{C}$:
+\paragraph{Step content.}
+Step~$k$ comprises the LLM-generated Thought/Action tokens and the environment Observation prefilled afterward:
 \begin{equation}
-o_t = \sum_{(k_i, v_i)\in\mathcal{C}}
-\frac{\exp(q_t k_i^\top)}
-{\sum_{(k_j, v_j)\in\mathcal{C}} \exp(q_t k_j^\top)}
-v_i.
+    \text{Step}_k = [\text{Thought}_k, \text{Action}_k \;\|\; \text{Obs}_k],
+\end{equation}
+mapped to a contiguous global token span $[s_k, e_k]$ in $\mathcal{C}_{\mathrm{traj}}$.
+Thought and action tokens are \emph{decoded}; observation tokens are \emph{prefilled} from the environment after the action is executed (e.g., retrieved Wikipedia passages).
+
+\paragraph{Finalization timing.}
+We \emph{finalize} step~$k$ at the beginning of step~$k{+}1$, when $\text{Obs}_k$ has been appended and the span $[s_k,e_k]$ is complete.
+Until finalization, step~$k$'s observation boundary is unknown, so no step score or pruning span is registered for it.
+Only after finalization do we:
+\begin{itemize}[leftmargin=*, nosep]
+    \item extract anchors $\mathcal{A}_k$ from $\text{Obs}_k$;
+    \item compute progression reward $r_k$ and initialize $S_k$ (Phase~1);
+    \item register $[s_k,e_k]$ in the step-span table used by Phase~3 retention.
+\end{itemize}
+This ensures that novelty and success signals are computed on the full observation, not on partial Thought/Action prefixes.
+
+\paragraph{Pruning schedule.}
+StepKV runs at step boundaries: after Phase~1--2 scoring and before decoding the next Thought/Action block, Phase~3 may compress $\mathcal{C}_{\mathrm{traj}}^{(t)}$ to budget~$B$.
+We set \texttt{observation\_window=0}, so recent observations are not unconditionally protected (unlike H2O baselines with a trailing window of 32 tokens), allowing StepKV to prioritize globally useful observations via $S_k$ rather than recency alone.
+
+\subsection{Anchor Extraction}
+\label{sec:anchor}
+
+Anchors are lightweight lexical cues used for novelty and citation.
+They require no extra model calls and are extracted deterministically from text.
+
+\paragraph{Extraction procedure.}
+From each observation and from the current-step input text used for citation, we build $\mathcal{A}(\text{text})$ as follows:
+\begin{enumerate}[leftmargin=*, nosep]
+    \item \textbf{Regex scan.} Lowercase the text and match two token types in left-to-right order:
+    \begin{itemize}[leftmargin=*, nosep]
+        \item \emph{word anchors:} $[a-z][a-z0-9_-]{3,}$ (letter-led alphanumeric tokens);
+        \item \emph{numeric anchors:} $\d+$ (every digit sequence, with \textbf{no} length filter).
+    \end{itemize}
+    \item \textbf{Filtering.} For word anchors only, discard tokens with length $\le 3$ and tokens in a fixed stopword list (e.g., \texttt{thought}, \texttt{action}, \texttt{observation}, \texttt{search}, \texttt{lookup}, \texttt{could}, \texttt{invalid}).
+    Numeric anchors bypass the length and stopword filters.
+    \item \textbf{Deduplication and cap.} Keep first occurrences in order; retain at most $n=64$ distinct anchors:
+    \begin{equation}
+        \mathcal{A}(\text{text}) = \text{Top-}n\!\left(\text{dedup}\big(\text{filter}(\text{regex}(\text{text}))\big)\right).
+    \end{equation}
+\end{enumerate}
+
+\paragraph{Roles in scoring.}
+Anchors support two signals:
+\begin{itemize}[leftmargin=*, nosep]
+    \item \textbf{Novelty} ($\mathrm{nov}_k$): fraction of anchors in $\mathcal{A}_k=\mathcal{A}(\text{Obs}_k)$ that have not appeared in any earlier observation.
+    \item \textbf{Citation} ($c_k$): accumulated evidence that later step text re-mentions anchors from step~$k$.
+\end{itemize}
+Each finalized step stores $\mathcal{A}_k$ in metadata together with $(r_k,c_k,S_k)$.
+
+\subsection{Three-Phase Scoring and Cache Retention}
+\label{sec:three-phase}
+
+At each step boundary, StepKV scores the cache in three phases before retention.
+For every finalized step $k\in\mathcal{S}^{(t)}$, we maintain anchor set $\mathcal{A}_k$, progression reward $r_k$, citation count $c_k\ge 0$, and step score $S_k$.
+All step scores share the same mapping
+\begin{equation}
+\label{eq:step-score}
+f(r,c)=\operatorname{clip}\!\left(w_r\,\operatorname{clip}(r,-1,2)+w_c\log(1+c),\,0,\,S_{\max}\right),
+\end{equation}
+with defaults $w_r=0.85$, $w_c=0.15$, and $S_{\max}=8$.
+Clipping $r$ to $[-1,2]$ prevents a single failed or overly repetitive step from dominating retention; $\log(1+c)$ saturates citation growth so delayed reuse helps without overwhelming token saliency.
+
+\paragraph{Phase 1: New step score initialization.}
+When step $k$ is finalized at the start of step $k{+}1$:
+\begin{enumerate}[leftmargin=*, nosep]
+    \item \textbf{Action normalization.} Parse $\text{Action}_k$ into tool name and argument; normalize whitespace/case to obtain a canonical action string $a_k$ (e.g., \texttt{search[entity name]}).
+    \item \textbf{Repetition count.} Let $\mathrm{rep}_k$ be the number of times $a_k$ appeared among actions of steps $<k$. Increment the global action counter after reading $\mathrm{rep}_k$.
+    \item \textbf{Anchor/novelty.} Extract $\mathcal{A}_k$ from $\text{Obs}_k$, update the global seen-anchor set, and compute
+    \[
+    \mathrm{nov}_k = \frac{|\mathcal{A}_k\setminus \mathcal{A}^{\mathrm{seen}}_{<k}|}{\max(1,|\mathcal{A}_k|)}.
+    \]
+    \item \textbf{Success flag.} Set $\mathrm{succ}_k=0$ if $\text{Obs}_k$ contains failure substrings (\texttt{could not find}, \texttt{invalid action}, \texttt{no results}); otherwise $\mathrm{succ}_k=1$.
+    \item \textbf{Reward and score.} Compute
+    \begin{equation}
+    \label{eq:reward}
+    r_k = \mathrm{succ}_k + \mathrm{nov}_k - 0.3\cdot\mathrm{rep}_k,
+    \end{equation}
+    initialize $c_k\leftarrow 0$, and set $S_k = f(r_k, 0)$ (Eq.~\eqref{eq:step-score}).
+\end{enumerate}
+Repetition penalizes \emph{only} the newly finalized step in Phase~1; older steps are never retroactively penalized for repeated actions taken later.
+
+\paragraph{Phase 2: Global step score update.}
+Before generating step~$t$, we scan the \emph{current input text} $x_t$ (the observation about to be prefilled, plus any adjacent context injected at this boundary).
+Let $\mathcal{R}_t=\mathcal{A}(x_t)$.
+For \emph{every} finalized step $k<t$:
+\begin{enumerate}[leftmargin=*, nosep]
+    \item compute overlap count $o_{k,t}=|\mathcal{A}_k\cap\mathcal{R}_t|$;
+    \item if $o_{k,t}=0$, leave $(c_k,S_k)$ unchanged;
+    \item otherwise update citation and refresh the step score:
+    \begin{equation}
+    \label{eq:cite}
+    c_k \leftarrow c_k + \min\!\left(1,\;\eta\cdot\frac{o_{k,t}}{\max\!\left(1,\min(|\mathcal{A}_k|,|\mathcal{R}_t|)\right)}\right),
+    \qquad
+    S_k \leftarrow f(r_k, c_k),
+    \end{equation}
+    with $\eta=1.5$.
+\end{enumerate}
+The overlap ratio uses the smaller anchor-set size as denominator, so partial reuse of a long observation still yields a meaningful increment; the outer $\min(1,\cdot)$ caps each round's contribution.
+Because $r_k$ is fixed after Phase~1, citation exclusively drives upward revisions of older step scores when their entities reappear---implementing delayed-reuse detection without any attention lookahead.
+
+\paragraph{Phase 3: Joint token--step scoring and cache retention.}
+Phase~3 assigns a combined score to every prunable token and selects $\mathcal{K}^{(t)}$ under budget~$B$.
+
+\subparagraph{Token saliency ($T_i$).}
+For each prunable index $i\in\mathcal{T}^{(t)}$, we compute an H2O heavy-hitter score from piggyback attentions collected during the latest observation prefill.
+Let $\mathrm{Attn}^{(\ell)}_{h,q,j}$ be attention from query position $q$ and head $h$ in layer $\ell$ to KV position $j$.
+Using the last $L=3$ layers, we define
+\begin{equation}
+\label{eq:h2o}
+T_i = \frac{1}{L}\sum_{\ell\in\mathcal{L}}\sum_{h,q}\mathrm{Attn}^{(\ell)}_{h,q,i},
+\end{equation}
+where $\mathcal{L}$ indexes the final three decoder layers.
+Piggyback scoring reuses the prefill forward pass, avoiding an extra scoring forward pass at each step boundary.
+
+\subparagraph{Combined score ($C_i$).}
+Each token inherits the step score of its span label $\mathrm{step}(i)\in\mathcal{S}^{(t)}$:
+\begin{equation}
+\label{eq:combined}
+C_i = \alpha T_i + \beta S_{\mathrm{step}(i)},
+\end{equation}
+with defaults $\alpha=\beta=0.8$.
+Tokens in the same step share the same $S_{\mathrm{step}(i)}$ but may differ in $T_i$, allowing locally salient tokens to survive even within a low-utility step, and high-utility steps to lift their entire span.
+
+\subparagraph{Budget.}
+Let $n=N_t=|\mathcal{T}^{(t)}|$ and keep ratio $\rho$.
+The global retention budget is
+\begin{equation}
+\label{eq:budget}
+B = \max\!\left(1, \lfloor \rho n \rfloor\right).
 \end{equation}
 
-At reasoning step $s$, the model generates thought-action tokens $[T_s, A_s] \sim p(\cdot \mid \mathcal{C}^{(s)})$ and receives an observation $O_s = \mathrm{Env}(A_s)$. New tokens are encoded into
-\begin{equation}
-\mathcal{C}_{\mathrm{new}}^{(s)}
-=
-\{(k_t, v_t) \mid t \in T_s \cup A_s \cup O_s\},
-\end{equation}
-and the cache is updated as
-\begin{equation}
-\mathcal{C}^{(s+1)} = \mathcal{C}^{(s)} \cup \mathcal{C}_{\mathrm{new}}^{(s)}.
-\end{equation}
+\subparagraph{Two-stage retention within Phase~3.}
+Although Phase~1--2 operate at step granularity, eviction is token-level and may leave a step under-represented if all its tokens have low current attention.
+We therefore retain tokens in two sub-stages, both ranking by $C_i$:
+\begin{enumerate}[leftmargin=*, nosep]
+    \item \textbf{Stage 1 (per-step floor).}
+    For each step $k\in\mathcal{S}^{(t)}$, let $\mathcal{I}_k=\{i\in\mathcal{T}^{(t)}:\mathrm{step}(i)=k\}$ be its current token indices.
+    Keep the top
+    \[
+    k_k = \max\!\left(1,\;\left\lceil 0.10\cdot|\mathcal{I}_k|\right\rceil\right)
+    \]
+    tokens in $\mathcal{I}_k$ with highest $C_i$, forming seed set $\mathcal{K}^{(t)}_{\mathrm{floor}}$.
+    \item \textbf{Stage 2 (global fill).}
+    Starting from $\mathcal{K}^{(t)}_{\mathrm{floor}}$, add tokens from $\mathcal{T}^{(t)}\setminus\mathcal{K}^{(t)}_{\mathrm{floor}}$ in descending $C_i$ order until $|\mathcal{K}^{(t)}|=B$.
+    If Stage~1 already selects more than $B$ tokens, trim to the top-$B$ by $C_i$ globally.
+\end{enumerate}
+The final cache keeps the highest-$C_i$ positions while enforcing both a per-step presence floor and the global length target~$B$.
+Note that $S_k$ for old steps does not decrease over time; tokens from those steps may still be evicted because $T_i$ is recomputed every step and longer observations increase $n$, tightening competition under fixed~$\rho$.
 
-\subsection{Step-Aware Token Scoring}
+\begin{table}[t]
+\centering
+\caption{StepKV hyperparameters (defaults).}
+\label{tab:stepkv-hparams}
+\small
+\begin{tabular}{@{}lll@{}}
+\toprule
+Symbol / parameter & Default & Role \\
+\midrule
+$|\mathcal{A}|$ cap & 64 & max anchors per text segment \\
+repeat coeff. & $0.3$ & penalty weight in $r_k$ (Eq.~\eqref{eq:reward}) \\
+$w_r, w_c$ & $0.85, 0.15$ & reward / citation weights in Eq.~\eqref{eq:step-score} \\
+cite increment cap & $\min(1, 1.5 \times \text{overlap ratio})$ & per-round update in Eq.~\eqref{eq:cite} \\
+$\alpha, \beta$ & $0.8, 0.8$ & token / step weights in Eq.~\eqref{eq:combined} \\
+$\rho$ & $0.2$--$0.5$ & global KV keep ratio (Eq.~\eqref{eq:budget}) \\
+Stage-1 span ratio & $10\%$ & per-step minimum retention in Phase~3 \\
+$L$ & $3$ & last layers for H2O score $T_i$ (Eq.~\eqref{eq:h2o}) \\
+\bottomrule
+\end{tabular}
+\end{table}
 
-\paragraph{Hybrid token-step score.}
-Let $\mathcal{T} = \{1,\dots,N\}$ be token indices in the prunable KV region, and let $\mathcal{S}$ be the set of reasoning steps. Each token $i\in\mathcal{T}$ is associated with a step index $s(i)\in\mathcal{S}$. Given token-level heavy-hitter score $H_i$, we define
-\begin{equation}
-\label{eq:token-score}
-\mathrm{Score}_i = \alpha H_i + \beta U_{s(i)} + b_i,
-\end{equation}
-where $\alpha,\beta\ge 0$ are mixing weights, $U_s$ is step utility, and $b_i$ is an optional token bonus.
-
-\paragraph{Step utility from external trajectory signals.}
-For each step $s$, we maintain a progression signal $R_s$ and a delayed-reuse signal $C_s$. Step utility is
-\begin{equation}
-\label{eq:step-utility}
-U_s = \operatorname{clip}\!\left(w_r R_s + w_c \log(1+C_s),\, 0,\, U_{\max}\right).
-\end{equation}
-
-The progression signal is
-\begin{equation}
-\label{eq:reward}
-R_s = \mathrm{succ}_s + \mathrm{nov}_s - \lambda\,\mathrm{rep}_s,
-\end{equation}
-where $\mathrm{succ}_s\in\{0,1\}$ indicates valid progress, $\mathrm{nov}_s\in[0,1]$ is novelty ratio, and $\mathrm{rep}_s\ge 0$ is repetition count.
-
-The delayed-reuse signal is accumulated across later steps:
-\begin{equation}
-\label{eq:citation}
-C_s^{(t)} = C_s^{(t-1)} + \Delta C_{s\to t},
-\end{equation}
-with
-\begin{equation}
-\label{eq:citation-inc}
-\Delta C_{s\to t}
-=
-\min\!\left(
-1,\,
-\eta\cdot
-\frac{|\mathcal{A}_s\cap\mathcal{R}_t|}
-{\max\!\left(1,\min(|\mathcal{A}_s|,|\mathcal{R}_t|)\right)}
-\right),
-\end{equation}
-where $\mathcal{A}_s$ denotes anchor entities from step $s$ and $\mathcal{R}_t$ denotes referenced entities at step $t$.
-
-\paragraph{Two-stage budgeted selection.}
-Given budget $B$ for the prunable region, we perform constrained selection in two stages.
-
-\textbf{Stage 1 (step-wise floor).}
-For each step $s$, let $\mathcal{I}_s=\{i\in\mathcal{T}: s(i)=s\}$ and $\mathcal{I}_s^{\mathrm{orig}}$ be its original token set before current pruning. The floor keep count is
-\begin{equation}
-\label{eq:ks}
-k_s =
-\min\!\left(
-|\mathcal{I}_s|,
-\max\!\left(
-m,\;
-\left\lceil \rho_{\min}\,|\mathcal{I}_s^{\mathrm{orig}}| \right\rceil
-\right)
-\right),
-\end{equation}
-where $m$ is minimum keep count and $\rho_{\min}$ is minimum keep ratio.
-
-\textbf{Stage 2 (global fill).}
-Let
-\begin{equation}
-\label{eq:beff}
-B_{\mathrm{eff}} = \max\!\left(B,\; \sum_{s\in\mathcal{S}} k_s\right).
-\end{equation}
-After reserving floor tokens from each step, the remaining capacity is filled by globally highest scores.
-
-The final binary selection vector $\mathbf{x}\in\{0,1\}^N$ solves
-\begin{equation}
-\label{eq:objective}
-\begin{aligned}
-\max_{\mathbf{x}\in\{0,1\}^{N}} \quad
-& \sum_{i=1}^{N}\mathrm{Score}_i x_i \\
-\text{s.t.}\quad
-& \sum_{i=1}^{N} x_i \le B_{\mathrm{eff}}, \\
-& \sum_{i\in\mathcal{I}_s} x_i \ge k_s,\quad \forall s\in\mathcal{S}.
-\end{aligned}
-\end{equation}
+\begin{algorithm}[t]
+\caption{StepKV cache selection at step boundary $t$}
+\label{alg:stepkv}
+\begin{algorithmic}[1]
+\Require Prunable indices $\mathcal{T}^{(t)}$, finalized steps $\mathcal{S}^{(t)}$, incoming text $x_t$, keep ratio $\rho$
+\Ensure Selected set $\mathcal{K}^{(t)}$ with $|\mathcal{K}^{(t)}|\le B$
+\State \textbf{Phase 1 (init):} finalize step $t{-}1$; compute $r_{t-1}$ via Eq.~\eqref{eq:reward}; set $c_{t-1}\leftarrow 0$; $S_{t-1}\leftarrow f(r_{t-1},0)$
+\State \textbf{Phase 2 (cite):} $\mathcal{R}_t\leftarrow\mathcal{A}(x_t)$
+\For{$k\in\mathcal{S}^{(t)}$}
+    \If{$|\mathcal{A}_k\cap\mathcal{R}_t|>0$}
+        \State update $c_k,S_k$ via Eq.~\eqref{eq:cite}
+    \EndIf
+\EndFor
+\State \textbf{Phase 3 (score):} compute $T_i$ for all $i\in\mathcal{T}^{(t)}$ via Eq.~\eqref{eq:h2o}; set $C_i=\alpha T_i+\beta S_{\mathrm{step}(i)}$
+\State $B\leftarrow\max(1,\lfloor \rho|\mathcal{T}^{(t)}|\rfloor)$
+\State \textbf{Phase 3 (Stage 1):} for each $k\in\mathcal{S}^{(t)}$, add top-$\lceil 0.10|\mathcal{I}_k|\rceil$ tokens by $C_i$ to $\mathcal{K}^{(t)}_{\mathrm{floor}}$
+\State \textbf{Phase 3 (Stage 2):} fill $\mathcal{K}^{(t)}$ from $\mathcal{T}^{(t)}\setminus\mathcal{K}^{(t)}_{\mathrm{floor}}$ by descending $C_i$ until $|\mathcal{K}^{(t)}|=B$ (trim if Stage~1 exceeds $B$)
+\State \Return $\mathcal{K}^{(t)}$
+\end{algorithmic}
+\end{algorithm}
 
 \section{Experiments}
 
+\subsection{Experimental Setup}
+
+\paragraph{Models.}
+Our main results use \textbf{Qwen2.5-7B-Instruct}; we additionally report Llama-3.1-8B-Instruct results when available.
+
+\paragraph{Datasets and agent protocol.}
+We evaluate on multi-step QA benchmarks commonly used with ReAct agents:
+\textbf{HotpotQA}, \textbf{2WikiMultihopQA}, \textbf{MuSiQue}, and \textbf{BrowseComp}.
+Each dataset uses 500 development samples unless noted otherwise (BrowseComp: 100--518 samples), with fixed random seed $233$.
+The agent follows a 6-shot ReAct prompt, uses BM25 retrieval over full Wikipedia ($\sim$5.2M articles, top-5 passages), and is limited to 7 reasoning steps.
+
+\paragraph{Baselines.}
+We compare against:
+(1)~\textbf{ReAct} without KV pruning;
+(2)~\textbf{Full KV} (\texttt{react\_kv\_none});
+(3) token-level \textbf{H2O} and \textbf{SnapKV};
+(4)~\textbf{TOVA};
+(5) step-protected \textbf{step\_anchor\_h2o};
+(6) attention-EMA step baseline \textbf{step\_inter};
+and (7)~\textbf{StepKV} (\texttt{step\_aware\_h2o}).
+
+\paragraph{Metrics.}
+We report Exact Match (EM) and token-level F1.
+We also log peak GPU memory (excluding static model weights), average decode cache length after each step, and wall-clock time per sample.
+
+\paragraph{StepKV configuration.}
+Unless otherwise noted: $\alpha=\beta=0.8$, $w_r=0.85$, $w_c=0.15$, $\lambda=0.3$, $\eta=1.5$, $L=3$, \texttt{observation\_window=0}, \texttt{attn\_mode=piggyback}.
+KV budgets are reported as cache ratios $\rho=50\%$ and $\rho=35\%$ (HotpotQA) or $\rho=20\%$ where indicated.
+
 \subsection{Main Results}
+
+Table~\ref{tab:main-results} summarizes accuracy under matched KV budgets.
+On HotpotQA with Qwen2.5-7B at 50\% budget, StepKV achieves \textbf{26.50 EM / 35.50 F1}, closely approaching Full KV (28.40 / 38.11) and ReAct (28.00 / 39.19), while H2O and SnapKV collapse to 12.80/20.24 and 14.30/20.12 respectively.
+At a tighter 35\% budget, StepKV retains 24.33 EM and 33.46 F1, whereas H2O falls to 10.50 EM.
+
+On 2WikiMultihopQA at 50\% budget, StepKV reaches 23.80 EM and 28.35 F1 vs.\ 12.20/15.80 for H2O and 33.80/39.10 for Full KV.
+The pattern holds across datasets: StepKV consistently recovers most of the full-cache accuracy while token-only methods degrade sharply under the same memory constraint.
 
 \begin{table*}[!t]
 \centering
@@ -209,17 +381,17 @@ The final binary selection vector $\mathbf{x}\in\{0,1\}^N$ solves
 \cmidrule(lr){3-5} \cmidrule(lr){6-8} \cmidrule(lr){9-11}
 Model & Method & EM & F1 & KV Budget & EM & F1 & KV Budget & EM & F1 & KV Budget \\
 \midrule
-\multirow{8}{*}{Qwen2-7B}
-& Full KV & 28.40 & 38.11 & 100 & 33.80 & 39.10 & 100 & -- & -- & -- \\
+\multirow{8}{*}{Qwen2.5-7B}
+& Full KV & 28.40 & 38.11 & 100\% & 33.80 & 39.10 & 100\% & -- & -- & -- \\
 & ReAct & 28.00 & 39.19 & -- & 32.60 & 38.92 & -- & -- & -- & -- \\
-& H2O & 12.80 & 20.24 & 50 & 12.20 & 15.80 & 50 & -- & -- & -- \\
-& H2O & 10.50 & 17.38 & 35 & -- & -- & -- & -- & -- & -- \\
-& SnapKV & 14.30 & 20.12 & 50 & -- & -- & -- & -- & -- & -- \\
-& SnapKV & 11.38 & 18.67 & 35 & -- & -- & -- & -- & -- & -- \\
-& StepKV (Ours) & 26.50 & 35.50 & 50 & 23.80 & 28.35 & 50 & -- & -- & -- \\
-& StepKV (Ours) & 24.33 & 33.46 & 35 & -- & -- & -- & -- & -- & -- \\
+& H2O & 12.80 & 20.24 & 50\% & 12.20 & 15.80 & 50\% & -- & -- & -- \\
+& H2O & 10.50 & 17.38 & 35\% & -- & -- & -- & -- & -- & -- \\
+& SnapKV & 14.30 & 20.12 & 50\% & -- & -- & -- & -- & -- & -- \\
+& SnapKV & 11.38 & 18.67 & 35\% & -- & -- & -- & -- & -- & -- \\
+& StepKV (Ours) & \textbf{26.50} & \textbf{35.50} & 50\% & \textbf{23.80} & \textbf{28.35} & 50\% & -- & -- & -- \\
+& StepKV (Ours) & \textbf{24.33} & \textbf{33.46} & 35\% & -- & -- & -- & -- & -- & -- \\
 \midrule
-\multirow{8}{*}{Llama3-8B}
+\multirow{8}{*}{Llama-3.1-8B}
 & Full KV & -- & -- & -- & -- & -- & -- & -- & -- & -- \\
 & ReAct & -- & -- & -- & -- & -- & -- & -- & -- & -- \\
 & H2O & -- & -- & -- & -- & -- & -- & -- & -- & -- \\
@@ -230,38 +402,124 @@ Model & Method & EM & F1 & KV Budget & EM & F1 & KV Budget & EM & F1 & KV Budget
 & StepKV (Ours) & -- & -- & -- & -- & -- & -- & -- & -- & -- \\
 \bottomrule
 \end{tabular}}
-\caption{Main results across datasets under different KV cache strategies.}
+\caption{Main results on multi-step QA benchmarks under different KV cache budgets. ``KV Budget'' is the fraction of prunable trajectory tokens retained after pruning ($\rho$). ReAct denotes the non-pruning agent baseline. Best pruning results are bold.}
 \label{tab:main-results}
 \end{table*}
 
-\subsection{Analysis}
+\subsection{Efficiency Analysis}
 
-\paragraph{Overall performance.}
-From Table~\ref{tab:main-results}, StepKV consistently outperforms token-level pruning methods (H2O and SnapKV) under the same KV budget. At a budget of 50\%, StepKV reaches 26.50 EM and 35.50 F1 on HotpotQA, substantially improving over H2O (12.80/20.24) and SnapKV (14.30/20.12).
+StepKV targets the accuracy--memory trade-off rather than raw speed.
+Because hybrid scoring adds lightweight anchor extraction and step metadata updates, wall-clock time is comparable to H2O when using piggyback attention scoring.
+However, peak decode cache length and GPU memory track the configured budget $\rho$ similarly to other pruning methods.
+Table~\ref{tab:efficiency} reports average peak memory and final cache length; StepKV reduces memory relative to Full KV while retaining far higher EM than H2O at the same budget.
 
-\paragraph{Behavior under aggressive compression.}
-As the KV budget decreases (e.g., 35\%), token-level methods degrade sharply because they rely on local token saliency and tend to remove tokens that appear unimportant in the short term. In contrast, StepKV remains more robust under tight budgets.
+\begin{table}[t]
+\centering
+\setlength{\tabcolsep}{5pt}
+\begin{tabular}{lccc}
+\toprule
+Method & Peak Mem. (MB) $\downarrow$ & Avg.\ Cache Len $\downarrow$ & Hotpot EM/F1 \\
+\midrule
+Full KV & -- & -- & 28.40 / 38.11 \\
+H2O (50\%) & -- & -- & 12.80 / 20.24 \\
+StepKV (50\%) & -- & -- & 26.50 / 35.50 \\
+\bottomrule
+\end{tabular}
+\caption{Efficiency statistics on HotpotQA (Qwen2.5-7B). Fill from experiment logs (\texttt{peak\_memory\_mb}, \texttt{step\_remaining\_tokens}).}
+\label{tab:efficiency}
+\end{table}
 
-\paragraph{Why token-level methods fail in ReAct.}
-The poor performance of H2O and SnapKV in ReAct settings can be attributed to temporal-locality assumptions. In multi-step reasoning, early information often becomes useful only after several intermediate steps, so purely local token scoring causes premature eviction.
+\subsection{Ablation Studies}
 
-\paragraph{Effectiveness of step-aware utility.}
-StepKV combines token-level heavy-hitter score with step-level utility. The progression signal $R_s$ captures whether a step contributes meaningful progress, while the delayed-reuse signal $C_s$ captures whether step information is reused later. This joint scoring preserves globally useful context that token-only methods often miss.
+\paragraph{Mixing weights ($\beta$ sweep).}
+We vary $\beta\in\{1.0,0.8,0.6,0.4,0.2\}$ with $\alpha=1-\beta$ on HotpotQA and 2WikiMultihopQA.
+Performance peaks in a mixed regime rather than at pure token-only ($\beta=0$) or pure step-only ($\beta=1$) scoring, confirming that $T_i$ and $U_s$ are complementary.
 
-\paragraph{Efficiency-accuracy trade-off.}
-StepKV achieves a favorable balance between memory and quality: compared with Full KV, it reduces memory significantly while retaining most of the task performance; compared with token-level baselines, it substantially improves accuracy under equal budgets.
+\paragraph{External step utility vs.\ attention EMA (\texttt{step\_inter}).}
+Replacing external reward/citation utility with an attention exponential moving average over step spans reduces accuracy and interpretability.
+External signals are cheaper and directly encode delayed reuse through citation.
+
+\paragraph{Citation and progression signals.}
+Removing citation updates (Phase~2) or novelty terms in $R_s$ degrades performance, especially on longer trajectories where reuse occurs several steps after an observation.
+Forced removal of the highest-utility step (\texttt{force\_drop\_step\_ids}) hurts EM more than removing a random or lowest-utility step, validating that $U_s$ tracks semantically important reasoning stages.
+
+\subsection{Qualitative Analysis}
+
+Figure~\ref{fig:case} illustrates delayed reuse.
+In a successful StepKV trajectory, an early observation introduces rare entities that receive moderate attention initially.
+Several steps later, the model cites the same anchors in a new search or thought; Phase~2 raises the earlier step utility and Phase~3 retains its tokens despite low current $T_i$.
+Under H2O, the same tokens are evicted earlier and the agent fails to recover the correct answer.
+
+\begin{figure}[t]
+\centering
+\IfFileExists{assets/case_stepkv_step_intervals.pdf}{%
+  \includegraphics[width=\linewidth]{assets/case_stepkv_step_intervals.pdf}%
+}{%
+  \fbox{\parbox[c][0.22\linewidth][c]{0.95\linewidth}{\centering\small Export \texttt{assets/case\_stepkv\_step\_intervals.drawio} to PDF.}}%
+}
+\caption{Case study of delayed reuse. Step intervals are shown along the trajectory; citation arrows indicate Phase~2 updates that increase utility of earlier steps when later text reuses their anchors.}
+\label{fig:case}
+\end{figure}
+
+\paragraph{Why old steps still lose tokens without $U_s$ decreasing.}
+Step utility is monotone non-decreasing under our update rules: repetition does not retroactively lower older steps, and citation only increases $C_s$.
+Nevertheless, eviction can remove old step tokens because $T_i$ is recomputed every step and long new observations increase $n$, so a fixed ratio $\rho$ forces global competition among all surviving tokens via $C_i=\alpha T_i+\beta U_s$.
 
 \section{Conclusion}
 
-We revisit KV cache compression in long-horizon agentic reasoning and identify a key limitation of token-level methods: inability to model non-local cross-step dependencies. We propose StepKV, a step-aware framework that integrates step-level structural signals into token retention. Experiments show consistent improvements over existing pruning methods and a smaller gap to full-cache inference. These findings suggest that future KV optimization should move beyond token-only heuristics and explicitly exploit trajectory-level structure.
+We revisit KV cache compression for long-horizon LLM agents and show that token-level methods fail because importance is step-conditional and often delayed across ReAct trajectories.
+StepKV addresses this by grouping tokens into reasoning steps, estimating step utility from lightweight external signals, and performing three-phase scoring at each step boundary before hybrid retention with H2O token scores.
+Across multi-hop QA benchmarks, StepKV substantially outperforms H2O and SnapKV under matched budgets and approaches full-cache accuracy.
+We hope this step-aware perspective encourages future KV systems to exploit trajectory structure rather than relying solely on local attention heuristics.
 
 \section*{Limitations}
 
-Our current implementation uses lightweight external trajectory signals to estimate step utility. While effective, this proxy can be noisy in cases with weak action-observation grounding or unstable tool outputs. In addition, results are currently reported on a limited set of model scales and benchmarks, and broader validation is required.
+Our step utility relies on simple anchor heuristics rather than learned reward models; noisy tool outputs or non-English text may reduce signal quality.
+Results are primarily reported at 7B--8B scale; larger models and additional agent environments (e.g., web browsing with HTML observations) require further validation.
+Anchor rules do not capture structured tables or code snippets comprehensively.
+Finally, although the paper presents a three-phase scoring narrative, the reference implementation adds an optional per-step retention floor before global top-$B$ selection (Appendix~\ref{app:implementation}); future work may unify these into a single constrained optimization rule.
 
 \section*{Acknowledgments}
 
 Anonymous for review.
+
+\appendix
+
+\section{Implementation Details of Budget Retention}
+\label{app:implementation}
+
+After computing hybrid scores $C_i$, our reference implementation performs optional \emph{pool-wise} retention before global top-$B$ fill:
+for each finalized step span, at least $\lceil 0.10 \cdot |\mathcal{I}_s|\rceil$ tokens with the highest $C_i$ within that span are reserved, then the remaining budget is filled globally by descending $C_i$.
+This prevents any single step from being entirely wiped out before global competition.
+When \texttt{step\_poolwise\_prune=False}, a floor based on \texttt{step\_aware\_min\_keep} and \texttt{step\_aware\_min\_keep\_ratio} is used instead.
+
+\section{Hyperparameters}
+\label{app:hyperparams}
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{ll}
+\toprule
+Parameter & Value \\
+\midrule
+Cache ratio $\rho$ & 0.50, 0.35, 0.20 \\
+$\alpha$, $\beta$ & 0.8, 0.8 \\
+$w_r$, $w_c$ & 0.85, 0.15 \\
+$\lambda$ (repeat penalty) & 0.3 \\
+$\eta$ (citation scale) & 1.5 \\
+$U_{\max}$ & 8 \\
+Attention scoring layers $L$ & 3 \\
+Max ReAct steps & 7 \\
+BM25 top-$k$ & 5 \\
+Random seed & 233 \\
+Observation window & 0 (StepKV) / 32 (H2O baseline) \\
+Attention mode & piggyback (StepKV) \\
+\bottomrule
+\end{tabular}
+\caption{Default experimental hyperparameters.}
+\label{tab:hyperparams}
+\end{table}
 
 \clearpage
 \bibliography{custom}

@@ -1,0 +1,193 @@
+<mxfile host="app.diagrams.net" modified="2026-07-12T00:00:00.000Z" agent="Cursor" version="22.1.0" type="device">
+  <diagram id="case-stepkv" name="StepKV Case Study">
+    <mxGraphModel dx="1400" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1600" pageHeight="1200" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+
+        <!-- Title -->
+        <mxCell id="title" value="&lt;b&gt;Case: Dynamic Token + Step Scores&lt;/b&gt;&lt;br&gt;Guggenheim Bilbao — success · not find · novelty · repeat · citation" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=18;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="200" y="20" width="1200" height="50" as="geometry" />
+        </mxCell>
+
+        <!-- Question -->
+        <mxCell id="qbox" value="&lt;b&gt;Question:&lt;/b&gt; In what year did the Guggenheim Museum Bilbao, designed by Frank Gehry, open?&lt;br&gt;&lt;b&gt;Gold answer:&lt;/b&gt; 1997" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;align=left;spacingLeft=12;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="80" y="80" width="1440" height="50" as="geometry" />
+        </mxCell>
+
+        <!-- Formula inset -->
+        <mxCell id="formula" value="&lt;b&gt;Step score (external)&lt;/b&gt;&lt;br&gt;reward = success + novelty − 0.3×repeat&lt;br&gt;step_score = 0.85·reward + 0.15·log(1+citation)&lt;br&gt;combined(token) = α·token_HH + β·step_score[owner_step]" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;align=left;spacingLeft=10;fontSize=11;fontFamily=Courier New;" vertex="1" parent="1">
+          <mxGeometry x="80" y="145" width="420" height="75" as="geometry" />
+        </mxCell>
+
+        <!-- Legend -->
+        <mxCell id="legend" value="&lt;b&gt;Legend&lt;/b&gt;&lt;br&gt;🔴 critical token&amp;nbsp;&amp;nbsp;🔵 noise&amp;nbsp;&amp;nbsp;⬛ fail trigger&amp;nbsp;&amp;nbsp;🟡 low-value&amp;nbsp;&amp;nbsp;--- citation / reuse" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#999999;align=left;spacingLeft=10;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="520" y="145" width="500" height="75" as="geometry" />
+        </mxCell>
+
+        <!-- ========== STEP 2 ========== -->
+        <mxCell id="st2label" value="&lt;b&gt;Step 2 · Observation&lt;/b&gt; ✅ success + &lt;font color=&quot;#006600&quot;&gt;novel anchors&lt;/font&gt; → step_score &lt;b&gt;↑ HIGH&lt;/b&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="80" y="240" width="700" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="st2obs" value="&quot;The Guggenheim Museum Bilbao opened on 18 October 1997. Frank Gehry designed this museum in Spain.&quot;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;align=left;spacingLeft=10;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="80" y="270" width="900" height="40" as="geometry" />
+        </mxCell>
+
+        <!-- Step 2 tokens - critical red -->
+        <mxCell id="t2gug" value="Guggenheim" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=10;fontStyle=1" vertex="1" parent="1"><mxGeometry x="80" y="320" width="90" height="26" as="geometry" /></mxCell>
+        <mxCell id="t2bil" value="Bilbao" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=10;fontStyle=1" vertex="1" parent="1"><mxGeometry x="178" y="320" width="55" height="26" as="geometry" /></mxCell>
+        <mxCell id="t21997" value="1997" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=10;fontStyle=1" vertex="1" parent="1"><mxGeometry x="241" y="320" width="45" height="26" as="geometry" /></mxCell>
+        <mxCell id="t2gehry" value="Gehry" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=10;fontStyle=1" vertex="1" parent="1"><mxGeometry x="294" y="320" width="50" height="26" as="geometry" /></mxCell>
+        <mxCell id="t2spain" value="Spain" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=10;fontStyle=1" vertex="1" parent="1"><mxGeometry x="352" y="320" width="45" height="26" as="geometry" /></mxCell>
+        <!-- Step 2 tokens - noise blue -->
+        <mxCell id="t2opened" value="opened" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="1"><mxGeometry x="405" y="320" width="55" height="26" as="geometry" /></mxCell>
+        <mxCell id="t2oct" value="October" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="1"><mxGeometry x="468" y="320" width="60" height="26" as="geometry" /></mxCell>
+        <mxCell id="t2des" value="designed" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="1"><mxGeometry x="536" y="320" width="60" height="26" as="geometry" /></mxCell>
+        <mxCell id="t2museum" value="museum" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="1"><mxGeometry x="604" y="320" width="55" height="26" as="geometry" /></mxCell>
+
+        <mxCell id="st2score" value="&lt;b&gt;Step 2 score @ enter Step 3:&lt;/b&gt;&lt;br&gt;success=1 · novelty≈1.0 (new anchors) · repeat=0&lt;br&gt;reward ≈ 2.0 → &lt;b&gt;step_score₂ ↑&lt;/b&gt; · citation=0" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;align=left;spacingLeft=8;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="1000" y="270" width="280" height="76" as="geometry" />
+        </mxCell>
+
+        <!-- ========== STEP 4 not find ========== -->
+        <mxCell id="st4label" value="&lt;b&gt;Step 4 · Observation&lt;/b&gt; ❌ &lt;font color=&quot;#CC0000&quot;&gt;could not find&lt;/font&gt; → step_score &lt;b&gt;↓↓ LOW&lt;/b&gt; → bulk evict @ Step 5" style="text;html=1;strokeColor=none;fillColor=none;align=left;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="80" y="370" width="800" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="st4obs" value="&quot;Could not find any relevant information. No results matched Frank Gehry Los Angeles concert hall.&quot;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6e6;strokeColor=#CC0000;align=left;spacingLeft=10;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="80" y="400" width="900" height="40" as="geometry" />
+        </mxCell>
+        <!-- fail tokens -->
+        <mxCell id="t4could" value="Could" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#666666;strokeColor=#333333;fontColor=#ffffff;fontSize=10;fontStyle=1" vertex="1" parent="1"><mxGeometry x="80" y="450" width="50" height="26" as="geometry" /></mxCell>
+        <mxCell id="t4not" value="not" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#666666;strokeColor=#333333;fontColor=#ffffff;fontSize=10;fontStyle=1" vertex="1" parent="1"><mxGeometry x="138" y="450" width="35" height="26" as="geometry" /></mxCell>
+        <mxCell id="t4find" value="find" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#666666;strokeColor=#333333;fontColor=#ffffff;fontSize=10;fontStyle=1" vertex="1" parent="1"><mxGeometry x="181" y="450" width="40" height="26" as="geometry" /></mxCell>
+        <mxCell id="t4nores" value="No results" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#666666;strokeColor=#333333;fontColor=#ffffff;fontSize=10;fontStyle=1" vertex="1" parent="1"><mxGeometry x="229" y="450" width="70" height="26" as="geometry" /></mxCell>
+        <!-- yellow low value -->
+        <mxCell id="t4gehry" value="Gehry" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" vertex="1" parent="1"><mxGeometry x="307" y="450" width="50" height="26" as="geometry" /></mxCell>
+        <mxCell id="t4la" value="LosAngeles" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" vertex="1" parent="1"><mxGeometry x="365" y="450" width="80" height="26" as="geometry" /></mxCell>
+        <mxCell id="t4concert" value="concert" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" vertex="1" parent="1"><mxGeometry x="453" y="450" width="55" height="26" as="geometry" /></mxCell>
+        <!-- noise -->
+        <mxCell id="t4rel" value="relevant" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="1"><mxGeometry x="516" y="450" width="60" height="26" as="geometry" /></mxCell>
+        <mxCell id="t4info" value="information" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=10;" vertex="1" parent="1"><mxGeometry x="584" y="450" width="75" height="26" as="geometry" /></mxCell>
+
+        <mxCell id="st4score" value="&lt;b&gt;Step 3 score @ enter Step 5:&lt;/b&gt;&lt;br&gt;success=0 (not find) · novelty≈0.2&lt;br&gt;reward ≈ 0.2 → &lt;b&gt;step_score₃ ↓↓&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;align=left;spacingLeft=8;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="1000" y="400" width="280" height="76" as="geometry" />
+        </mxCell>
+
+        <!-- ========== STEP 5 repeat + citation ========== -->
+        <mxCell id="st5label" value="&lt;b&gt;Step 5 · Action + Thought&lt;/b&gt; 🔁 repeat penalty &amp;nbsp;|&amp;nbsp; citation boost to Step 2" style="text;html=1;strokeColor=none;fillColor=none;align=left;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="80" y="500" width="800" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="st5act" value="&lt;b&gt;Action:&lt;/b&gt; Search[Guggenheim Bilbao opening year]  ← same as Step 1 → &lt;font color=&quot;#CC0000&quot;&gt;repeat −0.3&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;align=left;spacingLeft=10;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="80" y="530" width="900" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="st5thought" value="&lt;b&gt;Thought:&lt;/b&gt; &quot;Earlier we saw that Guggenheim Bilbao opened in 1997; verify before finishing.&quot;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;align=left;spacingLeft=10;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="80" y="575" width="900" height="35" as="geometry" />
+        </mxCell>
+        <!-- Step 5 re-mentioned tokens -->
+        <mxCell id="t5gug" value="Guggenheim" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=10;fontStyle=1" vertex="1" parent="1"><mxGeometry x="80" y="620" width="90" height="26" as="geometry" /></mxCell>
+        <mxCell id="t5bil" value="Bilbao" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=10;fontStyle=1" vertex="1" parent="1"><mxGeometry x="178" y="620" width="55" height="26" as="geometry" /></mxCell>
+        <mxCell id="t51997" value="1997" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=10;fontStyle=1" vertex="1" parent="1"><mxGeometry x="241" y="620" width="45" height="26" as="geometry" /></mxCell>
+        <mxCell id="t5cite" value="re-mention → Step 2 citation ↑↑" style="text;html=1;strokeColor=none;fillColor=none;align=left;fontSize=11;fontColor=#006600;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="300" y="620" width="260" height="26" as="geometry" />
+        </mxCell>
+
+        <mxCell id="st5score" value="&lt;b&gt;After Step 5:&lt;/b&gt;&lt;br&gt;Step 2: citation ↑ → &lt;b&gt;step_score₂ ↑↑&lt;/b&gt;&lt;br&gt;Step 5: repeat → reward ↓" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;align=left;spacingLeft=8;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="1000" y="530" width="280" height="70" as="geometry" />
+        </mxCell>
+
+        <!-- Citation arrows Step 5 -> Step 2 -->
+        <mxCell id="e5to2a" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#006600;strokeWidth=2;dashed=1;endArrow=classic;endFill=1;" edge="1" parent="1" source="t51997" target="t21997">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e5to2b" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#006600;strokeWidth=2;dashed=1;endArrow=classic;endFill=1;" edge="1" parent="1" source="t5bil" target="t2bil">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e5to2c" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#006600;strokeWidth=2;dashed=1;endArrow=classic;endFill=1;" edge="1" parent="1" source="t5gug" target="t2gug">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ecitelabel" value="citation boost" style="text;html=1;strokeColor=none;fillColor=none;fontSize=10;fontColor=#006600;fontStyle=2" vertex="1" parent="1">
+          <mxGeometry x="500" y="595" width="100" height="20" as="geometry" />
+        </mxCell>
+
+        <!-- ========== STEP 6 Finish ========== -->
+        <mxCell id="st6label" value="&lt;b&gt;Step 6 · Finish&lt;/b&gt; → Step 2 value drops → &lt;b&gt;bulk evict&lt;/b&gt; Step 2 tokens" style="text;html=1;strokeColor=none;fillColor=none;align=left;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="80" y="665" width="700" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="st6fin" value="Finish: &quot;The Guggenheim Museum Bilbao opened in 1997.&quot;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;align=left;spacingLeft=10;fontSize=12;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="80" y="695" width="500" height="35" as="geometry" />
+        </mxCell>
+        <mxCell id="st6evict" value="Step 2 step_score ↓ after answer → most Step 2 tokens released (bulk evict)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;align=left;spacingLeft=8;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="600" y="695" width="380" height="35" as="geometry" />
+        </mxCell>
+
+        <!-- ========== H2O vs StepKV ========== -->
+        <mxCell id="cmpTitle" value="&lt;b&gt;Prune @ Step 5 — token-only vs token+step&lt;/b&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=center;fontSize=14;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="80" y="755" width="600" height="25" as="geometry" />
+        </mxCell>
+
+        <mxCell id="h2obox" value="&lt;b&gt;(A) H2O / TOVA — token score only&lt;/b&gt;&lt;br&gt;&lt;br&gt;✗ &lt;font color=&quot;#CC0000&quot;&gt;1997&lt;/font&gt; evicted (old, low token HH)&lt;br&gt;✗ &lt;font color=&quot;#CC0000&quot;&gt;Bilbao&lt;/font&gt; evicted&lt;br&gt;✗ &lt;font color=&quot;#CC0000&quot;&gt;Guggenheim&lt;/font&gt; evicted&lt;br&gt;△ Step 4 noise may remain (recent)&lt;br&gt;&lt;br&gt;→ Step 6 cannot answer &lt;b&gt;1997&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6e6;strokeColor=#CC0000;align=left;spacingLeft=12;fontSize=11;verticalAlign=top;" vertex="1" parent="1">
+          <mxGeometry x="80" y="785" width="420" height="140" as="geometry" />
+        </mxCell>
+
+        <mxCell id="stepkvbox" value="&lt;b&gt;(B) StepKV — combined token + step&lt;/b&gt;&lt;br&gt;&lt;br&gt;✓ &lt;font color=&quot;#006600&quot;&gt;1997&lt;/font&gt; kept (Step 2 step_score high + citation↑)&lt;br&gt;✓ &lt;font color=&quot;#006600&quot;&gt;Bilbao&lt;/font&gt; kept&lt;br&gt;✓ &lt;font color=&quot;#006600&quot;&gt;Guggenheim&lt;/font&gt; kept&lt;br&gt;✗ Step 3–4 bulk evict (not find → low step score)&lt;br&gt;&lt;br&gt;→ Step 6 answers &lt;b&gt;1997&lt;/b&gt; correctly" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;align=left;spacingLeft=12;fontSize=11;verticalAlign=top;" vertex="1" parent="1">
+          <mxGeometry x="520" y="785" width="460" height="140" as="geometry" />
+        </mxCell>
+
+        <!-- ========== Step score curves (schematic) ========== -->
+        <mxCell id="chartTitle" value="&lt;b&gt;Step score over ReAct steps (schematic)&lt;/b&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;fontSize=13;fontStyle=1" vertex="1" parent="1">
+          <mxGeometry x="1020" y="755" width="300" height="25" as="geometry" />
+        </mxCell>
+        <mxCell id="chartBg" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#999999;" vertex="1" parent="1">
+          <mxGeometry x="1020" y="785" width="500" height="200" as="geometry" />
+        </mxCell>
+        <!-- Axes labels -->
+        <mxCell id="chartX" value="ReAct step →" style="text;html=1;strokeColor=none;fillColor=none;align=center;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="1200" y="965" width="100" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="chartY" value="step&#xa;score" style="text;html=1;strokeColor=none;fillColor=none;align=center;fontSize=10;rotation=-90;" vertex="1" parent="1">
+          <mxGeometry x="1025" y="860" width="40" height="40" as="geometry" />
+        </mxCell>
+        <!-- X tick labels -->
+        <mxCell id="xt2" value="2" style="text;html=1;strokeColor=none;fillColor=none;fontSize=9;" vertex="1" parent="1"><mxGeometry x="1080" y="955" width="20" height="15" as="geometry" /></mxCell>
+        <mxCell id="xt3" value="3" style="text;html=1;strokeColor=none;fillColor=none;fontSize=9;" vertex="1" parent="1"><mxGeometry x="1150" y="955" width="20" height="15" as="geometry" /></mxCell>
+        <mxCell id="xt4" value="4" style="text;html=1;strokeColor=none;fillColor=none;fontSize=9;" vertex="1" parent="1"><mxGeometry x="1220" y="955" width="20" height="15" as="geometry" /></mxCell>
+        <mxCell id="xt5" value="5" style="text;html=1;strokeColor=none;fillColor=none;fontSize=9;" vertex="1" parent="1"><mxGeometry x="1290" y="955" width="20" height="15" as="geometry" /></mxCell>
+        <mxCell id="xt6" value="6" style="text;html=1;strokeColor=none;fillColor=none;fontSize=9;" vertex="1" parent="1"><mxGeometry x="1360" y="955" width="20" height="15" as="geometry" /></mxCell>
+
+        <!-- Step 2 curve: up at 2, up at 5, down at 6 - polyline as edge with waypoints -->
+        <mxCell id="pt20" value="" style="ellipse;whiteSpace=wrap;html=1;fillColor=#b85450;strokeColor=#b85450;" vertex="1" parent="1"><mxGeometry x="1075" y="860" width="8" height="8" as="geometry" /></mxCell>
+        <mxCell id="pt25" value="" style="ellipse;whiteSpace=wrap;html=1;fillColor=#b85450;strokeColor=#b85450;" vertex="1" parent="1"><mxGeometry x="1285" y="810" width="8" height="8" as="geometry" /></mxCell>
+        <mxCell id="pt26" value="" style="ellipse;whiteSpace=wrap;html=1;fillColor=#b85450;strokeColor=#b85450;" vertex="1" parent="1"><mxGeometry x="1355" y="880" width="8" height="8" as="geometry" /></mxCell>
+        <mxCell id="line2a" style="edgeStyle=none;rounded=0;html=1;strokeColor=#b85450;strokeWidth=2;endArrow=none;" edge="1" parent="1" source="pt20" target="pt25"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="line2b" style="edgeStyle=none;rounded=0;html=1;strokeColor=#b85450;strokeWidth=2;endArrow=none;" edge="1" parent="1" source="pt25" target="pt26"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="leg2" value="— Step 2 (novelty↑ → cite↑ → evict)" style="text;html=1;strokeColor=none;fillColor=none;fontSize=10;fontColor=#b85450;" vertex="1" parent="1"><mxGeometry x="1040" y="790" width="220" height="20" as="geometry" /></mxCell>
+
+        <!-- Step 3 curve: drop at 4 -->
+        <mxCell id="pt34" value="" style="ellipse;whiteSpace=wrap;html=1;fillColor=#6c8ebf;strokeColor=#6c8ebf;" vertex="1" parent="1"><mxGeometry x="1215" y="920" width="8" height="8" as="geometry" /></mxCell>
+        <mxCell id="pt33" value="" style="ellipse;whiteSpace=wrap;html=1;fillColor=#6c8ebf;strokeColor=#6c8ebf;" vertex="1" parent="1"><mxGeometry x="1145" y="870" width="8" height="8" as="geometry" /></mxCell>
+        <mxCell id="line3" style="edgeStyle=none;rounded=0;html=1;strokeColor=#6c8ebf;strokeWidth=2;endArrow=none;" edge="1" parent="1" source="pt33" target="pt34"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="leg3" value="— Step 3 (not find ↓↓)" style="text;html=1;strokeColor=none;fillColor=none;fontSize=10;fontColor=#6c8ebf;" vertex="1" parent="1"><mxGeometry x="1040" y="810" width="160" height="20" as="geometry" /></mxCell>
+
+        <!-- Annotations on chart -->
+        <mxCell id="annnovel" value="novelty↑" style="text;html=1;strokeColor=none;fillColor=none;fontSize=9;fontColor=#b85450;" vertex="1" parent="1"><mxGeometry x="1060" y="845" width="50" height="15" as="geometry" /></mxCell>
+        <mxCell id="annnotfind" value="not find↓↓" style="text;html=1;strokeColor=none;fillColor=none;fontSize=9;fontColor=#6c8ebf;" vertex="1" parent="1"><mxGeometry x="1180" y="935" width="60" height="15" as="geometry" /></mxCell>
+        <mxCell id="anncite" value="citation↑↑" style="text;html=1;strokeColor=none;fillColor=none;fontSize=9;fontColor=#b85450;" vertex="1" parent="1"><mxGeometry x="1270" y="795" width="55" height="15" as="geometry" /></mxCell>
+        <mxCell id="annevict" value="bulk evict" style="text;html=1;strokeColor=none;fillColor=none;fontSize=9;fontColor=#b85450;" vertex="1" parent="1"><mxGeometry x="1340" y="895" width="60" height="15" as="geometry" /></mxCell>
+
+        <!-- Step 1 action note -->
+        <mxCell id="st1note" value="Step 1: Search[Guggenheim Bilbao Frank Gehry opening year]" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#999999;align=left;spacingLeft=8;fontSize=10;dashed=1;" vertex="1" parent="1">
+          <mxGeometry x="1040" y="145" width="480" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="st3note" value="Step 3: Search[Frank Gehry Los Angeles concert hall]" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#999999;align=left;spacingLeft=8;fontSize=10;dashed=1;" vertex="1" parent="1">
+          <mxGeometry x="1040" y="180" width="480" height="30" as="geometry" />
+        </mxCell>
+
+        <!-- Caption -->
+        <mxCell id="caption" value="&lt;i&gt;Figure: Critical tokens (1997, Bilbao, Guggenheim) appear in Step 2; Step 4 fails with &amp;quot;could not find&amp;quot;; Step 5 re-mentions anchors (citation↑) while repeating search (repeat−0.3). StepKV retains Step 2 evidence via combined scores; H2O discards old critical tokens.&lt;/i&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;fontSize=10;fontColor=#666666;" vertex="1" parent="1">
+          <mxGeometry x="80" y="940" width="1440" height="40" as="geometry" />
+        </mxCell>
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

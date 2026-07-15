@@ -35,6 +35,7 @@ import argparse
 import gc
 from collections import Counter
 from token_tracker import TokenTracker
+from kv_cache.anchor_utils import extract_anchor_terms
 
 # ==================== Configuration ====================
 MODEL_PATH = "Qwen/Qwen2.5-7B-Instruct"
@@ -1225,6 +1226,11 @@ def run_react_kv_experiment(val_data, selected_samples, retriever, pruning_mode,
         "step_poolwise_prune": True if pruning_mode in ("step_aware_h2o", "step_inter") else False,
         "step_reward_weight": 0.85,
         "step_citation_weight": 0.15,
+        "step_repeat_penalty": 0.3,
+        "step_ablate_novelty": False,
+        "step_ablate_success": False,
+        "step_ablate_citation": False,
+        "step_ablate_progression": False,
         "prompt_prefill_keep_ratio": 1.0 if pruning_mode in ("step_aware_h2o", "step_inter") else 1.0,
     }
     if kv_config_override:
@@ -1423,6 +1429,11 @@ def _run_react_kv_episode(
     seen_action_args = {}
     reward_weight = float(getattr(llm, "kv_config", {}).get("step_reward_weight", 0.7))
     citation_weight = float(getattr(llm, "kv_config", {}).get("step_citation_weight", 0.3))
+    repeat_penalty = float(getattr(llm, "kv_config", {}).get("step_repeat_penalty", 0.3))
+    ablate_novelty = bool(getattr(llm, "kv_config", {}).get("step_ablate_novelty", False))
+    ablate_success = bool(getattr(llm, "kv_config", {}).get("step_ablate_success", False))
+    ablate_citation = bool(getattr(llm, "kv_config", {}).get("step_ablate_citation", False))
+    ablate_progression = bool(getattr(llm, "kv_config", {}).get("step_ablate_progression", False))
     kv_stop_strings = ["\nObservation", "\nQuestion:"]
     import torch
     
@@ -1501,27 +1512,6 @@ def _run_react_kv_episode(
                 raise ValueError(f"Unexpected KV format: {type(layer_kv)} | {layer_kv}")
 
         return tuple(normalized)
-
-    def _extract_anchor_terms(text):
-        if not text:
-            return set()
-        words = re.findall(r"[A-Za-z0-9][A-Za-z0-9_-]{3,}", text.lower())
-        stop = {
-            "thought", "action", "observation", "search", "lookup", "find", "information",
-            "invalid", "could", "would", "should", "about", "which", "what", "where",
-            "when", "from", "with", "this", "that", "then", "than", "into", "have",
-            "has", "been", "were", "also", "there", "their", "them", "they", "because",
-            "movie", "film", "series", "director", "actor", "american", "british",
-        }
-        filtered = []
-        for w in words:
-            if w in stop:
-                continue
-            if len(w) <= 3:
-                continue
-            filtered.append(w)
-        # Keep anchor set small and stable to avoid citation score explosion.
-        return set(filtered[:64])
 
     def _normalize_action_arg(arg):
         if not arg:
@@ -2370,15 +2360,24 @@ def _run_react_kv_episode(
                             if prev_action_norm:
                                 seen_action_args[prev_action_norm] = prev_action_repeat + 1
                             prev_obs_text = obs or ""
-                            prev_obs_terms = _extract_anchor_terms(prev_obs_text)
+                            prev_obs_terms = extract_anchor_terms(prev_obs_text)
                             novelty_terms = prev_obs_terms.difference(seen_obs_anchor_terms)
                             novelty_ratio = (len(novelty_terms) / max(1, len(prev_obs_terms))) if prev_obs_terms else 0.0
+                            if ablate_novelty:
+                                novelty_ratio = 0.0
                             seen_obs_anchor_terms.update(prev_obs_terms)
                             success_flag = 1.0
                             obs_lower = prev_obs_text.lower()
-                            if ("could not find" in obs_lower) or ("invalid action" in obs_lower) or ("no results" in obs_lower):
+                            if not ablate_success and (
+                                ("could not find" in obs_lower)
+                                or ("invalid action" in obs_lower)
+                                or ("no results" in obs_lower)
+                            ):
                                 success_flag = 0.0
-                            reward_val = success_flag + novelty_ratio - 0.3 * float(prev_action_repeat)
+                            if ablate_progression:
+                                reward_val = 0.0
+                            else:
+                                reward_val = success_flag + novelty_ratio - repeat_penalty * float(prev_action_repeat)
                             step_meta.setdefault(prev_step, {})
                             step_meta[prev_step]["anchors"] = prev_obs_terms
                             step_meta[prev_step]["reward"] = float(reward_val)
@@ -2406,10 +2405,10 @@ def _run_react_kv_episode(
                             llm.kv_manager.update_step_scores(step_scores)
                         if use_step_scores:
                             _print_step_scores_summary()
-                if pruning_mode == "step_aware_h2o" and use_step_scores and step_meta:
+                if pruning_mode == "step_aware_h2o" and use_step_scores and step_meta and not ablate_citation:
                     # Citation signal: when current step text references anchors of old steps,
                     # increase their external score.
-                    ref_terms = _extract_anchor_terms(new_text)
+                    ref_terms = extract_anchor_terms(new_text)
                     if ref_terms:
                         for sid, meta in step_meta.items():
                             anchors = meta.get("anchors", set())
