@@ -1,0 +1,43 @@
+% StepKV component ablation table (template)
+% Fill numbers after running: python run_stepkv_component_ablation.py
+% Or copy results/stepkv_component_ablation/ablation_table_compact.tex after experiments finish.
+%
+% Required preamble:
+%   \usepackage{booktabs}
+%   \usepackage{multirow}
+
+\begin{table*}[t]
+\centering
+\small
+\setlength{\tabcolsep}{5pt}
+\caption{Component ablation of StepKV on three benchmarks ($N=500$, KV budget $\rho=0.50$).
+Each cell reports EM / F1 (\%).
+$\Delta$ values in the footnote are EM drops relative to \textit{Full StepKV} on the same dataset.}
+\label{tab:stepkv-ablation}
+\begin{tabular}{lcccccc}
+\toprule
+& \multicolumn{2}{c}{HotpotQA} & \multicolumn{2}{c}{2WikiMultihopQA} & \multicolumn{2}{c}{MuSiQue} \\
+\cmidrule(lr){2-3} \cmidrule(lr){4-5} \cmidrule(lr){6-7}
+Variant & EM & F1 & EM & F1 & EM & F1 \\
+\midrule
+\textbf{Full StepKV} & -- & -- & -- & -- & -- & -- \\
+w/o repeat           & -- & -- & -- & -- & -- & -- \\
+w/o novelty          & -- & -- & -- & -- & -- & -- \\
+w/o success          & -- & -- & -- & -- & -- & -- \\
+w/o cite             & -- & -- & -- & -- & -- & -- \\
+w/o token score      & -- & -- & -- & -- & -- & -- \\
+w/o step score       & -- & -- & -- & -- & -- & -- \\
+\bottomrule
+\end{tabular}
+
+\vspace{0.4em}
+{\footnotesize
+\textbf{$\Delta$EM (HotpotQA / 2Wiki / MuSiQue):}
+w/o repeat (-- / -- / --);
+w/o novelty (-- / -- / --);
+w/o success (-- / -- / --);
+w/o cite (-- / -- / --);
+w/o token score (-- / -- / --);
+w/o step score (-- / -- / --).
+}
+\end{table*}

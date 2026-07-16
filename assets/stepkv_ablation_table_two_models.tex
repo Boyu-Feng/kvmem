@@ -1,0 +1,58 @@
+% StepKV component ablation — two models (template)
+% Auto-fill:
+%   python merge_stepkv_ablation_two_models.py \
+%     --model_a results/stepkv_ablation_qwen25/summary.json --label_a "Qwen2.5-7B" \
+%     --model_b results/stepkv_ablation_llama31/summary.json --label_b "Llama-3.1-8B"
+%
+% Required: \usepackage{booktabs}
+
+\begin{table*}[t]
+\centering
+\footnotesize
+\setlength{\tabcolsep}{3.5pt}
+\caption{Component ablation of StepKV on three benchmarks ($N=500$, $\rho=0.50$).
+Results for Qwen2.5-7B and Llama-3.1-8B; each dataset reports EM / F1 (\%).
+$\Delta$EM in the footnote is relative to \textit{Full StepKV} on the same model and dataset.}
+\label{tab:stepkv-ablation-two-models}
+\begin{tabular}{lcccccccccccc}
+\toprule
+& \multicolumn{6}{c}{Qwen2.5-7B-Instruct} & \multicolumn{6}{c}{Llama-3.1-8B-Instruct} \\
+\cmidrule(lr){2-7} \cmidrule(lr){8-13}
+Variant
+& \multicolumn{2}{c}{HotpotQA} & \multicolumn{2}{c}{2WikiMultihopQA} & \multicolumn{2}{c}{MuSiQue}
+& \multicolumn{2}{c}{HotpotQA} & \multicolumn{2}{c}{2WikiMultihopQA} & \multicolumn{2}{c}{MuSiQue} \\
+& EM & F1 & EM & F1 & EM & F1 & EM & F1 & EM & F1 & EM & F1 \\
+\midrule
+\textbf{Full StepKV} & -- & -- & -- & -- & -- & -- & -- & -- & -- & -- & -- & -- \\
+w/o repeat           & -- & -- & -- & -- & -- & -- & -- & -- & -- & -- & -- & -- \\
+w/o novelty          & -- & -- & -- & -- & -- & -- & -- & -- & -- & -- & -- & -- \\
+w/o success          & -- & -- & -- & -- & -- & -- & -- & -- & -- & -- & -- & -- \\
+w/o cite             & -- & -- & -- & -- & -- & -- & -- & -- & -- & -- & -- & -- \\
+w/o token score      & -- & -- & -- & -- & -- & -- & -- & -- & -- & -- & -- & -- \\
+w/o step score       & -- & -- & -- & -- & -- & -- & -- & -- & -- & -- & -- & -- \\
+\bottomrule
+\end{tabular}
+
+\vspace{0.35em}
+{\footnotesize
+\textbf{Qwen2.5-7B $\Delta$EM:}
+w/o repeat (-- / -- / --);
+w/o novelty (-- / -- / --);
+w/o success (-- / -- / --);
+w/o cite (-- / -- / --);
+w/o token score (-- / -- / --);
+w/o step score (-- / -- / --).
+}
+
+\vspace{0.25em}
+{\footnotesize
+\textbf{Llama-3.1-8B $\Delta$EM:}
+w/o repeat (-- / -- / --);
+w/o novelty (-- / -- / --);
+w/o success (-- / -- / --);
+w/o cite (-- / -- / --);
+w/o token score (-- / -- / --);
+w/o step score (-- / -- / --).
+(HotpotQA / 2WikiMultihopQA / MuSiQue)
+}
+\end{table*}
