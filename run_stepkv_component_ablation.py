@@ -2,35 +2,43 @@
 """
 Component ablation for StepKV (step_aware_h2o) on HotpotQA, 2WikiMultihopQA, and MuSiQue.
 
-Default: 500 samples per dataset (seed=42), cache_ratio=0.5, 7 ablation variants each.
+Default: 500 samples per dataset (seed=42), cache_ratio=0.5, 6 ablation runs + full baseline
+imported from existing main experiments (results/*_qwen25_7b_v2/run2/stepaware_r50).
 
 Ablation variants:
-  full, no_repeat, no_novelty, no_success, no_cite, no_token, no_step
-
-Outputs (under --output_root):
-  <dataset>/<ablation>/result.json + result_checkpoint.json
-  summary.json, ablation_table.md, ablation_table.tex
+  full (imported, not re-run), no_repeat, no_novelty, no_success, no_cite, no_token, no_step
 
 Usage:
     python run_stepkv_component_ablation.py
     python run_stepkv_component_ablation.py --skip_existing
+    python run_stepkv_component_ablation.py --run_full_ablation   # force re-run full StepKV
 """
 
 from __future__ import annotations
 
 import argparse
+import glob
 import json
 import os
+import shutil
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Tuple
 
 import run_all_wiki_experiments_v2 as base
 import run_all_2wiki_experiments_v2 as runner_2wiki
 import run_all_musique_experiments_v2 as runner_musique
+from analyze_run_kv_metrics import detect_dataset_suffix, resolve_result_json
 from models.model_paths import ensure_local_model_path
 
 
 DATASET_NAMES = ("hotpotqa", "2wiki", "musique")
+
+# Ablation dataset name -> results folder prefix (see run_qwen25_7b_*_experiments.sh)
+DATASET_RESULTS_FOLDER_KEY = {
+    "hotpotqa": "wiki",
+    "2wiki": "2wiki",
+    "musique": "musique",
+}
 
 ABLATION_SPECS: Dict[str, Dict[str, Any]] = {
     "full": {
@@ -107,6 +115,81 @@ def _prepare_dataset(dataset: str, num_samples: int, seed: int):
 
     retriever = WikiBM25Retriever(index_dir=base.WIKI_INDEX_DIR, load_corpus=True)
     return selected, retriever, metrics_dataset
+
+
+def _stepkv_subdir_for_ratio(cache_ratio: float) -> str:
+    pct = int(round(float(cache_ratio) * 100))
+    return f"stepaware_r{pct}"
+
+
+def _ratio_tag(cache_ratio: float) -> str:
+    return f"r{int(round(float(cache_ratio) * 100))}"
+
+
+def _find_full_stepkv_source(
+    dataset: str,
+    results_root: str,
+    model_results_suffix: str,
+    run_tag: str,
+    cache_ratio: float,
+) -> str:
+    folder_key = DATASET_RESULTS_FOLDER_KEY.get(dataset)
+    if not folder_key:
+        raise ValueError(f"Unknown dataset: {dataset}")
+    run_dir = os.path.join(results_root, f"{folder_key}_{model_results_suffix}", run_tag)
+    if not os.path.isdir(run_dir):
+        raise FileNotFoundError(f"Main run directory not found: {run_dir}")
+
+    subdir = _stepkv_subdir_for_ratio(cache_ratio)
+    dataset_suffix = detect_dataset_suffix(run_dir)
+    if not dataset_suffix:
+        raise FileNotFoundError(
+            f"Cannot detect dataset suffix under {run_dir}. "
+            f"Expected react_kv_*.json in {subdir}/ or sibling folders."
+        )
+    source = resolve_result_json(
+        run_dir,
+        subdir,
+        "react_kv_step_aware_h2o",
+        dataset_suffix,
+        _ratio_tag(cache_ratio),
+    )
+    if not source:
+        raise FileNotFoundError(
+            f"Full StepKV result not found under {run_dir}/{subdir}/ "
+            f"(react_kv_step_aware_h2o_{dataset_suffix}*.json)"
+        )
+    return source
+
+
+def _import_full_baseline(source_json: str, out_dir: str, cache_ratio: float) -> Dict[str, Any]:
+    """Copy existing full StepKV result into ablation output tree."""
+    os.makedirs(out_dir, exist_ok=True)
+    out_json = os.path.join(out_dir, "result.json")
+    shutil.copy2(source_json, out_json)
+
+    out_ckpt = os.path.join(out_dir, "result_checkpoint.json")
+    src_dir = os.path.dirname(source_json)
+    ckpt_candidates = sorted(glob.glob(os.path.join(src_dir, "*checkpoint*.json")))
+    if ckpt_candidates:
+        shutil.copy2(ckpt_candidates[0], out_ckpt)
+
+    em, f1, total_time = _load_summary_metrics(out_json)
+    spec = ABLATION_SPECS["full"]
+    return {
+        "ablation": "full",
+        "label": spec["label"],
+        "description": spec["description"],
+        "em": em,
+        "f1": f1,
+        "time_s": total_time,
+        "output_json": out_json,
+        "checkpoint_json": out_ckpt if os.path.isfile(out_ckpt) else "",
+        "kv_override": _base_kv_override(cache_ratio),
+        "source_json": os.path.abspath(source_json),
+        "imported_from_main_run": True,
+        "skipped_rerun": True,
+    }
 
 
 def _base_kv_override(cache_ratio: float) -> Dict[str, Any]:
@@ -391,9 +474,39 @@ def main() -> None:
     parser.add_argument(
         "--skip_existing",
         action="store_true",
-        help="If result json exists, load metrics instead of re-running.",
+        help="If result json exists, load metrics instead of re-running (non-full ablations).",
+    )
+    parser.add_argument(
+        "--run_full_ablation",
+        action="store_true",
+        help="Re-run full StepKV instead of importing from main experiment run2.",
+    )
+    parser.add_argument(
+        "--refresh_full_import",
+        action="store_true",
+        help="Re-copy full StepKV from main run even if output already exists.",
+    )
+    parser.add_argument(
+        "--results_root",
+        default="results",
+        type=str,
+        help="Root directory containing wiki_qwen25_7b_v2/run2/ etc.",
+    )
+    parser.add_argument(
+        "--run_tag",
+        default="run2",
+        type=str,
+        help="Subfolder under each dataset results dir (default: run2, seed=42).",
+    )
+    parser.add_argument(
+        "--model_results_suffix",
+        default="qwen25_7b_v2",
+        type=str,
+        help="Results folder suffix, e.g. qwen25_7b_v2 or llama31_8b_v2.",
     )
     args = parser.parse_args()
+
+    reuse_full_from_run = not args.run_full_ablation
 
     base.MODEL_PATH = ensure_local_model_path(
         args.model_path,
@@ -414,6 +527,10 @@ def main() -> None:
         "model_path": base.MODEL_PATH,
         "model_label": args.model_label or base.MODEL_PATH,
         "ablation_order": ordered_ablations,
+        "reuse_full_from_run": reuse_full_from_run,
+        "full_baseline_run_tag": args.run_tag,
+        "full_baseline_results_root": args.results_root,
+        "full_baseline_model_suffix": args.model_results_suffix,
         "datasets": {},
     }
 
@@ -427,9 +544,44 @@ def main() -> None:
         for name in ordered_ablations:
             out_dir = os.path.join(args.output_root, dataset, name)
             out_json = os.path.join(out_dir, "result.json")
-            if args.skip_existing and os.path.isfile(out_json):
+            spec = ABLATION_SPECS[name]
+
+            if name == "full" and reuse_full_from_run:
+                if (
+                    args.refresh_full_import
+                    or not args.skip_existing
+                    or not os.path.isfile(out_json)
+                ):
+                    source_json = _find_full_stepkv_source(
+                        dataset=dataset,
+                        results_root=args.results_root,
+                        model_results_suffix=args.model_results_suffix,
+                        run_tag=args.run_tag,
+                        cache_ratio=args.cache_ratio,
+                    )
+                    print(f"[INFO] [{dataset}] import full from {source_json}")
+                    row = _import_full_baseline(source_json, out_dir, args.cache_ratio)
+                elif os.path.isfile(out_json):
+                    em, f1, t = _load_summary_metrics(out_json)
+                    row = {
+                        "ablation": name,
+                        "label": spec["label"],
+                        "description": spec["description"],
+                        "em": em,
+                        "f1": f1,
+                        "time_s": t,
+                        "output_json": out_json,
+                        "checkpoint_json": os.path.join(out_dir, "result_checkpoint.json"),
+                        "skipped_rerun": True,
+                        "imported_from_main_run": True,
+                    }
+                    print(f"[INFO] [{dataset}] loaded existing full: EM={em:.2f}, F1={f1:.2f}")
+                else:
+                    raise FileNotFoundError(
+                        f"[{dataset}] full baseline missing and reuse_full_from_run=True"
+                    )
+            elif args.skip_existing and os.path.isfile(out_json):
                 em, f1, t = _load_summary_metrics(out_json)
-                spec = ABLATION_SPECS[name]
                 row = {
                     "ablation": name,
                     "label": spec["label"],
