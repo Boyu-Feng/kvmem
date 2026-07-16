@@ -3,7 +3,8 @@
 Component ablation for StepKV (step_aware_h2o) on HotpotQA, 2WikiMultihopQA, and MuSiQue.
 
 Default: 500 samples per dataset (seed=42), cache_ratio=0.5, 6 ablation runs + full baseline
-imported from existing main experiments (results/*_qwen25_7b_v2/run2/stepaware_r50).
+imported from existing main experiments. Auto-detects qwen25_7b_v2 vs llama31_8b_v2 run2
+StepKV jsons under results/.
 
 Ablation variants:
   full (imported, not re-run), no_repeat, no_novelty, no_success, no_cite, no_token, no_step
@@ -22,13 +23,13 @@ import json
 import os
 import shutil
 from datetime import datetime, timezone
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 import run_all_wiki_experiments_v2 as base
 import run_all_2wiki_experiments_v2 as runner_2wiki
 import run_all_musique_experiments_v2 as runner_musique
 from analyze_run_kv_metrics import detect_dataset_suffix, resolve_result_json
-from models.model_paths import ensure_local_model_path
+from models.model_paths import detect_available_models, ensure_local_model_path
 
 
 DATASET_NAMES = ("hotpotqa", "2wiki", "musique")
@@ -39,6 +40,9 @@ DATASET_RESULTS_FOLDER_KEY = {
     "2wiki": "2wiki",
     "musique": "musique",
 }
+
+# Preferred order when multiple model result families exist on one machine.
+KNOWN_MODEL_RESULT_SUFFIXES = ("qwen25_7b_v2", "llama31_8b_v2")
 
 ABLATION_SPECS: Dict[str, Dict[str, Any]] = {
     "full": {
@@ -126,40 +130,312 @@ def _ratio_tag(cache_ratio: float) -> str:
     return f"r{int(round(float(cache_ratio) * 100))}"
 
 
-def _find_full_stepkv_source(
-    dataset: str,
+def _list_candidate_run_dirs(
     results_root: str,
+    folder_key: str,
     model_results_suffix: str,
-    run_tag: str,
-    cache_ratio: float,
-) -> str:
-    folder_key = DATASET_RESULTS_FOLDER_KEY.get(dataset)
-    if not folder_key:
-        raise ValueError(f"Unknown dataset: {dataset}")
-    run_dir = os.path.join(results_root, f"{folder_key}_{model_results_suffix}", run_tag)
-    if not os.path.isdir(run_dir):
-        raise FileNotFoundError(f"Main run directory not found: {run_dir}")
+) -> List[str]:
+    base = os.path.join(results_root, f"{folder_key}_{model_results_suffix}")
+    if not os.path.isdir(base):
+        return []
+    return sorted(
+        d for d in glob.glob(os.path.join(base, "run*"))
+        if os.path.isdir(d)
+    )
 
+
+def _resolve_stepkv_in_run_dir(
+    run_dir: str,
+    cache_ratio: float,
+) -> Optional[str]:
     subdir = _stepkv_subdir_for_ratio(cache_ratio)
     dataset_suffix = detect_dataset_suffix(run_dir)
     if not dataset_suffix:
-        raise FileNotFoundError(
-            f"Cannot detect dataset suffix under {run_dir}. "
-            f"Expected react_kv_*.json in {subdir}/ or sibling folders."
-        )
-    source = resolve_result_json(
+        return None
+    return resolve_result_json(
         run_dir,
         subdir,
         "react_kv_step_aware_h2o",
         dataset_suffix,
         _ratio_tag(cache_ratio),
     )
-    if not source:
-        raise FileNotFoundError(
-            f"Full StepKV result not found under {run_dir}/{subdir}/ "
-            f"(react_kv_step_aware_h2o_{dataset_suffix}*.json)"
+
+
+def _format_run_dir_hints(
+    results_root: str,
+    folder_key: str,
+    model_results_suffix: str,
+    run_tag: str,
+) -> str:
+    base = os.path.join(results_root, f"{folder_key}_{model_results_suffix}")
+    lines = [f"Looked under: {base}/{run_tag}/stepaware_r50/"]
+    run_dirs = _list_candidate_run_dirs(results_root, folder_key, model_results_suffix)
+    if not run_dirs:
+        sibling_dirs = sorted(
+            os.path.basename(p)
+            for p in glob.glob(os.path.join(results_root, f"*_{model_results_suffix}"))
+            if os.path.isdir(p)
         )
-    return source
+        if sibling_dirs:
+            lines.append(
+                "Found result families: " + ", ".join(sibling_dirs)
+            )
+        else:
+            lines.append(
+                f"No '*_{model_results_suffix}' directories under {results_root}."
+            )
+        return "\n".join(lines)
+
+    lines.append("Available run tags:")
+    for run_dir in run_dirs:
+        tag = os.path.basename(run_dir)
+        source = _resolve_stepkv_in_run_dir(run_dir, 0.5)
+        if source:
+            lines.append(f"  - {tag}: {source}")
+        else:
+            lines.append(f"  - {tag}: (no stepaware StepKV json found)")
+    return "\n".join(lines)
+
+
+def _discover_model_result_suffixes(results_root: str, folder_key: str) -> List[str]:
+    """Return suffixes like qwen25_7b_v2 / llama31_8b_v2 under results/{folder_key}_*."""
+    pattern = os.path.join(results_root, f"{folder_key}_*")
+    found: List[str] = []
+    prefix = f"{folder_key}_"
+    for path in sorted(glob.glob(pattern)):
+        if not os.path.isdir(path):
+            continue
+        base = os.path.basename(path)
+        if base.startswith(prefix):
+            found.append(base[len(prefix):])
+    known = [s for s in KNOWN_MODEL_RESULT_SUFFIXES if s in found]
+    other = [s for s in found if s not in KNOWN_MODEL_RESULT_SUFFIXES]
+    return known + other
+
+
+def _infer_model_family_from_results_suffix(suffix: str) -> str:
+    lower = suffix.lower()
+    if "llama" in lower:
+        return "llama"
+    if "qwen" in lower:
+        return "qwen"
+    return "auto"
+
+
+def _collect_all_result_suffixes(results_root: str, datasets: List[str]) -> List[str]:
+    seen: set[str] = set()
+    ordered: List[str] = []
+    for dataset in datasets:
+        folder_key = DATASET_RESULTS_FOLDER_KEY[dataset]
+        for suffix in _discover_model_result_suffixes(results_root, folder_key):
+            if suffix not in seen:
+                seen.add(suffix)
+                ordered.append(suffix)
+    return ordered
+
+
+def _find_full_stepkv_source_for_suffix(
+    dataset: str,
+    results_root: str,
+    model_results_suffix: str,
+    run_tag: str,
+    cache_ratio: float,
+) -> Optional[str]:
+    folder_key = DATASET_RESULTS_FOLDER_KEY.get(dataset)
+    if not folder_key:
+        raise ValueError(f"Unknown dataset: {dataset}")
+
+    preferred_run_dir = os.path.join(
+        results_root, f"{folder_key}_{model_results_suffix}", run_tag
+    )
+    if os.path.isdir(preferred_run_dir):
+        source = _resolve_stepkv_in_run_dir(preferred_run_dir, cache_ratio)
+        if source:
+            return source
+
+    run_dirs = _list_candidate_run_dirs(results_root, folder_key, model_results_suffix)
+    ordered_run_dirs = sorted(
+        run_dirs,
+        key=lambda p: (
+            0 if os.path.basename(p) == run_tag else 1,
+            -int("".join(ch for ch in os.path.basename(p) if ch.isdigit()) or "0"),
+        ),
+    )
+    for run_dir in ordered_run_dirs:
+        source = _resolve_stepkv_in_run_dir(run_dir, cache_ratio)
+        if source:
+            return source
+    return None
+
+
+def _score_model_results_suffix(
+    results_root: str,
+    datasets: List[str],
+    model_results_suffix: str,
+    run_tag: str,
+    cache_ratio: float,
+) -> Tuple[int, int, Dict[str, str]]:
+    """Return (exact_run_tag_hits, total_hits, dataset->source_json)."""
+    hits: Dict[str, str] = {}
+    exact_hits = 0
+    for dataset in datasets:
+        folder_key = DATASET_RESULTS_FOLDER_KEY[dataset]
+        preferred_run_dir = os.path.join(
+            results_root, f"{folder_key}_{model_results_suffix}", run_tag
+        )
+        source = None
+        if os.path.isdir(preferred_run_dir):
+            source = _resolve_stepkv_in_run_dir(preferred_run_dir, cache_ratio)
+        if not source:
+            source = _find_full_stepkv_source_for_suffix(
+                dataset, results_root, model_results_suffix, run_tag, cache_ratio
+            )
+        if source:
+            hits[dataset] = source
+            if f"/{run_tag}/" in source.replace("\\", "/"):
+                exact_hits += 1
+    return exact_hits, len(hits), hits
+
+
+def _format_all_baseline_hints(
+    results_root: str,
+    datasets: List[str],
+    run_tag: str,
+    cache_ratio: float,
+) -> str:
+    lines = [f"Searched under {results_root} for run_tag={run_tag} StepKV baselines:"]
+    suffixes = _collect_all_result_suffixes(results_root, datasets)
+    if not suffixes:
+        lines.append("  (no wiki_*/2wiki_*/musique_* result directories found)")
+        return "\n".join(lines)
+    for suffix in suffixes:
+        exact, total, hits = _score_model_results_suffix(
+            results_root, datasets, suffix, run_tag, cache_ratio
+        )
+        lines.append(
+            f"  - {suffix}: {total}/{len(datasets)} datasets "
+            f"({exact} at {run_tag})"
+        )
+        for dataset, source in hits.items():
+            lines.append(f"      {dataset}: {source}")
+    return "\n".join(lines)
+
+
+def auto_detect_model_results_suffix(
+    results_root: str,
+    datasets: List[str],
+    run_tag: str,
+    cache_ratio: float,
+    model_family_hint: str = "auto",
+) -> Tuple[str, Dict[str, str]]:
+    """Pick qwen25_7b_v2 vs llama31_8b_v2 based on available run2 StepKV jsons."""
+    suffixes = _collect_all_result_suffixes(results_root, datasets)
+    if not suffixes:
+        raise FileNotFoundError(
+            "No main experiment result directories found.\n"
+            + _format_all_baseline_hints(results_root, datasets, run_tag, cache_ratio)
+        )
+
+    scored: List[Tuple[int, int, str, Dict[str, str]]] = []
+    for suffix in suffixes:
+        exact, total, hits = _score_model_results_suffix(
+            results_root, datasets, suffix, run_tag, cache_ratio
+        )
+        scored.append((exact, total, suffix, hits))
+
+    scored.sort(key=lambda item: (item[0], item[1]), reverse=True)
+    best_exact, best_total, best_suffix, best_hits = scored[0]
+    if best_total == 0:
+        raise FileNotFoundError(
+            "No StepKV full baseline json found for any model family.\n"
+            + _format_all_baseline_hints(results_root, datasets, run_tag, cache_ratio)
+            + "\nFix: copy main experiment results, pass --model_results_suffix, "
+            "or use --run_full_ablation."
+        )
+
+    tied = [
+        item for item in scored
+        if item[0] == best_exact and item[1] == best_total
+    ]
+    if len(tied) > 1:
+        family_hint = (model_family_hint or "auto").strip().lower()
+        preferred = [
+            item for item in tied
+            if family_hint != "auto"
+            and _infer_model_family_from_results_suffix(item[2]) == family_hint
+        ]
+        if preferred:
+            best_suffix = preferred[0][2]
+            best_hits = preferred[0][3]
+        else:
+            family_order = []
+            for item in tied:
+                fam = _infer_model_family_from_results_suffix(item[2])
+                if fam != "auto" and fam not in family_order:
+                    family_order.append(fam)
+            if len(family_order) == 1:
+                for item in tied:
+                    if _infer_model_family_from_results_suffix(item[2]) == family_order[0]:
+                        best_suffix = item[2]
+                        best_hits = item[3]
+                        break
+            else:
+                options = ", ".join(item[2] for item in tied)
+                raise FileNotFoundError(
+                    "Multiple model families have the same StepKV baseline coverage: "
+                    f"{options}. Pass --model_results_suffix explicitly."
+                )
+
+    if best_total < len(datasets):
+        missing = [ds for ds in datasets if ds not in best_hits]
+        print(
+            f"[WARN] Auto-selected {best_suffix} but missing baselines for: "
+            + ", ".join(missing)
+        )
+    else:
+        print(
+            f"[INFO] Auto-detected model results suffix: {best_suffix} "
+            f"({best_exact}/{len(datasets)} datasets at {run_tag})"
+        )
+    return best_suffix, best_hits
+
+
+def _find_full_stepkv_source(
+    dataset: str,
+    results_root: str,
+    model_results_suffix: str,
+    run_tag: str,
+    cache_ratio: float,
+    known_sources: Optional[Dict[str, str]] = None,
+) -> str:
+    if known_sources and dataset in known_sources:
+        return known_sources[dataset]
+
+    source = _find_full_stepkv_source_for_suffix(
+        dataset, results_root, model_results_suffix, run_tag, cache_ratio
+    )
+    if source:
+        used_tag = source.replace("\\", "/").split("/")[-3]
+        if used_tag != run_tag:
+            print(
+                f"[WARN] [{dataset}] requested run_tag={run_tag} missing for "
+                f"{model_results_suffix}; using {source}"
+            )
+        return source
+
+    folder_key = DATASET_RESULTS_FOLDER_KEY.get(dataset)
+    if not folder_key:
+        raise ValueError(f"Unknown dataset: {dataset}")
+    hints = _format_run_dir_hints(
+        results_root, folder_key, model_results_suffix, run_tag
+    )
+    raise FileNotFoundError(
+        f"Full StepKV result not found for dataset={dataset} "
+        f"(suffix={model_results_suffix}).\n{hints}\n"
+        f"Fix: copy main experiment results to this machine, pass "
+        f"--model_results_suffix <qwen25_7b_v2|llama31_8b_v2>, "
+        f"--run_tag <existing>, or use --run_full_ablation."
+    )
 
 
 def _import_full_baseline(source_json: str, out_dir: str, cache_ratio: float) -> Dict[str, Any]:
@@ -500,17 +776,75 @@ def main() -> None:
     )
     parser.add_argument(
         "--model_results_suffix",
-        default="qwen25_7b_v2",
+        default="auto",
         type=str,
-        help="Results folder suffix, e.g. qwen25_7b_v2 or llama31_8b_v2.",
+        help="Results folder suffix (auto, qwen25_7b_v2, llama31_8b_v2). "
+        "Default auto: pick the family that has run2 StepKV baselines.",
     )
     args = parser.parse_args()
 
     reuse_full_from_run = not args.run_full_ablation
+    baseline_sources: Dict[str, str] = {}
+    model_results_suffix = args.model_results_suffix.strip()
+
+    # If only one local model exists (e.g., Llama on this machine), use it to
+    # disambiguate qwen25_7b_v2 vs llama31_8b_v2 when importing full baselines.
+    model_family_hint = args.model_family
+    if model_family_hint == "auto":
+        available_models = detect_available_models()
+        if len(available_models) == 1:
+            model_family_hint = next(iter(available_models.keys()))
+            print(
+                f"[INFO] Single local model detected ({model_family_hint}); "
+                "will prefer matching run2 StepKV baselines."
+            )
+
+    if reuse_full_from_run:
+        if model_results_suffix == "auto":
+            model_results_suffix, baseline_sources = auto_detect_model_results_suffix(
+                results_root=args.results_root,
+                datasets=list(args.datasets),
+                run_tag=args.run_tag,
+                cache_ratio=args.cache_ratio,
+                model_family_hint=model_family_hint,
+            )
+        else:
+            exact, total, baseline_sources = _score_model_results_suffix(
+                args.results_root,
+                list(args.datasets),
+                model_results_suffix,
+                args.run_tag,
+                args.cache_ratio,
+            )
+            if total == 0:
+                raise FileNotFoundError(
+                    f"No StepKV baseline found for suffix={model_results_suffix}.\n"
+                    + _format_all_baseline_hints(
+                        args.results_root,
+                        list(args.datasets),
+                        args.run_tag,
+                        args.cache_ratio,
+                    )
+                )
+            print(
+                f"[INFO] Using model results suffix: {model_results_suffix} "
+                f"({exact}/{len(args.datasets)} datasets at {args.run_tag})"
+            )
+
+    resolved_model_family = args.model_family
+    if resolved_model_family == "auto":
+        if model_results_suffix not in ("", "auto"):
+            inferred = _infer_model_family_from_results_suffix(model_results_suffix)
+            if inferred != "auto":
+                resolved_model_family = inferred
+        elif model_family_hint != "auto":
+            resolved_model_family = model_family_hint
+        if resolved_model_family != "auto":
+            print(f"[INFO] Resolved model_family={resolved_model_family}")
 
     base.MODEL_PATH = ensure_local_model_path(
         args.model_path,
-        model_family=args.model_family,
+        model_family=resolved_model_family,
         allow_download=not args.no_download_model,
     )
     print(f"[INFO] Using model: {base.MODEL_PATH}")
@@ -530,7 +864,9 @@ def main() -> None:
         "reuse_full_from_run": reuse_full_from_run,
         "full_baseline_run_tag": args.run_tag,
         "full_baseline_results_root": args.results_root,
-        "full_baseline_model_suffix": args.model_results_suffix,
+        "full_baseline_model_suffix": model_results_suffix,
+        "full_baseline_sources": baseline_sources,
+        "model_family": resolved_model_family,
         "datasets": {},
     }
 
@@ -555,9 +891,10 @@ def main() -> None:
                     source_json = _find_full_stepkv_source(
                         dataset=dataset,
                         results_root=args.results_root,
-                        model_results_suffix=args.model_results_suffix,
+                        model_results_suffix=model_results_suffix,
                         run_tag=args.run_tag,
                         cache_ratio=args.cache_ratio,
+                        known_sources=baseline_sources,
                     )
                     print(f"[INFO] [{dataset}] import full from {source_json}")
                     row = _import_full_baseline(source_json, out_dir, args.cache_ratio)
