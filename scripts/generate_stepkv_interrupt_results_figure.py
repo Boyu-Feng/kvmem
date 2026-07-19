@@ -117,27 +117,8 @@ def generate_results_figure(summary: Dict[str, Any], output_base: str) -> None:
                 color=C_MUTED,
             )
 
-    num_samples = summary.get("num_samples", "?")
-    seed = summary.get("seed", "?")
-    cache_ratio = summary.get("cache_ratio", "?")
-    ax.set_title(
-        "Step Interruption Ablation on 2WikiMultihopQA",
-        fontsize=13,
-        fontweight="bold",
-        color=C_TEXT,
-        pad=12,
-    )
-    fig.text(
-        0.5,
-        0.02,
-        f"N={num_samples}, seed={seed}, cache ratio ρ={cache_ratio}",
-        ha="center",
-        fontsize=9,
-        color=C_MUTED,
-    )
-
     ax.legend(loc="upper right", frameon=False, fontsize=10)
-    fig.tight_layout(rect=[0, 0.05, 1, 1])
+    fig.tight_layout()
 
     os.makedirs(os.path.dirname(output_base) or ".", exist_ok=True)
     for ext in ("png", "pdf"):

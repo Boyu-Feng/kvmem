@@ -1,0 +1,178 @@
+<mxfile host="app.diagrams.net" agent="Cursor" version="22.1.0" type="device">
+  <diagram id="snatch_case" name="Token-only vs StepKV">
+    <mxGraphModel dx="780" dy="600" grid="1" gridSize="10" guides="1" tooltips="1" connect="0" arrows="0" fold="1" page="1" pageScale="1" pageWidth="780" pageHeight="383" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="title" value="Case: Token-level Eviction vs StepKV" style="html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;fontColor=#333333;align=center;verticalAlign=top;spacing=0;spacingTop=0;spacingBottom=0;fontStyle=1;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="8" y="2" width="764" height="11" as="geometry" />
+        </mxCell>
+        <mxCell id="qbox" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#D0D5DD;strokeWidth=1.5;" vertex="1" parent="1">
+          <mxGeometry x="8" y="14" width="764" height="24" as="geometry" />
+        </mxCell>
+        <mxCell id="qtxt" value="Q: In which city was the director of the 2000 film Snatch born?" style="html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;fontColor=#333333;align=left;verticalAlign=top;spacing=0;spacingTop=0;spacingBottom=0;fontSize=10;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="12" y="17" width="756" height="18" as="geometry" />
+        </mxCell>
+        <mxCell id="L_frame" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FAFAFA;strokeColor=#AAAAAA;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="8" y="40" width="374" height="333" as="geometry" />
+        </mxCell>
+        <mxCell id="L_title" value="(a) Token-only Eviction" style="html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;fontColor=#333333;align=center;verticalAlign=top;spacing=0;spacingTop=0;spacingBottom=0;fontStyle=1;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="12" y="42" width="366" height="12" as="geometry" />
+        </mxCell>
+        <mxCell id="L_s0_bg" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FAFBFD;strokeColor=#888888;strokeWidth=1;" vertex="1" parent="1">
+          <mxGeometry x="12" y="56" width="366" height="58" as="geometry" />
+        </mxCell>
+        <mxCell id="L_s0_sl" value="Step 1" style="html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;fontColor=#888888;align=left;verticalAlign=top;spacing=0;spacingTop=0;spacingBottom=0;fontStyle=1;fontSize=9;" vertex="1" parent="1">
+          <mxGeometry x="15" y="59" width="36" height="11" as="geometry" />
+        </mxCell>
+        <mxCell id="L_s0_th" value="&lt;b&gt;Thought:&lt;/b&gt; &lt;span style='outline:1.5px dashed #C44E52;outline-offset:2px;border:0;padding:0;margin:0;background:transparent;color:#444444;'&gt;Two&lt;/span&gt;-&lt;span style='outline:1.5px dashed #C44E52;outline-offset:2px;border:0;padding:0;margin:0;background:transparent;color:#444444;'&gt;hop&lt;/span&gt; &lt;span style='outline:1.5px dashed #C44E52;outline-offset:2px;border:0;padding:0;margin:0;background:transparent;color:#444444;'&gt;plan&lt;/span&gt;: &lt;span style='outline:1.5px dashed #C44E52;outline-offset:2px;border:0;padding:0;margin:0;background:transparent;color:#444444;'&gt;identify&lt;/span&gt; the &lt;span style='outline:1.5px dashed #C44E52;outline-offset:2px;border:0;padding:0;margin:0;background:transparent;color:#444444;'&gt;film&lt;/span&gt;&#x27;&lt;span style='outline:1.5px dashed #C44E52;outline-offset:2px;border:0;padding:0;margin:0;background:transparent;color:#444444;'&gt;s&lt;/span&gt; &lt;span style='outline:1.5px dashed #C44E52;outline-offset:2px;border:0;padding:0;margin:0;background:transparent;color:#444444;'&gt;director&lt;/span&gt;, then &lt;span style='outline:1.5px dashed #C44E52;outline-offset:2px;border:0;padding:0;margin:0;background:transparent;color:#444444;'&gt;find&lt;/span&gt; the &lt;span style='outline:1.5px dashed #C44E52;outline-offset:2px;border:0;padding:0;margin:0;background:transparent;color:#444444;'&gt;birthplace&lt;/span&gt;." style="html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;fontColor=#444444;align=left;verticalAlign=top;spacing=0;spacingTop=0;spacingBottom=0;fontSize=9;" vertex="1" parent="1">
+          <mxGeometry x="52" y="59" width="322" height="26" as="geometry" />
+        </mxCell>
+        <mxCell id="L_s0_ac" value="&lt;b&gt;Action:&lt;/b&gt; &lt;span style='outline:1.5px dashed #C44E52;outline-offset:2px;border:0;padding:0;margin:0;background:transparent;color:#4C72B0;'&gt;Search&lt;/span&gt;[&lt;span style='outline:1.5px dashed #C44E52;outline-offset:2px;border:0;padding:0;margin:0;background:transparent;color:#4C72B0;'&gt;Snatch&lt;/span&gt; (2000 &lt;span style='outline:1.5px dashed #C44E52;outline-offset:2px;border:0;padding:0;margin:0;background:transparent;color:#4C72B0;'&gt;film&lt;/span&gt;)]" style="html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;fontColor=#4C72B0;align=left;verticalAlign=top;spacing=0;spacingTop=0;spacingBottom=0;fontSize=9;" vertex="1" parent="1">
+          <mxGeometry x="52" y="84" width="322" height="14" as="geometry" />
+        </mxCell>
+        <mxCell id="L_s0_ob" value="&lt;b&gt;Obs:&lt;/b&gt; &lt;span style='outline:1.5px dashed #C44E52;outline-offset:2px;border:0;padding:0;margin:0;background:transparent;color:#555555;'&gt;Snatch&lt;/span&gt; is a &lt;span style='outline:1.5px dashed #C44E52;outline-offset:2px;border:0;padding:0;margin:0;background:transparent;color:#555555;'&gt;2000&lt;/span&gt; British crime comedy &lt;span style='outline:1.5px dashed #C44E52;outline-offset:2px;border:0;padding:0;margin:0;background:transparent;color:#555555;'&gt;film&lt;/span&gt; &lt;span style='outline:1.5px dashed #C44E52;outline-offset:2px;border:0;padding:0;margin:0;background:transparent;color:#555555;'&gt;directed&lt;/span&gt; by &lt;span style='outline:1.5px dashed #C44E52;outline-offset:2px;border:0;padding:0;margin:0;background:transparent;color:#555555;'&gt;Guy&lt;/span&gt; &lt;span style='outline:1.5px dashed #C44E52;outline-offset:2px;border:0;padding:0;margin:0;background:transparent;color:#555555;'&gt;Ritchie&lt;/span&gt;." style="html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;fontColor=#555555;align=left;verticalAlign=top;spacing=0;spacingTop=0;spacingBottom=0;fontSize=9;" vertex="1" parent="1">
+          <mxGeometry x="52" y="98" width="322" height="24" as="geometry" />
+        </mxCell>
+        <mxCell id="L_s1_bg" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FAFBFD;strokeColor=#888888;strokeWidth=1;" vertex="1" parent="1">
+          <mxGeometry x="12" y="117" width="366" height="58" as="geometry" />
+        </mxCell>
+        <mxCell id="L_s1_sl" value="Step 2" style="html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;fontColor=#888888;align=left;verticalAlign=top;spacing=0;spacingTop=0;spacingBottom=0;fontStyle=1;fontSize=9;" vertex="1" parent="1">
+          <mxGeometry x="15" y="120" width="36" height="11" as="geometry" />
+        </mxCell>
+        <mxCell id="L_s1_th" value="&lt;b&gt;Thought:&lt;/b&gt; &lt;span style='outline:1.5px dashed #C44E52;outline-offset:2px;border:0;padding:0;margin:0;background:transparent;color:#444444;'&gt;Use&lt;/span&gt; &lt;span style='outline:1.5px dashed #C44E52;outline-offset:2px;border:0;padding:0;margin:0;background:transparent;color:#444444;'&gt;Lookup&lt;/span&gt; on the &lt;span style='outline:1.5px dashed #C44E52;outline-offset:2px;border:0;padding:0;margin:0;background:transparent;color:#444444;'&gt;current&lt;/span&gt; &lt;span style='outline:1.5px dashed #C44E52;outline-offset:2px;border:0;padding:0;margin:0;background:transparent;color:#444444;'&gt;passage&lt;/span&gt; to &lt;span style='outline:1.5px dashed #C44E52;outline-offset:2px;border:0;padding:0;margin:0;background:transparent;color:#444444;'&gt;extract&lt;/span&gt; the &lt;span style='outline:1.5px dashed #C44E52;outline-offset:2px;border:0;padding:0;margin:0;background:transparent;color:#444444;'&gt;birthplace&lt;/span&gt;." style="html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;fontColor=#444444;align=left;verticalAlign=top;spacing=0;spacingTop=0;spacingBottom=0;fontSize=9;" vertex="1" parent="1">
+          <mxGeometry x="52" y="120" width="322" height="26" as="geometry" />
+        </mxCell>
+        <mxCell id="L_s1_ac" value="&lt;b&gt;Action:&lt;/b&gt; &lt;span style='outline:1.5px dashed #C44E52;outline-offset:2px;border:0;padding:0;margin:0;background:transparent;color:#4C72B0;'&gt;Lookup&lt;/span&gt;[&lt;span style='outline:1.5px dashed #C44E52;outline-offset:2px;border:0;padding:0;margin:0;background:transparent;color:#4C72B0;'&gt;born&lt;/span&gt;]" style="html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;fontColor=#4C72B0;align=left;verticalAlign=top;spacing=0;spacingTop=0;spacingBottom=0;fontSize=9;" vertex="1" parent="1">
+          <mxGeometry x="52" y="145" width="322" height="14" as="geometry" />
+        </mxCell>
+        <mxCell id="L_s1_ob" value="&lt;b&gt;Obs:&lt;/b&gt; &lt;span style='outline:1.5px dashed #C44E52;outline-offset:2px;border:0;padding:0;margin:0;background:transparent;color:#555555;'&gt;Guy&lt;/span&gt; &lt;span style='outline:1.5px dashed #C44E52;outline-offset:2px;border:0;padding:0;margin:0;background:transparent;color:#555555;'&gt;Ritchie&lt;/span&gt; was &lt;span style='outline:1.5px dashed #C44E52;outline-offset:2px;border:0;padding:0;margin:0;background:transparent;color:#555555;'&gt;born&lt;/span&gt; in &lt;span style='outline:1.5px dashed #C44E52;outline-offset:2px;border:0;padding:0;margin:0;background:transparent;color:#555555;'&gt;Hatfield&lt;/span&gt;, Hertfordshire, &lt;span style='outline:1.5px dashed #C44E52;outline-offset:2px;border:0;padding:0;margin:0;background:transparent;color:#555555;'&gt;England&lt;/span&gt;." style="html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;fontColor=#555555;align=left;verticalAlign=top;spacing=0;spacingTop=0;spacingBottom=0;fontSize=9;" vertex="1" parent="1">
+          <mxGeometry x="52" y="159" width="322" height="24" as="geometry" />
+        </mxCell>
+        <mxCell id="L_s2_bg" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FAFBFD;strokeColor=#888888;strokeWidth=1;" vertex="1" parent="1">
+          <mxGeometry x="12" y="178" width="366" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="L_s2_sl" value="Step 3" style="html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;fontColor=#888888;align=left;verticalAlign=top;spacing=0;spacingTop=0;spacingBottom=0;fontStyle=1;fontSize=9;" vertex="1" parent="1">
+          <mxGeometry x="15" y="181" width="36" height="11" as="geometry" />
+        </mxCell>
+        <mxCell id="L_s2_th" value="&lt;b&gt;Thought:&lt;/b&gt; Which 2000 film was this? I need the director again but the title is gone. Search once more." style="html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;fontColor=#444444;align=left;verticalAlign=top;spacing=0;spacingTop=0;spacingBottom=0;fontSize=9;" vertex="1" parent="1">
+          <mxGeometry x="52" y="181" width="322" height="26" as="geometry" />
+        </mxCell>
+        <mxCell id="L_s2_ac" value="&lt;b&gt;Action:&lt;/b&gt; Search[2000 crime comedy film director]" style="html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;fontColor=#4C72B0;align=left;verticalAlign=top;spacing=0;spacingTop=0;spacingBottom=0;fontSize=9;" vertex="1" parent="1">
+          <mxGeometry x="52" y="206" width="322" height="14" as="geometry" />
+        </mxCell>
+        <mxCell id="L_s2_ob" value="&lt;b&gt;Obs:&lt;/b&gt; Could not find a unique match; retrieval returned unrelated film pages." style="html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;fontColor=#555555;align=left;verticalAlign=top;spacing=0;spacingTop=0;spacingBottom=0;fontSize=9;" vertex="1" parent="1">
+          <mxGeometry x="52" y="220" width="322" height="24" as="geometry" />
+        </mxCell>
+        <mxCell id="L_s3_bg" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FAFBFD;strokeColor=#888888;strokeWidth=1;" vertex="1" parent="1">
+          <mxGeometry x="12" y="251" width="366" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="L_s3_sl" value="Step 4" style="html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;fontColor=#888888;align=left;verticalAlign=top;spacing=0;spacingTop=0;spacingBottom=0;fontStyle=1;fontSize=9;" vertex="1" parent="1">
+          <mxGeometry x="15" y="254" width="36" height="11" as="geometry" />
+        </mxCell>
+        <mxCell id="L_s3_th" value="&lt;b&gt;Thought:&lt;/b&gt; Still stuck. Maybe Danny Boyle directed a 2000 crime comedy? Repeat search on a wrong name." style="html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;fontColor=#444444;align=left;verticalAlign=top;spacing=0;spacingTop=0;spacingBottom=0;fontSize=9;" vertex="1" parent="1">
+          <mxGeometry x="52" y="254" width="322" height="26" as="geometry" />
+        </mxCell>
+        <mxCell id="L_s3_ac" value="&lt;b&gt;Action:&lt;/b&gt; Search[Danny Boyle 2000 film]" style="html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;fontColor=#4C72B0;align=left;verticalAlign=top;spacing=0;spacingTop=0;spacingBottom=0;fontSize=9;" vertex="1" parent="1">
+          <mxGeometry x="52" y="279" width="322" height="14" as="geometry" />
+        </mxCell>
+        <mxCell id="L_s3_ob" value="&lt;b&gt;Obs:&lt;/b&gt; Results mention Trainspotting-era films, not the film in the question." style="html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;fontColor=#555555;align=left;verticalAlign=top;spacing=0;spacingTop=0;spacingBottom=0;fontSize=9;" vertex="1" parent="1">
+          <mxGeometry x="52" y="293" width="322" height="24" as="geometry" />
+        </mxCell>
+        <mxCell id="L_bg" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F4CCCC;strokeColor=#C44E52;strokeWidth=1.5;" vertex="1" parent="1">
+          <mxGeometry x="12" y="324" width="366" height="28" as="geometry" />
+        </mxCell>
+        <mxCell id="L_sl" value="Step 5  Final Answer" style="html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;fontColor=#C44E52;align=left;verticalAlign=top;spacing=0;spacingTop=0;spacingBottom=0;fontStyle=1;fontSize=9;" vertex="1" parent="1">
+          <mxGeometry x="15" y="327" width="360" height="11" as="geometry" />
+        </mxCell>
+        <mxCell id="L_ans" value="Manchester  [WRONG]" style="html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;fontColor=#333333;align=left;verticalAlign=top;spacing=0;spacingTop=0;spacingBottom=0;fontStyle=1;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="15" y="338" width="360" height="12" as="geometry" />
+        </mxCell>
+        <mxCell id="L_foot" value="Steps 1-2: most tokens evicted; only glue words remain. Reasoning collapses." style="html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;fontColor=#666666;align=center;verticalAlign=top;spacing=0;spacingTop=0;spacingBottom=0;fontSize=8;" vertex="1" parent="1">
+          <mxGeometry x="12" y="355" width="366" height="14" as="geometry" />
+        </mxCell>
+        <mxCell id="R_frame" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FAF8FF;strokeColor=#B4A7D6;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="398" y="40" width="374" height="321" as="geometry" />
+        </mxCell>
+        <mxCell id="R_title" value="(b) Ours StepKV" style="html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;fontColor=#333333;align=center;verticalAlign=top;spacing=0;spacingTop=0;spacingBottom=0;fontStyle=1;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="402" y="42" width="366" height="12" as="geometry" />
+        </mxCell>
+        <mxCell id="R_s0_bg" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FAFBFD;strokeColor=#8172B3;strokeWidth=1;" vertex="1" parent="1">
+          <mxGeometry x="402" y="56" width="366" height="58" as="geometry" />
+        </mxCell>
+        <mxCell id="R_s0_sl" value="Step 1" style="html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;fontColor=#8172B3;align=left;verticalAlign=top;spacing=0;spacingTop=0;spacingBottom=0;fontStyle=1;fontSize=9;" vertex="1" parent="1">
+          <mxGeometry x="405" y="59" width="36" height="11" as="geometry" />
+        </mxCell>
+        <mxCell id="R_s0_th" value="&lt;b&gt;Thought:&lt;/b&gt; Find the director of Snatch, then look up the birthplace." style="html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;fontColor=#444444;align=left;verticalAlign=top;spacing=0;spacingTop=0;spacingBottom=0;fontSize=9;" vertex="1" parent="1">
+          <mxGeometry x="442" y="59" width="322" height="26" as="geometry" />
+        </mxCell>
+        <mxCell id="R_s0_ac" value="&lt;b&gt;Action:&lt;/b&gt; Search[Snatch (2000 film)]" style="html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;fontColor=#4C72B0;align=left;verticalAlign=top;spacing=0;spacingTop=0;spacingBottom=0;fontSize=9;" vertex="1" parent="1">
+          <mxGeometry x="442" y="84" width="322" height="14" as="geometry" />
+        </mxCell>
+        <mxCell id="R_s0_ob" value="&lt;b&gt;Obs:&lt;/b&gt; Snatch &lt;span style='outline:1.5px dashed #C44E52;outline-offset:2px;border:0;padding:0;margin:0;background:transparent;color:#555555;'&gt;is&lt;/span&gt; &lt;span style='outline:1.5px dashed #C44E52;outline-offset:2px;border:0;padding:0;margin:0;background:transparent;color:#555555;'&gt;a&lt;/span&gt; 2000 British crime &lt;span style='outline:1.5px dashed #C44E52;outline-offset:2px;border:0;padding:0;margin:0;background:transparent;color:#555555;'&gt;comedy&lt;/span&gt; film directed by Guy Ritchie." style="html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;fontColor=#555555;align=left;verticalAlign=top;spacing=0;spacingTop=0;spacingBottom=0;fontSize=9;" vertex="1" parent="1">
+          <mxGeometry x="442" y="98" width="322" height="24" as="geometry" />
+        </mxCell>
+        <mxCell id="R_s1_bg" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FAFBFD;strokeColor=#8172B3;strokeWidth=1;" vertex="1" parent="1">
+          <mxGeometry x="402" y="117" width="366" height="58" as="geometry" />
+        </mxCell>
+        <mxCell id="R_s1_sl" value="Step 2" style="html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;fontColor=#8172B3;align=left;verticalAlign=top;spacing=0;spacingTop=0;spacingBottom=0;fontStyle=1;fontSize=9;" vertex="1" parent="1">
+          <mxGeometry x="405" y="120" width="36" height="11" as="geometry" />
+        </mxCell>
+        <mxCell id="R_s1_th" value="&lt;b&gt;Thought:&lt;/b&gt; Lookup birthplace &lt;span style='outline:1.5px dashed #C44E52;outline-offset:2px;border:0;padding:0;margin:0;background:transparent;color:#444444;'&gt;in&lt;/span&gt; the current passage." style="html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;fontColor=#444444;align=left;verticalAlign=top;spacing=0;spacingTop=0;spacingBottom=0;fontSize=9;" vertex="1" parent="1">
+          <mxGeometry x="442" y="120" width="322" height="26" as="geometry" />
+        </mxCell>
+        <mxCell id="R_s1_ac" value="&lt;b&gt;Action:&lt;/b&gt; Lookup[born]" style="html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;fontColor=#4C72B0;align=left;verticalAlign=top;spacing=0;spacingTop=0;spacingBottom=0;fontSize=9;" vertex="1" parent="1">
+          <mxGeometry x="442" y="145" width="322" height="14" as="geometry" />
+        </mxCell>
+        <mxCell id="R_s1_ob" value="&lt;b&gt;Obs:&lt;/b&gt; Guy Ritchie &lt;span style='outline:1.5px dashed #C44E52;outline-offset:2px;border:0;padding:0;margin:0;background:transparent;color:#555555;'&gt;was&lt;/span&gt; born &lt;span style='outline:1.5px dashed #C44E52;outline-offset:2px;border:0;padding:0;margin:0;background:transparent;color:#555555;'&gt;in&lt;/span&gt; Hatfield, Hertfordshire, England." style="html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;fontColor=#555555;align=left;verticalAlign=top;spacing=0;spacingTop=0;spacingBottom=0;fontSize=9;" vertex="1" parent="1">
+          <mxGeometry x="442" y="159" width="322" height="24" as="geometry" />
+        </mxCell>
+        <mxCell id="R_s2_bg" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FAFBFD;strokeColor=#8172B3;strokeWidth=1;" vertex="1" parent="1">
+          <mxGeometry x="402" y="178" width="366" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="R_s2_sl" value="Step 3" style="html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;fontColor=#8172B3;align=left;verticalAlign=top;spacing=0;spacingTop=0;spacingBottom=0;fontStyle=1;fontSize=9;" vertex="1" parent="1">
+          <mxGeometry x="405" y="181" width="36" height="11" as="geometry" />
+        </mxCell>
+        <mxCell id="R_s2_th" value="&lt;b&gt;Thought:&lt;/b&gt; Snatch, Guy Ritchie, and Hatfield stay connected; finish with confidence." style="html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;fontColor=#444444;align=left;verticalAlign=top;spacing=0;spacingTop=0;spacingBottom=0;fontSize=9;" vertex="1" parent="1">
+          <mxGeometry x="442" y="181" width="322" height="26" as="geometry" />
+        </mxCell>
+        <mxCell id="R_s2_ac" value="&lt;b&gt;Action:&lt;/b&gt; Finish[Hatfield]" style="html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;fontColor=#4C72B0;align=left;verticalAlign=top;spacing=0;spacingTop=0;spacingBottom=0;fontSize=9;" vertex="1" parent="1">
+          <mxGeometry x="442" y="206" width="322" height="14" as="geometry" />
+        </mxCell>
+        <mxCell id="R_s2_ob" value="&lt;b&gt;Obs:&lt;/b&gt; No &lt;span style='outline:1.5px dashed #C44E52;outline-offset:2px;border:0;padding:0;margin:0;background:transparent;color:#555555;'&gt;conflicting&lt;/span&gt; evidence found &lt;span style='outline:1.5px dashed #C44E52;outline-offset:2px;border:0;padding:0;margin:0;background:transparent;color:#555555;'&gt;in&lt;/span&gt; cache." style="html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;fontColor=#555555;align=left;verticalAlign=top;spacing=0;spacingTop=0;spacingBottom=0;fontSize=9;" vertex="1" parent="1">
+          <mxGeometry x="442" y="220" width="322" height="24" as="geometry" />
+        </mxCell>
+        <mxCell id="R_s3_bg" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FAFBFD;strokeColor=#8172B3;strokeWidth=1;" vertex="1" parent="1">
+          <mxGeometry x="402" y="251" width="366" height="58" as="geometry" />
+        </mxCell>
+        <mxCell id="R_s3_sl" value="Step 4" style="html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;fontColor=#8172B3;align=left;verticalAlign=top;spacing=0;spacingTop=0;spacingBottom=0;fontStyle=1;fontSize=9;" vertex="1" parent="1">
+          <mxGeometry x="405" y="254" width="36" height="11" as="geometry" />
+        </mxCell>
+        <mxCell id="R_s3_th" value="&lt;b&gt;Thought:&lt;/b&gt; Answer ready." style="html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;fontColor=#444444;align=left;verticalAlign=top;spacing=0;spacingTop=0;spacingBottom=0;fontSize=9;" vertex="1" parent="1">
+          <mxGeometry x="442" y="254" width="322" height="26" as="geometry" />
+        </mxCell>
+        <mxCell id="R_s3_ac" value="&lt;b&gt;Action:&lt;/b&gt; Finish[Hatfield]" style="html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;fontColor=#4C72B0;align=left;verticalAlign=top;spacing=0;spacingTop=0;spacingBottom=0;fontSize=9;" vertex="1" parent="1">
+          <mxGeometry x="442" y="279" width="322" height="14" as="geometry" />
+        </mxCell>
+        <mxCell id="R_s3_ob" value="&lt;b&gt;Obs:&lt;/b&gt; &lt;span style='outline:1.5px dashed #C44E52;outline-offset:2px;border:0;padding:0;margin:0;background:transparent;color:#555555;'&gt;Could&lt;/span&gt; not find &lt;span style='outline:1.5px dashed #C44E52;outline-offset:2px;border:0;padding:0;margin:0;background:transparent;color:#555555;'&gt;any&lt;/span&gt; reason to revise the answer." style="html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;fontColor=#555555;align=left;verticalAlign=top;spacing=0;spacingTop=0;spacingBottom=0;fontSize=9;" vertex="1" parent="1">
+          <mxGeometry x="442" y="293" width="322" height="24" as="geometry" />
+        </mxCell>
+        <mxCell id="R_bg" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#D5E8D4;strokeColor=#55A868;strokeWidth=1.5;" vertex="1" parent="1">
+          <mxGeometry x="402" y="312" width="366" height="28" as="geometry" />
+        </mxCell>
+        <mxCell id="R_sl" value="Step 5  Final Answer" style="html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;fontColor=#2D7600;align=left;verticalAlign=top;spacing=0;spacingTop=0;spacingBottom=0;fontStyle=1;fontSize=9;" vertex="1" parent="1">
+          <mxGeometry x="405" y="315" width="360" height="11" as="geometry" />
+        </mxCell>
+        <mxCell id="R_ans" value="Hatfield  [CORRECT]" style="html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;fontColor=#333333;align=left;verticalAlign=top;spacing=0;spacingTop=0;spacingBottom=0;fontStyle=1;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="405" y="326" width="360" height="12" as="geometry" />
+        </mxCell>
+        <mxCell id="R_foot" value="Only filler tokens pruned each step; reasoning chain stays intact." style="html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;fontColor=#666666;align=center;verticalAlign=top;spacing=0;spacingTop=0;spacingBottom=0;fontSize=8;" vertex="1" parent="1">
+          <mxGeometry x="402" y="343" width="366" height="14" as="geometry" />
+        </mxCell>
+        <mxCell id="leg" value="Red dashed outline = evicted (circled outside the word, not a text box)" style="html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;fontColor=#C44E52;align=center;verticalAlign=top;spacing=0;spacingTop=0;spacingBottom=0;fontSize=8;" vertex="1" parent="1">
+          <mxGeometry x="8" y="373" width="764" height="9" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
