@@ -78,6 +78,8 @@ def _run_one(
     interrupt_mode: str,
     cache_ratio: float,
 ) -> Dict[str, Any]:
+    os.makedirs(os.path.dirname(out_json) or ".", exist_ok=True)
+    os.makedirs(os.path.dirname(ckpt_json) or ".", exist_ok=True)
     kv_override = {
         "cache_ratio": float(cache_ratio),
         "attn_mode": "piggyback",
@@ -200,6 +202,7 @@ def main() -> None:
 
     for mode in ordered_modes:
         out_dir = os.path.join(args.output_root, mode)
+        os.makedirs(out_dir, exist_ok=True)
         out_json = os.path.join(out_dir, "result.json")
         ckpt_json = os.path.join(out_dir, "result_checkpoint.json")
 
@@ -249,6 +252,20 @@ def main() -> None:
     _write_md(summary, out_md)
     print(f"\n[INFO] Saved summary: {out_json}")
     print(f"[INFO] Saved table:   {out_md}")
+
+    import subprocess
+    import sys
+
+    fig_script = os.path.join(os.path.dirname(__file__), "scripts", "generate_stepkv_interrupt_results_figure.py")
+    if os.path.isfile(fig_script):
+        proc = subprocess.run(
+            [sys.executable, fig_script, "--summary", out_json],
+            cwd=os.path.dirname(__file__) or ".",
+        )
+        if proc.returncode != 0:
+            print("[WARN] Results figure generation failed (see above).")
+    else:
+        print(f"[WARN] Figure script not found: {fig_script}")
 
 
 if __name__ == "__main__":

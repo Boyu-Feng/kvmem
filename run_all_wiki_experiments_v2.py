@@ -94,6 +94,7 @@ def _slim_react_kv_checkpoint_results(results):
 
 def _atomic_write_json(path, obj, indent=None):
     """Write JSON atomically and keep a .bak copy of the previous checkpoint."""
+    os.makedirs(os.path.dirname(path) or ".", exist_ok=True)
     tmp_path = f"{path}.tmp"
     bak_path = f"{path}.bak"
     dump_kwargs = {"ensure_ascii": False}
