@@ -1,0 +1,219 @@
+<mxfile host="app.diagrams.net" agent="Cursor" version="22.1.0" type="device">
+  <diagram id="stepwise-stepkv" name="Step-wise StepKV">
+    <mxGraphModel dx="1200" dy="800" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1100" pageHeight="520" math="1">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+
+        <!-- Title -->
+        <mxCell id="title" value="&lt;b&gt;Step-wise Reasoning with StepKV&lt;/b&gt;" style="text;html=1;strokeColor=none;fillColor=none;fontSize=18;fontStyle=1;fontColor=#333333;align=left;" vertex="1" parent="1">
+          <mxGeometry x="40" y="24" width="420" height="32" as="geometry" />
+        </mxCell>
+
+        <!-- ========== LLM container ========== -->
+        <mxCell id="llm_box" value="" style="rounded=1;fillColor=#E8E8E8;strokeColor=#666666;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="40" y="200" width="620" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="llm_lbl" value="Large Language Model" style="text;html=1;strokeColor=none;fillColor=none;fontSize=14;fontStyle=1;fontColor=#444444;align=center;" vertex="1" parent="1">
+          <mxGeometry x="240" y="232" width="220" height="36" as="geometry" />
+        </mxCell>
+
+        <!-- ========== Output row (above LLM) ========== -->
+        <mxCell id="out_lbl" value="output token / hidden state" style="text;html=1;strokeColor=none;fillColor=none;fontSize=9;fontColor=#666666;align=left;" vertex="1" parent="1">
+          <mxGeometry x="40" y="118" width="160" height="14" as="geometry" />
+        </mxCell>
+
+        <!-- output blocks Step 1..n -->
+        <mxCell id="o_q" value="input" style="rounded=1;fillColor=#CCCCCC;strokeColor=#888888;fontSize=10;fontColor=#333333;" vertex="1" parent="1">
+          <mxGeometry x="40" y="136" width="48" height="28" as="geometry" />
+        </mxCell>
+        <mxCell id="o_s1" value="Step 1" style="rounded=1;fillColor=#B4A7D6;strokeColor=#9673A6;fontSize=10;fontColor=#222222;" vertex="1" parent="1">
+          <mxGeometry x="100" y="136" width="72" height="28" as="geometry" />
+        </mxCell>
+        <mxCell id="o_s2" value="Step 2" style="rounded=1;fillColor=#B4A7D6;strokeColor=#9673A6;fontSize=10;fontColor=#222222;" vertex="1" parent="1">
+          <mxGeometry x="188" y="136" width="72" height="28" as="geometry" />
+        </mxCell>
+        <mxCell id="o_s3" value="Step 3" style="rounded=1;fillColor=#B4A7D6;strokeColor=#9673A6;fontSize=10;fontColor=#222222;" vertex="1" parent="1">
+          <mxGeometry x="276" y="136" width="72" height="28" as="geometry" />
+        </mxCell>
+        <mxCell id="o_dots" value="···" style="text;html=1;strokeColor=none;fillColor=none;fontSize=16;fontColor=#666666;align=center;" vertex="1" parent="1">
+          <mxGeometry x="356" y="136" width="32" height="28" as="geometry" />
+        </mxCell>
+        <mxCell id="o_sn" value="Step &lt;i&gt;n&lt;/i&gt;" style="rounded=1;fillColor=#B4A7D6;strokeColor=#9673A6;fontSize=10;fontColor=#222222;" vertex="1" parent="1">
+          <mxGeometry x="396" y="136" width="72" height="28" as="geometry" />
+        </mxCell>
+
+        <!-- curved flow arrows output row -->
+        <mxCell id="arr_o1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;curved=1;strokeColor=#9673A6;strokeWidth=1.5;endArrow=classic;html=1;" edge="1" parent="1" source="o_s1" target="o_s2">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="arr_o2" style="edgeStyle=orthogonalEdgeStyle;rounded=1;curved=1;strokeColor=#9673A6;strokeWidth=1.5;endArrow=classic;html=1;" edge="1" parent="1" source="o_s2" target="o_s3">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="arr_o3" style="edgeStyle=orthogonalEdgeStyle;rounded=1;curved=1;strokeColor=#9673A6;strokeWidth=1.5;endArrow=classic;html=1;" edge="1" parent="1" source="o_s3" target="o_sn">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="380" y="152" />
+              <mxPoint x="380" y="120" />
+              <mxPoint x="432" y="120" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- new tokens (light purple) under input path -->
+        <mxCell id="nt1" value="" style="rounded=1;fillColor=#D5CFE2;strokeColor=#9673A6;strokeWidth=1;" vertex="1" parent="1">
+          <mxGeometry x="108" y="168" width="10" height="18" as="geometry" />
+        </mxCell>
+        <mxCell id="nt2" value="" style="rounded=1;fillColor=#D5CFE2;strokeColor=#9673A6;strokeWidth=1;" vertex="1" parent="1">
+          <mxGeometry x="122" y="168" width="10" height="18" as="geometry" />
+        </mxCell>
+        <mxCell id="nt_lbl" value="new tokens" style="text;html=1;strokeColor=none;fillColor=none;fontSize=8;fontColor=#666666;" vertex="1" parent="1">
+          <mxGeometry x="100" y="186" width="56" height="12" as="geometry" />
+        </mxCell>
+
+        <!-- down arrow input to LLM -->
+        <mxCell id="arr_in_llm" style="strokeColor=#666666;strokeWidth=1.5;endArrow=classic;html=1;" edge="1" parent="1" source="o_s1" target="llm_box">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="136" y="180" />
+              <mxPoint x="136" y="200" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- ========== KV cache row (below LLM) ========== -->
+        <mxCell id="kv_lbl" value="KV Cache" style="text;html=1;strokeColor=none;fillColor=none;fontSize=9;fontColor=#666666;align=left;" vertex="1" parent="1">
+          <mxGeometry x="40" y="318" width="80" height="14" as="geometry" />
+        </mxCell>
+
+        <mxCell id="kv_q" value="[Question]" style="rounded=1;fillColor=#FFF2CC;strokeColor=#D6B656;fontSize=10;fontColor=#333333;" vertex="1" parent="1">
+          <mxGeometry x="40" y="336" width="72" height="32" as="geometry" />
+        </mxCell>
+        <mxCell id="kv_s1" value="Step 1" style="rounded=1;fillColor=#FFF2CC;strokeColor=#D6B656;fontSize=10;fontColor=#333333;" vertex="1" parent="1">
+          <mxGeometry x="124" y="336" width="88" height="32" as="geometry" />
+        </mxCell>
+        <mxCell id="kv_s2" value="Step 2" style="rounded=1;fillColor=#FFF2CC;strokeColor=#D6B656;fontSize=10;fontColor=#333333;" vertex="1" parent="1">
+          <mxGeometry x="224" y="336" width="88" height="32" as="geometry" />
+        </mxCell>
+        <mxCell id="kv_s3" value="Step 3" style="rounded=1;fillColor=#FFF2CC;strokeColor=#D6B656;fontSize=10;fontColor=#333333;" vertex="1" parent="1">
+          <mxGeometry x="324" y="336" width="88" height="32" as="geometry" />
+        </mxCell>
+        <mxCell id="kv_dots" value="···" style="text;html=1;strokeColor=none;fillColor=none;fontSize=16;fontColor=#666666;align=center;" vertex="1" parent="1">
+          <mxGeometry x="420" y="336" width="28" height="32" as="geometry" />
+        </mxCell>
+        <mxCell id="kv_sn" value="Step &lt;i&gt;n&lt;/i&gt;" style="rounded=1;fillColor=#FFF2CC;strokeColor=#D6B656;fontSize=10;fontColor=#333333;" vertex="1" parent="1">
+          <mxGeometry x="456" y="336" width="88" height="32" as="geometry" />
+        </mxCell>
+
+        <!-- LLM to KV -->
+        <mxCell id="arr_llm_kv" style="strokeColor=#666666;strokeWidth=1.5;endArrow=classic;html=1;" edge="1" parent="1" source="llm_box" target="kv_s2">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- ========== Legend ========== -->
+        <mxCell id="leg_box" value="" style="rounded=1;fillColor=#FAFAFA;strokeColor=#CCCCCC;strokeWidth=1;" vertex="1" parent="1">
+          <mxGeometry x="40" y="400" width="340" height="88" as="geometry" />
+        </mxCell>
+        <mxCell id="leg_y1" value="" style="rounded=1;fillColor=#FFF2CC;strokeColor=#D6B656;" vertex="1" parent="1">
+          <mxGeometry x="52" y="412" width="14" height="14" as="geometry" />
+        </mxCell>
+        <mxCell id="leg_t1" value="old KV cache" style="text;html=1;strokeColor=none;fillColor=none;fontSize=10;align=left;" vertex="1" parent="1">
+          <mxGeometry x="72" y="410" width="90" height="18" as="geometry" />
+        </mxCell>
+        <mxCell id="leg_y2" value="" style="rounded=1;fillColor=#D5CFE2;strokeColor=#9673A6;" vertex="1" parent="1">
+          <mxGeometry x="52" y="434" width="14" height="14" as="geometry" />
+        </mxCell>
+        <mxCell id="leg_t2" value="new tokens" style="text;html=1;strokeColor=none;fillColor=none;fontSize=10;align=left;" vertex="1" parent="1">
+          <mxGeometry x="72" y="432" width="90" height="18" as="geometry" />
+        </mxCell>
+        <mxCell id="leg_y3" value="" style="rounded=1;fillColor=#B4A7D6;strokeColor=#9673A6;" vertex="1" parent="1">
+          <mxGeometry x="52" y="456" width="14" height="14" as="geometry" />
+        </mxCell>
+        <mxCell id="leg_t3" value="output token / hidden state" style="text;html=1;strokeColor=none;fillColor=none;fontSize=10;align=left;" vertex="1" parent="1">
+          <mxGeometry x="72" y="454" width="160" height="18" as="geometry" />
+        </mxCell>
+        <mxCell id="leg_g1" value="" style="rounded=1;fillColor=#CCCCCC;strokeColor=#888888;" vertex="1" parent="1">
+          <mxGeometry x="240" y="412" width="14" height="14" as="geometry" />
+        </mxCell>
+        <mxCell id="leg_t4" value="joint selection" style="text;html=1;strokeColor=none;fillColor=none;fontSize=10;align=left;" vertex="1" parent="1">
+          <mxGeometry x="260" y="410" width="100" height="18" as="geometry" />
+        </mxCell>
+        <mxCell id="leg_t5" value="&lt;b&gt;retain 50% length&lt;/b&gt;" style="text;html=1;strokeColor=none;fillColor=none;fontSize=11;align=left;fontColor=#333333;" vertex="1" parent="1">
+          <mxGeometry x="240" y="438" width="120" height="22" as="geometry" />
+        </mxCell>
+
+        <!-- ========== StepKV Compression panel (right) ========== -->
+        <mxCell id="comp_box" value="" style="rounded=1;fillColor=#E1D5E7;strokeColor=#9673A6;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="700" y="120" width="360" height="320" as="geometry" />
+        </mxCell>
+        <mxCell id="comp_title" value="&lt;b&gt;StepKV Compression&lt;/b&gt;" style="text;html=1;strokeColor=none;fillColor=none;fontSize=16;fontStyle=1;fontColor=#333333;align=center;" vertex="1" parent="1">
+          <mxGeometry x="700" y="128" width="360" height="28" as="geometry" />
+        </mxCell>
+
+        <mxCell id="comp_s" value="Step Score &lt;i&gt;S&lt;/i&gt;" style="text;html=1;strokeColor=none;fillColor=none;fontSize=13;fontColor=#333333;align=left;" vertex="1" parent="1">
+          <mxGeometry x="720" y="168" width="140" height="24" as="geometry" />
+        </mxCell>
+        <mxCell id="comp_c" value="Token Score &lt;i&gt;C&lt;/i&gt; = 0.8&lt;i&gt;T&lt;/i&gt; + 0.8&lt;i&gt;S&lt;/i&gt;" style="text;html=1;strokeColor=none;fillColor=none;fontSize=13;fontColor=#333333;align=left;" vertex="1" parent="1">
+          <mxGeometry x="720" y="200" width="280" height="24" as="geometry" />
+        </mxCell>
+        <mxCell id="comp_note" value="(paper default; diagram may use other weights)" style="text;html=1;strokeColor=none;fillColor=none;fontSize=9;fontColor=#666666;align=left;" vertex="1" parent="1">
+          <mxGeometry x="720" y="222" width="280" height="16" as="geometry" />
+        </mxCell>
+        <mxCell id="comp_glob" value="Global select old + new KV" style="text;html=1;strokeColor=none;fillColor=none;fontSize=13;fontColor=#333333;align=left;" vertex="1" parent="1">
+          <mxGeometry x="720" y="252" width="240" height="24" as="geometry" />
+        </mxCell>
+
+        <mxCell id="comp_b1" value="Budget &lt;i&gt;B&lt;/i&gt;&lt;sub&gt;t&lt;/sub&gt; = ⌊&lt;i&gt;ρ N&lt;/i&gt;&lt;sub&gt;t&lt;/sub&gt;⌋,  &lt;i&gt;ρ&lt;/i&gt; = 0.5" style="text;html=1;strokeColor=none;fillColor=none;fontSize=12;fontColor=#333333;align=left;" vertex="1" parent="1">
+          <mxGeometry x="720" y="296" width="320" height="28" as="geometry" />
+        </mxCell>
+        <mxCell id="comp_b2" value="(optional per-step floor + global fill to &lt;i&gt;B&lt;/i&gt;&lt;sub&gt;t&lt;/sub&gt;)" style="text;html=1;strokeColor=none;fillColor=none;fontSize=11;fontColor=#555555;align=left;" vertex="1" parent="1">
+          <mxGeometry x="720" y="328" width="320" height="24" as="geometry" />
+        </mxCell>
+
+        <!-- Partial Answer dashed arrow -->
+        <mxCell id="partial_lbl" value="Partial Answer" style="text;html=1;strokeColor=none;fillColor=none;fontSize=11;fontColor=#666666;align=center;" vertex="1" parent="1">
+          <mxGeometry x="560" y="148" width="100" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="arr_partial" style="dashed=1;strokeColor=#9673A6;strokeWidth=1.5;endArrow=classic;html=1;" edge="1" parent="1" source="o_sn" target="comp_box">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="520" y="150" />
+              <mxPoint x="680" y="150" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- Update KV arrows -->
+        <mxCell id="upd_lbl1" value="Update KV for next decode" style="text;html=1;strokeColor=none;fillColor=none;fontSize=10;fontColor=#444444;align=center;" vertex="1" parent="1">
+          <mxGeometry x="620" y="248" width="140" height="18" as="geometry" />
+        </mxCell>
+        <mxCell id="arr_upd_llm" style="strokeColor=#9673A6;strokeWidth=2;endArrow=classic;html=1;" edge="1" parent="1" source="comp_box" target="llm_box">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="680" y="280" />
+              <mxPoint x="680" y="250" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="arr_upd_kv" style="strokeColor=#9673A6;strokeWidth=2;endArrow=classic;html=1;" edge="1" parent="1" source="comp_box" target="kv_sn">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="880" y="460" />
+              <mxPoint x="560" y="460" />
+              <mxPoint x="560" y="352" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="upd_lbl2" value="Update KV for next decode" style="text;html=1;strokeColor=none;fillColor=none;fontSize=10;fontColor=#444444;align=center;" vertex="1" parent="1">
+          <mxGeometry x="480" y="442" width="140" height="18" as="geometry" />
+        </mxCell>
+
+        <!-- Step boundary annotation -->
+        <mxCell id="ann_step" value="step boundary → score &amp;amp; prune" style="text;html=1;strokeColor=none;fillColor=none;fontSize=9;fontColor=#888888;align=center;fontStyle=2;" vertex="1" parent="1">
+          <mxGeometry x="700" y="380" width="360" height="20" as="geometry" />
+        </mxCell>
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

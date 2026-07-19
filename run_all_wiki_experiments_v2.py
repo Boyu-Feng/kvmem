@@ -1231,6 +1231,7 @@ def run_react_kv_experiment(val_data, selected_samples, retriever, pruning_mode,
         "step_ablate_success": False,
         "step_ablate_citation": False,
         "step_ablate_progression": False,
+        "step_interrupt_mode": "none",
         "prompt_prefill_keep_ratio": 1.0 if pruning_mode in ("step_aware_h2o", "step_inter") else 1.0,
     }
     if kv_config_override:
@@ -1434,6 +1435,11 @@ def _run_react_kv_episode(
     ablate_success = bool(getattr(llm, "kv_config", {}).get("step_ablate_success", False))
     ablate_citation = bool(getattr(llm, "kv_config", {}).get("step_ablate_citation", False))
     ablate_progression = bool(getattr(llm, "kv_config", {}).get("step_ablate_progression", False))
+    step_interrupt_mode = str(
+        getattr(llm, "kv_config", {}).get("step_interrupt_mode", "none") or "none"
+    ).strip().lower()
+    interrupted_steps = set()
+    step_interrupt_events = []
     kv_stop_strings = ["\nObservation", "\nQuestion:"]
     import torch
     
@@ -2102,6 +2108,10 @@ def _run_react_kv_episode(
                 for k, v in step_meta.items()
                 if isinstance(k, int)
             }
+        if step_interrupt_events:
+            payload["step_interrupt_mode"] = step_interrupt_mode
+            payload["step_interrupt_events"] = step_interrupt_events
+            payload["interrupted_steps"] = sorted(int(x) for x in interrupted_steps)
         if llm is not None and hasattr(llm, "get_pruning_history"):
             try:
                 payload["pruning_history"] = llm.get_pruning_history()
@@ -2292,6 +2302,31 @@ def _run_react_kv_episode(
     # 后续步骤：增量生成
     step = 2
     while step_limit is None or step <= step_limit:
+        if (
+            step_interrupt_mode not in ("", "none")
+            and pruning_mode in ("step_aware_h2o", "step_inter")
+            and llm.kv_manager is not None
+        ):
+            from kv_cache.step_interrupt import steps_to_drop_on_enter
+
+            newly_dropped = steps_to_drop_on_enter(
+                step, step_interrupt_mode, interrupted_steps
+            )
+            if newly_dropped:
+                interrupted_steps.update(newly_dropped)
+                llm.kv_manager.update_step_force_drop_ids(sorted(interrupted_steps))
+                step_interrupt_events.append(
+                    {
+                        "enter_step": int(step),
+                        "newly_dropped": [int(x) for x in newly_dropped],
+                        "cumulative": sorted(int(x) for x in interrupted_steps),
+                    }
+                )
+                print(
+                    f"[INFO] Step interrupt entering step {step}: "
+                    f"drop {newly_dropped}, cumulative {sorted(interrupted_steps)}"
+                )
+
         print(f"Step {step} generation starting.")
         print("--------------------------------")
         new_text = f"\nObservation {step - 1}: {obs}\nThought {step}:"
