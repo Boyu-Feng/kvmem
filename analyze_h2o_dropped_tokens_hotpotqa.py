@@ -846,8 +846,11 @@ def _set_middle_ylabel(
 
 
 def _step_legend_ncol(n_items: int) -> int:
-    """Keep step legend compact on one row when labels are short."""
-    return max(1, int(n_items))
+    """Lay out step legend in two rows (e.g. step1..step7 -> 4 + 3)."""
+    n = max(1, int(n_items))
+    if n <= 4:
+        return n
+    return (n + 1) // 2
 
 
 def _global_react_step_count(
