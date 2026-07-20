@@ -50,8 +50,10 @@ run_wiki() {
   local output_dir="$1"
   local seed="$2"
   local cache_ratio="$3"
-  local tag="tokenskipping_r${cache_ratio/./}"
-  local log_file="${LOGDIR}/logs_${tag}_hotpotqa_seed${seed}.log"
+  local run_tag="$4"
+  local ratio_tag="$5"
+  local tag="tokenskipping_${ratio_tag}"
+  local log_file="${LOGDIR}/logs_${tag}_hotpotqa_${run_tag}.log"
   local result_json="${output_dir}/react_kv_tokenskipping_wiki.json"
 
   echo "$(date): HotpotQA TokenSkipping seed=${seed} cache_ratio=${cache_ratio} -> ${output_dir}"
@@ -76,8 +78,10 @@ run_2wiki() {
   local output_dir="$1"
   local seed="$2"
   local cache_ratio="$3"
-  local tag="tokenskipping_r${cache_ratio/./}"
-  local log_file="${LOGDIR}/logs_${tag}_2wiki_seed${seed}.log"
+  local run_tag="$4"
+  local ratio_tag="$5"
+  local tag="tokenskipping_${ratio_tag}"
+  local log_file="${LOGDIR}/logs_${tag}_2wiki_${run_tag}.log"
   local result_json="${output_dir}/react_kv_tokenskipping_2wiki.json"
   local data_args=""
   if [ -f "$WIKI2_DATA_PATH" ]; then
@@ -108,11 +112,11 @@ run_musique() {
   local output_dir="$1"
   local seed="$2"
   local cache_ratio="$3"
-  local tag="tokenskipping_r${cache_ratio/./}"
-  local log_file="${LOGDIR}/logs_${tag}_musique_seed${seed}.log"
-  local pct
-  pct=$($PYTHON -c "print(int(round(float('${cache_ratio}') * 100)))")
-  local result_json="${output_dir}/react_kv_tokenskipping_musique_r${pct}.json"
+  local run_tag="$4"
+  local ratio_tag="$5"
+  local tag="tokenskipping_${ratio_tag}"
+  local log_file="${LOGDIR}/logs_${tag}_musique_${run_tag}.log"
+  local result_json="${output_dir}/react_kv_tokenskipping_musique_${ratio_tag}.json"
   local data_args=""
   if [ -f "$MUSIQUE_DATA_PATH" ]; then
     data_args="--data_path $MUSIQUE_DATA_PATH"
@@ -144,10 +148,11 @@ for i in "${!RUN_TAGS[@]}"; do
   echo "$(date): ===== ${RUN} (seed=${SEED}) ====="
 
   for cache_ratio in "${CACHE_RATIOS[@]}"; do
-    ratio_tag="r${cache_ratio/./}"
-    run_wiki "${OUTPUT_ROOT}/hotpotqa/${RUN}/${ratio_tag}" "$SEED" "$cache_ratio"
-    run_2wiki "${OUTPUT_ROOT}/2wiki/${RUN}/${ratio_tag}" "$SEED" "$cache_ratio"
-    run_musique "${OUTPUT_ROOT}/musique/${RUN}/${ratio_tag}" "$SEED" "$cache_ratio"
+    ratio_tag="r$($PYTHON -c "print(int(round(float('${cache_ratio}') * 100)))")"
+    base_dir="${OUTPUT_ROOT}/${RUN}/${ratio_tag}"
+    run_wiki "${base_dir}/hotpotqa" "$SEED" "$cache_ratio" "$RUN" "$ratio_tag"
+    run_2wiki "${base_dir}/2wiki" "$SEED" "$cache_ratio" "$RUN" "$ratio_tag"
+    run_musique "${base_dir}/musique" "$SEED" "$cache_ratio" "$RUN" "$ratio_tag"
   done
 done
 
