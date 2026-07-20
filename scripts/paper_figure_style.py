@@ -21,7 +21,7 @@ FONT_BAR_VALUE = 17
 SUBPLOTS_LEFT = 0.10
 SUBPLOTS_RIGHT = 0.98
 SUBPLOTS_TOP = 0.88
-LEGEND_PAD_ABOVE_AXES = 0.012
+LEGEND_PAD_ABOVE_AXES = 0.022
 LEGEND_HANDLELENGTH = 1.8
 LEGEND_HANDLETEXTPAD = 0.35
 LEGEND_COLUMNSPACING = 0.45
@@ -62,7 +62,7 @@ def apply_top_legend(
     if ax is not None:
         ax.legend(
             loc="lower center",
-            bbox_to_anchor=(0.5, 1.008),
+            bbox_to_anchor=(0.5, 1.012),
             bbox_transform=ax.transAxes,
             **legend_kwargs,
         )
