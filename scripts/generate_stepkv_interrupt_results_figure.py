@@ -46,12 +46,21 @@ C_TEXT = "#333333"
 C_MUTED = "#666666"
 
 MODE_LABELS = {
-    "none": "Full StepKV",
+    "none": "Full KV",
     "lag1": "lag-1",
     "lag2": "lag-2",
     "lag3": "lag-3",
     "window2": "window-2",
 }
+
+
+def _ylim_top(ems: List[float], f1s: List[float], *, has_delta: bool) -> float:
+    peak = max(max(ems), max(f1s))
+    # Bar value labels sit slightly above each bar; keep only a small margin.
+    top = peak + 2.5
+    if has_delta:
+        top = max(top, peak + 7.5)
+    return top
 
 
 def _load_summary(path: str) -> Dict[str, Any]:
@@ -113,7 +122,9 @@ def generate_results_figure(summary: Dict[str, Any], output_base: str) -> None:
     )
 
     ymax = max(max(ems), max(f1s))
-    ax.set_ylim(0, min(100, ymax + 12))
+    baseline_em = ems[0] if labels[0] == MODE_LABELS["none"] else None
+    has_delta = baseline_em is not None and n > 1
+    ax.set_ylim(0, _ylim_top(ems, f1s, has_delta=has_delta))
     ax.set_ylabel("Score (%)", fontsize=FONT_AXIS_LABEL, color=C_TEXT)
     ax.set_xticks(x)
     ax.set_xticklabels(labels, fontsize=FONT_TICK)
@@ -133,22 +144,22 @@ def generate_results_figure(summary: Dict[str, Any], output_base: str) -> None:
             color=C_TEXT,
         )
 
-    baseline_em = ems[0] if labels[0] == MODE_LABELS["none"] else None
     if baseline_em is not None:
         ax.axhline(baseline_em, color=C_BASELINE, linestyle=":", linewidth=1.0, alpha=0.7)
-        for i in range(1, n):
-            dem = ems[i] - baseline_em
-            ax.text(
-                x[i],
-                max(ems[i], f1s[i]) + 5.5,
-                f"ΔEM {dem:+.1f}",
-                ha="center",
-                va="bottom",
-                fontsize=FONT_ANNOT,
-                color=C_MUTED,
-            )
+        if has_delta:
+            for i in range(1, n):
+                dem = ems[i] - baseline_em
+                ax.text(
+                    x[i],
+                    max(ems[i], f1s[i]) + 3.0,
+                    f"ΔEM {dem:+.1f}",
+                    ha="center",
+                    va="bottom",
+                    fontsize=FONT_ANNOT,
+                    color=C_MUTED,
+                )
 
-    fig.subplots_adjust(top=SUBPLOTS_TOP, bottom=0.10, left=0.10, right=0.98)
+    fig.subplots_adjust(top=SUBPLOTS_TOP, bottom=0.12, left=0.10, right=0.98)
     apply_top_legend(fig, *ax.get_legend_handles_labels(), ncol=2)
 
     os.makedirs(os.path.dirname(output_base) or ".", exist_ok=True)
