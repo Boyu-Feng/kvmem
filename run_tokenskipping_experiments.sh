@@ -30,7 +30,42 @@ NO_DOWNLOAD_MODEL="${NO_DOWNLOAD_MODEL:-0}"
 OUTPUT_ROOT="${OUTPUT_ROOT:-results/tokenskipping_baseline}"
 WIKI2_DATA_PATH="${WIKI2_DATA_PATH:-/root/autodl-tmp/kvmem/data/2wiki/dev.json}"
 MUSIQUE_DATA_PATH="${MUSIQUE_DATA_PATH:-/root/autodl-tmp/kvmem/data/musique/dev.json}"
-WIKI_INDEX_DIR="${WIKI_INDEX_DIR:-wiki_index}"
+
+resolve_wiki_index_dir() {
+  "$PYTHON" - <<'PY'
+import os
+import sys
+
+script_dir = os.getcwd()
+candidates = []
+for raw in (
+    os.environ.get("WIKI_INDEX_DIR", "").strip(),
+    "data/wiki_index",
+    os.path.join(script_dir, "data/wiki_index"),
+    "wiki_index",
+    os.path.join(script_dir, "wiki_index"),
+    "/root/autodl-tmp/kvmem/data/wiki_index",
+):
+    if not raw or raw in candidates:
+        continue
+    candidates.append(raw)
+
+for cand in candidates:
+    if os.path.isfile(os.path.join(cand, "titles.json")):
+        sys.stderr.write(f"[INFO] Using wiki index: {cand}\n")
+        sys.stdout.write(cand + "\n")
+        break
+else:
+    sys.stderr.write(
+        "[ERROR] Wiki BM25 index not found. Checked:\n"
+        + "\n".join(f"  - {c}" for c in candidates)
+        + "\nSet WIKI_INDEX_DIR or build with build_wiki_index.py.\n"
+    )
+    raise SystemExit(1)
+PY
+}
+
+WIKI_INDEX_DIR="$(resolve_wiki_index_dir)"
 
 RUN_TAGS=("run1" "run2" "run3")
 RUN_SEEDS=(233 42 3407)
