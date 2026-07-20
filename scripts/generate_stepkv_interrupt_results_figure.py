@@ -74,19 +74,20 @@ def generate_results_figure(summary: Dict[str, Any], output_base: str) -> None:
     labels, ems, f1s = _extract_rows(summary)
     n = len(labels)
     x = np.arange(n)
-    width = 0.34
+    bar_width = 0.34
+    fig_w = max(6.0, 1.35 * n + 2.0)
+    fig_h = fig_w / 1.2
+    fig, ax = plt.subplots(figsize=(fig_w, fig_h))
 
-    fig, ax = plt.subplots(figsize=(max(6.0, 1.35 * n + 2.0), 4.6))
-
-    bars_em = ax.bar(x - width / 2, ems, width, label="EM", color=C_EM, edgecolor="white", linewidth=0.8)
-    bars_f1 = ax.bar(x + width / 2, f1s, width, label="F1", color=C_F1, edgecolor="white", linewidth=0.8)
+    bars_em = ax.bar(x - bar_width / 2, ems, bar_width, label="EM", color=C_EM, edgecolor="white", linewidth=0.8)
+    bars_f1 = ax.bar(x + bar_width / 2, f1s, bar_width, label="F1", color=C_F1, edgecolor="white", linewidth=0.8)
 
     ymax = max(max(ems), max(f1s))
     ax.set_ylim(0, min(100, ymax + 12))
-    ax.set_ylabel("Score (%)", fontsize=11, color=C_TEXT)
+    ax.set_ylabel("Score (%)", fontsize=14, color=C_TEXT)
     ax.set_xticks(x)
-    ax.set_xticklabels(labels, fontsize=10)
-    ax.tick_params(axis="y", labelsize=10)
+    ax.set_xticklabels(labels, fontsize=13)
+    ax.tick_params(axis="both", labelsize=13)
     ax.grid(axis="y", linestyle="--", alpha=0.35, linewidth=0.8)
     ax.set_axisbelow(True)
 
