@@ -2,6 +2,9 @@
 # Run TokenSkipping baseline on HotpotQA / 2Wiki / MuSiQue with 3 seeds each.
 set -euo pipefail
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd "$SCRIPT_DIR"
+
 export CUDA_VISIBLE_DEVICES="${CUDA_VISIBLE_DEVICES:-0}"
 export OMP_NUM_THREADS=1
 unset HF_ENDPOINT || true
@@ -17,9 +20,13 @@ MUSIQUE_SCRIPT=run_all_musique_experiments_v2.py
 METRICS_SCRIPT=record_experiment_metrics.py
 LOGDIR=logs
 
-MODEL_REPO="${MODEL_REPO:-Qwen/Qwen2.5-7B-Instruct}"
-LOCAL_MODEL_DIR="${LOCAL_MODEL_DIR:-/root/autodl-tmp/hf_cache/models/Qwen2.5-7B-Instruct}"
-MODEL_PATH="${MODEL_PATH:-$LOCAL_MODEL_DIR}"
+# Model resolution (see models/model_paths.py):
+#   MODEL_PATH=auto          -> detect local Qwen/Llama (or env KVMEM_MODEL_PATH)
+#   MODEL_FAMILY=qwen|llama  -> force family when both exist, or choose download target
+#   NO_DOWNLOAD_MODEL=1      -> fail instead of downloading
+MODEL_PATH="${MODEL_PATH:-auto}"
+MODEL_FAMILY="${MODEL_FAMILY:-auto}"
+NO_DOWNLOAD_MODEL="${NO_DOWNLOAD_MODEL:-0}"
 OUTPUT_ROOT="${OUTPUT_ROOT:-results/tokenskipping_baseline}"
 WIKI2_DATA_PATH="${WIKI2_DATA_PATH:-/root/autodl-tmp/kvmem/data/2wiki/dev.json}"
 MUSIQUE_DATA_PATH="${MUSIQUE_DATA_PATH:-/root/autodl-tmp/kvmem/data/musique/dev.json}"
@@ -31,20 +38,44 @@ CACHE_RATIOS=("0.5" "0.2")
 
 mkdir -p "$LOGDIR"
 
-if [ -f "$LOCAL_MODEL_DIR/config.json" ] && [ -f "$LOCAL_MODEL_DIR/tokenizer_config.json" ]; then
-  echo "$(date): Found local model at ${LOCAL_MODEL_DIR}, skip download."
-else
-  echo "$(date): Local model not found, downloading ${MODEL_REPO} to ${LOCAL_MODEL_DIR}..."
-  mkdir -p "$(dirname "$LOCAL_MODEL_DIR")"
-  if command -v hf >/dev/null 2>&1; then
-    hf download "$MODEL_REPO" --local-dir "$LOCAL_MODEL_DIR"
-  elif command -v huggingface-cli >/dev/null 2>&1; then
-    huggingface-cli download "$MODEL_REPO" --local-dir "$LOCAL_MODEL_DIR"
-  else
-    echo "[ERROR] Neither 'hf' nor 'huggingface-cli' is installed."
-    exit 1
-  fi
+resolve_model_info() {
+  MODEL_PATH="$MODEL_PATH" \
+  MODEL_FAMILY="$MODEL_FAMILY" \
+  NO_DOWNLOAD_MODEL="$NO_DOWNLOAD_MODEL" \
+  "$PYTHON" - <<'PY'
+import os
+import sys
+
+sys.path.insert(0, os.getcwd())
+from models.model_paths import ensure_local_model_path, infer_model_family
+
+explicit = os.environ.get("MODEL_PATH", "auto").strip()
+family = os.environ.get("MODEL_FAMILY", "auto").strip().lower()
+allow_download = os.environ.get("NO_DOWNLOAD_MODEL", "0").strip().lower() not in (
+    "1", "true", "yes", "on",
+)
+path = ensure_local_model_path(
+    explicit,
+    model_family=family,
+    allow_download=allow_download,
+)
+detected = infer_model_family(path) or "model"
+print(path)
+print(detected)
+PY
+}
+
+{
+  read -r MODEL_PATH
+  read -r DETECTED_MODEL_FAMILY
+} < <(resolve_model_info)
+echo "$(date): Auto-detected model family=${DETECTED_MODEL_FAMILY}, path=${MODEL_PATH}"
+
+# If OUTPUT_ROOT was not customized, tag it with the detected model family.
+if [ "$OUTPUT_ROOT" = "results/tokenskipping_baseline" ]; then
+  OUTPUT_ROOT="results/tokenskipping_baseline_${DETECTED_MODEL_FAMILY}"
 fi
+echo "$(date): Output root -> ${OUTPUT_ROOT}"
 
 run_wiki() {
   local output_dir="$1"
