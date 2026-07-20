@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import os
+import sys
 from typing import Dict, List, Optional
 
 DEFAULT_QWEN_REPO = "Qwen/Qwen2.5-7B-Instruct"
@@ -25,6 +26,10 @@ MODEL_FAMILIES: Dict[str, Dict[str, str]] = {
 
 class AmbiguousModelError(FileNotFoundError):
     """Raised when multiple supported models are available under auto mode."""
+
+
+def _log_info(message: str) -> None:
+    print(message, file=sys.stderr)
 
 
 def is_local_model_dir(path: str) -> bool:
@@ -233,7 +238,7 @@ def download_hf_model(repo_id: str, local_dir: str) -> None:
         ) from exc
 
     os.makedirs(local_dir, exist_ok=True)
-    print(f"[INFO] Downloading {repo_id} -> {local_dir}")
+    _log_info(f"[INFO] Downloading {repo_id} -> {local_dir}")
     snapshot_download(repo_id=repo_id, local_dir=local_dir)
 
 
@@ -245,7 +250,7 @@ def _resolve_auto_model_path(model_family: str = "auto") -> str:
     for env_name in ("KVMEM_MODEL_PATH", "LOCAL_MODEL_PATH"):
         env_path = os.environ.get(env_name, "").strip()
         if is_local_model_dir(env_path):
-            print(
+            _log_info(
                 f"[INFO] Using model from {env_name}: {env_path} "
                 f"({describe_local_model(env_path)})"
             )
@@ -253,7 +258,7 @@ def _resolve_auto_model_path(model_family: str = "auto") -> str:
 
     scanned = _pick_scanned_model(model_family=model_family)
     if scanned is not None:
-        print(
+        _log_info(
             f"[INFO] Auto-detected local model under {_models_roots()[0]}: "
             f"{describe_local_model(scanned)} -> {scanned}"
         )
@@ -263,7 +268,7 @@ def _resolve_auto_model_path(model_family: str = "auto") -> str:
     if model_family in MODEL_FAMILIES:
         path = available.get(model_family)
         if path:
-            print(
+            _log_info(
                 f"[INFO] Auto-selected {MODEL_FAMILIES[model_family]['label']} "
                 f"via --model_family {model_family}: {path}"
             )
@@ -283,7 +288,7 @@ def _resolve_auto_model_path(model_family: str = "auto") -> str:
         )
     if len(available) == 1:
         family, path = next(iter(available.items()))
-        print(
+        _log_info(
             f"[INFO] Auto-detected {MODEL_FAMILIES[family]['label']} "
             f"({family}): {path}"
         )
@@ -361,7 +366,7 @@ def ensure_local_model_path(
 
     download_hf_model(repo_id, local_dir)
     if is_local_model_dir(local_dir):
-        print(
+        _log_info(
             f"[INFO] Using downloaded {MODEL_FAMILIES[model_family]['label']}: "
             f"{local_dir}"
         )

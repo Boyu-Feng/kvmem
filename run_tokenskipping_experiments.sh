@@ -59,9 +59,10 @@ path = ensure_local_model_path(
     model_family=family,
     allow_download=allow_download,
 )
-print(path)
-print(model_slug(path))
-print(describe_local_model(path))
+# stdout is machine-readable for shell parsing; logs go to stderr.
+sys.stdout.write(path + "\n")
+sys.stdout.write(model_slug(path) + "\n")
+sys.stdout.write(describe_local_model(path) + "\n")
 PY
 }
 
