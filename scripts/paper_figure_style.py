@@ -20,10 +20,11 @@ FONT_BAR_VALUE = 17
 
 SUBPLOTS_LEFT = 0.10
 SUBPLOTS_RIGHT = 0.98
-SUBPLOTS_TOP = 0.94
-LEGEND_HANDLELENGTH = 2.4
-LEGEND_HANDLETEXTPAD = 0.9
-LEGEND_COLUMNSPACING = 1.8
+SUBPLOTS_TOP = 0.88
+LEGEND_BBOX_Y = 1.006
+LEGEND_HANDLELENGTH = 2.0
+LEGEND_HANDLETEXTPAD = 0.6
+LEGEND_COLUMNSPACING = 1.0
 
 
 def panel_height(n_panels: int) -> float:
@@ -40,6 +41,7 @@ def apply_top_legend(
     left: float = SUBPLOTS_LEFT,
     right: float = SUBPLOTS_RIGHT,
 ) -> None:
+    _ = (left, right)
     if not handles:
         return
 
@@ -58,17 +60,14 @@ def apply_top_legend(
     if ax is not None:
         ax.legend(
             loc="lower center",
-            bbox_to_anchor=(0.5, 1.0),
+            bbox_to_anchor=(0.5, 1.015),
             bbox_transform=ax.transAxes,
             **legend_kwargs,
         )
         return
 
-    width = max(0.01, float(right) - float(left))
-    legend_h = max(0.02, 1.0 - SUBPLOTS_TOP)
     fig.legend(
         loc="lower center",
-        bbox_to_anchor=(left, SUBPLOTS_TOP, width, legend_h),
-        mode="expand",
+        bbox_to_anchor=(0.5, LEGEND_BBOX_Y),
         **legend_kwargs,
     )

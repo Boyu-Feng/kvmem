@@ -708,7 +708,7 @@ def _build_kept_points(
 
 
 def _step_label(step: int) -> str:
-    return f"token from step {step}"
+    return f"step{step} token"
 
 
 def _display_step_from_point(point: Dict[str, Any]) -> int:
@@ -846,11 +846,8 @@ def _set_middle_ylabel(
 
 
 def _step_legend_ncol(n_items: int) -> int:
-    """Wrap long step legends (e.g. Step 1..7) into two rows."""
-    n = max(1, int(n_items))
-    if n <= 4:
-        return n
-    return max(4, (n + 1) // 2)
+    """Keep step legend compact on one row when labels are short."""
+    return max(1, int(n_items))
 
 
 def _global_react_step_count(
@@ -1584,7 +1581,7 @@ def _plot_cohort_survival(
         apply_top_legend(
             fig,
             legend_handles,
-            [f"Step {s}" for s in global_owner_steps],
+            [f"step{s} token" for s in global_owner_steps],
             ncol=legend_ncol,
             left=SUBPLOTS_LEFT,
             right=SUBPLOTS_RIGHT,
