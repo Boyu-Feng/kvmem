@@ -57,13 +57,15 @@ MODE_LABELS = {
 }
 
 
-def _ylim_top(ems: List[float], f1s: List[float], *, has_delta: bool) -> float:
+def _ylim_top(ems: List[float], f1s: List[float], *, has_delta: bool, n: int) -> float:
     peak = max(max(ems), max(f1s))
-    # Bar value labels sit slightly above each bar; keep only a small margin.
+    if peak <= 30:
+        return 30.0
     top = peak + 2.5
     if has_delta:
-        top = max(top, peak + 7.5)
-    return top
+        for i in range(1, n):
+            top = max(top, max(ems[i], f1s[i]) + 5.5)
+    return min(100, top + 1.0)
 
 
 def _load_summary(path: str) -> Dict[str, Any]:
@@ -127,7 +129,9 @@ def generate_results_figure(summary: Dict[str, Any], output_base: str) -> None:
     ymax = max(max(ems), max(f1s))
     baseline_em = ems[0] if labels[0] == MODE_LABELS["none"] else None
     has_delta = baseline_em is not None and n > 1
-    ax.set_ylim(0, _ylim_top(ems, f1s, has_delta=has_delta))
+    ax.set_ylim(0, _ylim_top(ems, f1s, has_delta=has_delta, n=n))
+    if ymax <= 30:
+        ax.set_yticks([0, 10, 20, 30])
     ax.set_ylabel("Score (%)", fontsize=FONT_AXIS_LABEL, color=C_TEXT)
     ax.set_xticks(x)
     ax.set_xticklabels(labels, fontsize=FONT_TICK)
