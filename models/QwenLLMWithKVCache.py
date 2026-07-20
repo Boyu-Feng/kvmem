@@ -552,7 +552,7 @@ class QwenLLMWithKVCache:
 
         # 9) For token-level pruning baselines, enforce budget right after first decode.
         # This makes step-1 behavior consistent with later steps (e.g., tova/h2o).
-        if self.kv_manager and self.kv_config.get("pruning_mode") in ("h2o", "tova", "pyramidinfer", "step_anchor_h2o"):
+        if self.kv_manager and self.kv_config.get("pruning_mode") in ("h2o", "tova", "streamingllm", "tokenskipping", "pyramidinfer", "step_anchor_h2o"):
             self.kv_manager.current_cache_len = self.current_cache_len
             while True:
                 target_budget = self._compute_h2o_budget()
@@ -916,7 +916,7 @@ class QwenLLMWithKVCache:
         # Check if pruning is needed
         if self.kv_manager:
             piggyback_attentions = outputs.attentions if need_attention else None
-            if self.kv_config.get("pruning_mode") in ("h2o", "tova", "pyramidinfer", "step_anchor_h2o"):
+            if self.kv_config.get("pruning_mode") in ("h2o", "tova", "streamingllm", "tokenskipping", "pyramidinfer", "step_anchor_h2o"):
                 target_budget = self._compute_h2o_budget()
                 if target_budget is not None and self.current_cache_len > target_budget:
                     # Score once per step, batch-prune, then token top-up with cached attentions.
@@ -1024,7 +1024,7 @@ class QwenLLMWithKVCache:
         # --- 1. 获取注意力权重 (原有逻辑保留) ---
         if attentions_override is not None:
             attentions = attentions_override
-        elif mode != "snapkv":
+        elif mode not in ("snapkv", "streamingllm", "tokenskipping"):
             if self.attn_mode == "scoring_forward":
                 t0 = time.time()
                 attentions = self._get_attention_for_scoring()
@@ -1233,7 +1233,7 @@ class QwenLLMWithKVCache:
             response_text: decoded string
             generated_len: number of tokens generated
         """
-        if self.kv_config.get("pruning_mode") in ("h2o", "tova", "pyramidinfer", "step_anchor_h2o"):
+        if self.kv_config.get("pruning_mode") in ("h2o", "tova", "streamingllm", "tokenskipping", "pyramidinfer", "step_anchor_h2o"):
             return self._decode_token_by_token_with_pruning(last_logits, max_new_tokens)
 
         t0 = time.time()

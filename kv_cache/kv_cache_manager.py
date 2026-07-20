@@ -438,7 +438,7 @@ class KVCacheManager:
         # Execute pruning
         cache_before = self.current_cache_len  # Track cache size before pruning
         effective_keep_ratio = self.cache_ratio
-        if self.pruning_mode in ("h2o", "tova", "pyramidinfer", "step_aware_h2o", "step_inter"):
+        if self.pruning_mode in ("h2o", "tova", "streamingllm", "tokenskipping", "pyramidinfer", "step_aware_h2o", "step_inter"):
             # Ratio semantics should be based on logical token totals (stable across steps),
             # not recursively on already-pruned current cache.
             protected_suffix_len = max(0, self.current_cache_len - prune_end)

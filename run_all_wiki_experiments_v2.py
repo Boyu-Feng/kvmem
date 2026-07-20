@@ -756,6 +756,7 @@ _PRUNING_MODE_TO_METRICS_METHOD = {
     "none": "react_kv_none",
     "h2o": "react_kv_h2o",
     "tova": "react_kv_tova",
+    "tokenskipping": "react_kv_tokenskipping",
     "step_anchor_h2o": "react_kv_step_anchor_h2o",
     "step_aware_h2o": "react_kv_step_aware_h2o",
     "step_inter": "react_kv_step_inter",
@@ -1215,7 +1216,7 @@ def run_react_kv_experiment(val_data, selected_samples, retriever, pruning_mode,
         "pool_window": 4,
         "max_trajectory_tokens": 1024,
         "sink_size": 4,
-        "observation_window": 0 if pruning_mode in ("step_aware_h2o", "step_inter", "tova") else 32,
+        "observation_window": 0 if pruning_mode in ("step_aware_h2o", "step_inter", "tova", "streamingllm", "tokenskipping") else 32,
         "num_score_layers": 3,
         "attn_mode": "piggyback" if pruning_mode in ("step_aware_h2o", "step_inter") else "scoring_forward",
         "step_anchor_keep_last_obs": -1 if pruning_mode == "step_anchor_h2o" else 1,
@@ -1277,7 +1278,7 @@ def run_react_kv_experiment(val_data, selected_samples, retriever, pruning_mode,
         )
 
     # Initialize token tracker for H2O pruning
-    token_tracker = TokenTracker() if pruning_mode in ("h2o", "tova", "step_anchor_h2o", "step_aware_h2o", "step_inter") else None
+    token_tracker = TokenTracker() if pruning_mode in ("h2o", "tova", "streamingllm", "tokenskipping", "step_anchor_h2o", "step_aware_h2o", "step_inter") else None
 
     llm = QwenLLMWithKVCache(MODEL_PATH, kv_config, token_tracker=token_tracker)
     model_param_mb = _model_param_mb(llm)
@@ -1892,7 +1893,7 @@ def _run_react_kv_episode(
         """
         Print per-step H2O summary with compact statistics.
         """
-        if pruning_mode not in ("h2o", "tova", "step_anchor_h2o", "step_aware_h2o", "step_inter"):
+        if pruning_mode not in ("h2o", "tova", "streamingllm", "tokenskipping", "step_anchor_h2o", "step_aware_h2o", "step_inter"):
             return
 
         new_token_count = 0
@@ -2270,7 +2271,7 @@ def _run_react_kv_episode(
     
     step_log = {"step": 1, "thought": thought, "action_type": action_type, "action_arg": action_arg}
     step_timings.append({"step": 1, "generation_time": step_time, "kv_cache_length": llm.get_cache_len()})
-    if pruning_mode in ("h2o", "tova", "step_anchor_h2o", "step_aware_h2o", "step_inter"):
+    if pruning_mode in ("h2o", "tova", "streamingllm", "tokenskipping", "step_anchor_h2o", "step_aware_h2o", "step_inter"):
         pruning_history_after_step1 = len(llm.get_pruning_history()) if hasattr(llm, "get_pruning_history") else 0
         new_events_step1 = llm.get_pruning_history()[pruning_history_before_step1:pruning_history_after_step1] if hasattr(llm, "get_pruning_history") else []
         step_discarded_counts[1] = sum(int(e.get("tokens_evicted", 0)) for e in new_events_step1)
@@ -2491,7 +2492,7 @@ def _run_react_kv_episode(
             
         step_time = time.time() - t_step_start
         print(f"Step {step} generation complete Response: {response}")
-        if not use_memory_fusion and pruning_mode in ("h2o", "tova", "step_anchor_h2o", "step_aware_h2o", "step_inter"):
+        if not use_memory_fusion and pruning_mode in ("h2o", "tova", "streamingllm", "tokenskipping", "step_anchor_h2o", "step_aware_h2o", "step_inter"):
             if llm.token_tracker is not None and hasattr(llm.token_tracker, "next_global_id"):
                 step_token_end_id = llm.token_tracker.next_global_id - 1
             else:
@@ -2874,7 +2875,7 @@ def main():
     parser = argparse.ArgumentParser(description="Run all HotpotQA experiments with full Wikipedia corpus")
     parser.add_argument("--experiment", type=str, required=True,
                         choices=["single", "rag", "react", "react_kv_none",
-                                 "react_kv_h2o", "react_kv_tova", "react_kv_step_anchor_h2o", "react_kv_step_aware_h2o", "react_kv_step_inter", "react_kv_snapkv", "ours", "collect", "all"],
+                                 "react_kv_h2o", "react_kv_tova", "react_kv_tokenskipping", "react_kv_step_anchor_h2o", "react_kv_step_aware_h2o", "react_kv_step_inter", "react_kv_snapkv", "ours", "collect", "all"],
                         help="Which experiment to run")
     parser.add_argument("--output_dir", type=str, default=None,
                         help="Override output directory (default: wiki_0318_v2)")
@@ -2889,8 +2890,7 @@ def main():
     args = parser.parse_args()
 
     MODEL_PATH = args.model_path
-    # RANDOM_SEED = int(args.seed)
-    RANDOM_SEED = 42
+    RANDOM_SEED = int(args.seed)
     MAX_STEPS = parse_max_steps(args.max_steps)
     print(f"[INFO] Using model: {MODEL_PATH}")
     print(f"[INFO] Using random seed: {RANDOM_SEED}")
@@ -2909,7 +2909,7 @@ def main():
 
     # Experiments that need wiki retriever
     needs_retriever = args.experiment in ["rag", "react", "react_kv_none",
-                                           "react_kv_h2o", "react_kv_tova", "react_kv_step_anchor_h2o", "react_kv_step_aware_h2o", "react_kv_step_inter", "react_kv_snapkv", "ours", "all"]
+                                           "react_kv_h2o", "react_kv_tova", "react_kv_tokenskipping", "react_kv_step_anchor_h2o", "react_kv_step_aware_h2o", "react_kv_step_inter", "react_kv_snapkv", "ours", "all"]
 
     retriever = None
     if needs_retriever:
@@ -2962,6 +2962,14 @@ def main():
             val_data, selected_samples, retriever, "tova",
             os.path.join(output_dir, "react_kv_tova_wiki_500_0513.json"),
             os.path.join(output_dir, "react_kv_tova_wiki_500_0513_checkpoint.json"),
+            kv_config_override={"cache_ratio": float(args.cache_ratio)} if args.cache_ratio is not None else None,
+        )
+
+    if args.experiment == "react_kv_tokenskipping" or args.experiment == "all":
+        run_react_kv_experiment(
+            val_data, selected_samples, retriever, "tokenskipping",
+            os.path.join(output_dir, "react_kv_tokenskipping_wiki.json"),
+            os.path.join(output_dir, "react_kv_tokenskipping_wiki_checkpoint.json"),
             kv_config_override={"cache_ratio": float(args.cache_ratio)} if args.cache_ratio is not None else None,
         )
 

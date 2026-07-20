@@ -87,8 +87,8 @@ class PruningStrategy:
             token_tracker: optional TokenTracker instance for tracking pruned tokens
         """
         # 支持用户自定义的 "ours" 模式（融合/压缩占位实现）
-        assert mode in ("h2o", "tova", "pyramidinfer", "step_anchor_h2o", "step_aware_h2o", "step_inter", "snapkv", "h2o_snapkv", "ours"), \
-            f"Unknown pruning mode: {mode}. Must be one of: h2o, tova, pyramidinfer, step_anchor_h2o, step_aware_h2o, step_inter, snapkv, h2o_snapkv, ours"
+        assert mode in ("h2o", "tova", "streamingllm", "tokenskipping", "pyramidinfer", "step_anchor_h2o", "step_aware_h2o", "step_inter", "snapkv", "h2o_snapkv", "ours"), \
+            f"Unknown pruning mode: {mode}. Must be one of: h2o, tova, streamingllm, tokenskipping, pyramidinfer, step_anchor_h2o, step_aware_h2o, step_inter, snapkv, h2o_snapkv, ours"
 
         self.mode = mode
         self.h2o_scorer = H2OScorer(num_score_layers=num_score_layers)
@@ -151,6 +151,18 @@ class PruningStrategy:
         elif self.mode == "tova":
             return self._prune_tova(
                 past_key_values, attentions,
+                prune_start, prune_end, total_len,
+                keep_ratio, num_layers
+            )
+        elif self.mode == "streamingllm":
+            return self._prune_streamingllm(
+                past_key_values,
+                prune_start, prune_end, total_len,
+                keep_ratio, num_layers
+            )
+        elif self.mode == "tokenskipping":
+            return self._prune_tokenskipping(
+                past_key_values,
                 prune_start, prune_end, total_len,
                 keep_ratio, num_layers
             )
@@ -620,6 +632,146 @@ class PruningStrategy:
                 latest_query_scores,
                 latest_query_scores,
             ),
+        }
+        return new_kv, new_total_len, info
+
+    def _prune_streamingllm(self, past_key_values,
+                            prune_start, prune_end, total_len,
+                            keep_ratio, num_layers):
+        """
+        StreamingLLM-style baseline: keep sink tokens in the protected prefix and
+        retain only the most recent tokens inside the prunable trajectory region.
+        No attention scores are used.
+        """
+        prunable_len = prune_end - prune_start
+        if prunable_len <= 0:
+            return past_key_values, total_len, {"pruned": False, "mode": "streamingllm", "reason": "empty_prunable"}
+
+        num_keep = max(1, int(prunable_len * keep_ratio))
+        if num_keep >= prunable_len:
+            return past_key_values, total_len, {
+                "pruned": False,
+                "mode": "streamingllm",
+                "reason": "no_compression_needed",
+            }
+
+        keep_start = prune_end - num_keep
+        device = self._get_device(past_key_values)
+        prefix_indices = torch.arange(prune_start, device=device)
+        abs_keep = torch.arange(keep_start, prune_end, device=device)
+        suffix_indices = torch.arange(prune_end, total_len, device=device)
+        keep_indices = torch.cat([prefix_indices, abs_keep, suffix_indices])
+
+        new_kv = []
+        for layer_idx in range(num_layers):
+            k, v = self._get_kv(past_key_values, layer_idx)
+            new_k = k[:, :, keep_indices, :]
+            new_v = v[:, :, keep_indices, :]
+            new_kv.append((new_k, new_v))
+        new_kv = self._build_cache(new_kv)
+
+        new_total_len = keep_indices.shape[0]
+        kept_indices_list = keep_indices.cpu().tolist() if hasattr(keep_indices, "cpu") else list(keep_indices)
+        if self.token_tracker is not None:
+            try:
+                self.token_tracker.record_pruning_with_kept_indices(
+                    step=None,
+                    kept_local_indices=kept_indices_list,
+                    old_cache_length=total_len,
+                    prune_start=prune_start,
+                    prune_end=prune_end,
+                )
+            except Exception as e:
+                print(f"[WARN] Token tracking failed during StreamingLLM prune: {e}")
+
+        evicted_abs = torch.arange(prune_start, keep_start, device=device)
+        info = {
+            "pruned": True,
+            "mode": "streamingllm",
+            "prunable_region_size": int(prunable_len),
+            "heavy_hitters_kept": int(num_keep),
+            "tokens_evicted": int(prunable_len - num_keep),
+            "compression_ratio": float(num_keep / max(1, prunable_len)),
+            "new_total_len": int(new_total_len),
+            "evicted_abs_indices": evicted_abs.detach().cpu().tolist(),
+        }
+        return new_kv, new_total_len, info
+
+    def _compute_key_norm_scores(self, past_key_values, prune_start, prune_end, num_layers):
+        """TokenSkipping: L2 norm of key vectors, averaged over last score layers."""
+        start_layer = max(0, num_layers - self.h2o_scorer.num_score_layers)
+        layer_scores = []
+        for layer_idx in range(start_layer, num_layers):
+            k, _ = self._get_kv(past_key_values, layer_idx)
+            region = k[:, :, prune_start:prune_end, :]
+            # Mean over heads -> L2 norm per token position.
+            per_head_norm = torch.linalg.vector_norm(region, dim=-1)  # (B, H, T)
+            layer_scores.append(per_head_norm[0].mean(dim=0))
+        if not layer_scores:
+            device = self._get_device(past_key_values)
+            return torch.zeros(max(0, prune_end - prune_start), device=device)
+        return torch.stack(layer_scores, dim=0).mean(dim=0)
+
+    def _prune_tokenskipping(self, past_key_values,
+                             prune_start, prune_end, total_len,
+                             keep_ratio, num_layers):
+        """
+        TokenSkipping baseline (Hongthai & Chuangsuwanich, ICIT 2025):
+        retain high L2-norm key tokens under a fixed budget; anchor/prefix
+        and observation suffix stay protected by the manager.
+        """
+        prunable_len = prune_end - prune_start
+        if prunable_len <= 0:
+            return past_key_values, total_len, {"pruned": False, "mode": "tokenskipping", "reason": "empty_prunable"}
+
+        scores = self._compute_key_norm_scores(past_key_values, prune_start, prune_end, num_layers)
+        if scores.numel() <= 0:
+            return past_key_values, total_len, {"pruned": False, "mode": "tokenskipping", "reason": "no_scores"}
+
+        heavy_indices, evicted_indices = self.h2o_scorer.select_heavy_hitters(scores, keep_ratio)
+        abs_heavy = heavy_indices + prune_start
+
+        device = scores.device
+        prefix_indices = torch.arange(prune_start, device=device)
+        suffix_indices = torch.arange(prune_end, total_len, device=device)
+        keep_indices = torch.cat([prefix_indices, abs_heavy, suffix_indices])
+
+        new_kv = []
+        for layer_idx in range(num_layers):
+            k, v = self._get_kv(past_key_values, layer_idx)
+            new_k = k[:, :, keep_indices, :]
+            new_v = v[:, :, keep_indices, :]
+            new_kv.append((new_k, new_v))
+        new_kv = self._build_cache(new_kv)
+
+        new_total_len = keep_indices.shape[0]
+        kept_indices_list = keep_indices.cpu().tolist() if hasattr(keep_indices, "cpu") else list(keep_indices)
+        if self.token_tracker is not None:
+            try:
+                self.token_tracker.record_pruning_with_kept_indices(
+                    step=None,
+                    kept_local_indices=kept_indices_list,
+                    old_cache_length=total_len,
+                    prune_start=prune_start,
+                    prune_end=prune_end,
+                )
+            except Exception as e:
+                print(f"[WARN] Token tracking failed during TokenSkipping prune: {e}")
+
+        info = {
+            "pruned": True,
+            "mode": "tokenskipping",
+            "prunable_region_size": int(prunable_len),
+            "heavy_hitters_kept": int(len(heavy_indices)),
+            "tokens_evicted": int(len(evicted_indices)),
+            "compression_ratio": float(len(heavy_indices) / max(1, prunable_len)),
+            "new_total_len": int(new_total_len),
+            "evicted_abs_indices": (evicted_indices + prune_start).detach().cpu().tolist(),
+            "token_score_snapshot": {
+                "prune_start": int(prune_start),
+                "prune_end": int(prune_end),
+                "display_scores": scores.detach().cpu().tolist(),
+            },
         }
         return new_kv, new_total_len, info
 
