@@ -783,7 +783,7 @@ def _plot_style(mode: str) -> Dict[str, float]:
             "panel_h": panel_h,
             "fig_w": 16.0,
             "labelpad": 6,
-            "hspace": 0.38,
+            "hspace": 0.32,
         }
     return {
         "axis_label": FONT_AXIS_LABEL,
@@ -827,7 +827,7 @@ def _multi_panel_chart_style() -> Dict[str, float]:
         "legend": FONT_LEGEND,
         "method_title": FONT_METHOD_TITLE,
         "panel_h": panel_height(3),
-        "hspace": 0.28,
+        "hspace": 0.32,
         "labelpad": 6,
     }
 
@@ -961,7 +961,13 @@ def _plot_three_methods(
     )
 
     n_panels = len(method_plot_data)
-    from scripts.paper_figure_style import FIG_H, FIG_W, SUBPLOTS_LEFT, SUBPLOTS_RIGHT, SUBPLOTS_TOP, apply_top_legend
+    from scripts.paper_figure_style import (
+        FIG_H,
+        FIG_W,
+        apply_top_legend,
+        multi_panel_subplots_adjust,
+        save_paper_figure,
+    )
 
     if mode == "dropped":
         fig_w = FIG_W
@@ -974,14 +980,7 @@ def _plot_three_methods(
         axes = [axes]
     has_top_legend = bool(legend_handles)
     legend_ncol = _step_legend_ncol(len(legend_labels)) if has_top_legend else 4
-    panel_hspace = float(style.get("hspace", 0.12))
-    fig.subplots_adjust(
-        hspace=panel_hspace,
-        bottom=0.06,
-        top=SUBPLOTS_TOP if has_top_legend else 0.96,
-        left=SUBPLOTS_LEFT,
-        right=SUBPLOTS_RIGHT,
-    )
+    multi_panel_subplots_adjust(fig, has_top_legend=has_top_legend)
 
     y_label = "Cumulative keep after step" if mode == "kept" else "Evicted at ReAct step"
     empty_msg = (
@@ -1083,7 +1082,7 @@ def _plot_three_methods(
         apply_top_legend(fig, legend_handles, legend_labels, ncol=legend_ncol)
 
     os.makedirs(os.path.dirname(output_pdf) or ".", exist_ok=True)
-    fig.savefig(output_pdf, bbox_inches="tight", pad_inches=0.10)
+    save_paper_figure(fig, output_pdf)
     plt.close(fig)
 
 
@@ -1456,10 +1455,9 @@ def _plot_cohort_survival(
         FIG_H,
         FIG_W,
         FONT_ANNOT,
-        SUBPLOTS_LEFT,
-        SUBPLOTS_RIGHT,
-        SUBPLOTS_TOP,
         apply_top_legend,
+        multi_panel_subplots_adjust,
+        save_paper_figure,
     )
 
     n_panels = len(method_plot_data)
@@ -1555,7 +1553,7 @@ def _plot_cohort_survival(
         ax.tick_params(axis="both", which="major", labelsize=style["tick"])
 
     for ax in axes:
-        ax.set_xlim(0.5, global_x_max + 0.5)
+        ax.set_xlim(0.5, global_x_max + 0.85)
         ax.set_xticks(list(range(1, global_x_max + 1)))
 
     axes[-1].set_xlabel("ReAct step", fontsize=style["axis_label"], labelpad=x_labelpad)
@@ -1573,24 +1571,16 @@ def _plot_cohort_survival(
         for s in global_owner_steps
     ]
     legend_ncol = _step_legend_ncol(len(global_owner_steps))
-    fig.subplots_adjust(
-        hspace=style["hspace"],
-        top=SUBPLOTS_TOP if has_any else 0.96,
-        bottom=0.06,
-        left=SUBPLOTS_LEFT,
-        right=SUBPLOTS_RIGHT,
-    )
+    multi_panel_subplots_adjust(fig, has_top_legend=has_any)
     if has_any:
         apply_top_legend(
             fig,
             legend_handles,
             [f"step{s} token" for s in global_owner_steps],
             ncol=legend_ncol,
-            left=SUBPLOTS_LEFT,
-            right=SUBPLOTS_RIGHT,
         )
     os.makedirs(os.path.dirname(output_pdf) or ".", exist_ok=True)
-    fig.savefig(output_pdf, bbox_inches="tight", pad_inches=0.12)
+    save_paper_figure(fig, output_pdf)
     plt.close(fig)
 
 

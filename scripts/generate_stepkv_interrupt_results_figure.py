@@ -37,6 +37,7 @@ from paper_figure_style import (
     SUBPLOTS_RIGHT,
     SUBPLOTS_TOP,
     apply_top_legend,
+    save_paper_figure,
 )
 
 
@@ -167,7 +168,7 @@ def generate_results_figure(summary: Dict[str, Any], output_base: str) -> None:
     os.makedirs(os.path.dirname(output_base) or ".", exist_ok=True)
     for ext in ("png", "pdf"):
         path = f"{output_base}.{ext}"
-        fig.savefig(path, bbox_inches="tight", dpi=300 if ext == "png" else None)
+        save_paper_figure(fig, path)
         print(f"[INFO] Wrote {path}")
     plt.close(fig)
 
