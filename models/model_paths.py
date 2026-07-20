@@ -88,6 +88,50 @@ def find_local_model_for_family(family: str) -> Optional[str]:
     return None
 
 
+def scan_local_model_dirs() -> List[str]:
+    """Scan HF models roots for any subdirectory that looks like a local HF model."""
+    found: List[str] = []
+    seen = set()
+    for root in _models_roots():
+        if not os.path.isdir(root):
+            continue
+        try:
+            entries = sorted(os.listdir(root))
+        except OSError:
+            continue
+        for name in entries:
+            cand = os.path.join(root, name)
+            if not is_local_model_dir(cand):
+                continue
+            real = os.path.realpath(cand)
+            if real in seen:
+                continue
+            seen.add(real)
+            found.append(cand)
+    return found
+
+
+def model_slug(path: str) -> str:
+    """Short tag for result dirs/logs (qwen, llama, or directory basename)."""
+    family = infer_model_family(path)
+    if family:
+        return family
+    base = os.path.basename(path.rstrip(os.sep))
+    slug = base.lower().replace("_", "-").replace(" ", "-")
+    return slug or "model"
+
+
+def describe_local_model(path: str) -> str:
+    family = infer_model_family(path)
+    base = os.path.basename(path.rstrip(os.sep))
+    if family and family in MODEL_FAMILIES:
+        label = MODEL_FAMILIES[family]["label"]
+        if base.lower() != label.lower():
+            return f"{label} ({base})"
+        return label
+    return base or path
+
+
 def detect_available_models() -> Dict[str, str]:
     """Return {family: local_path} for each supported model found locally."""
     found: Dict[str, str] = {}
@@ -95,7 +139,46 @@ def detect_available_models() -> Dict[str, str]:
         path = find_local_model_for_family(family)
         if path:
             found[family] = path
+
+    # Also accept any scanned model dir whose config/path looks like qwen/llama.
+    for path in scan_local_model_dirs():
+        family = infer_model_family(path)
+        if family and family not in found:
+            found[family] = path
     return found
+
+
+def _pick_scanned_model(model_family: str = "auto") -> Optional[str]:
+    scanned = scan_local_model_dirs()
+    if not scanned:
+        return None
+
+    model_family = (model_family or "auto").strip().lower()
+    if model_family in MODEL_FAMILIES:
+        matched = [p for p in scanned if infer_model_family(p) == model_family]
+        if len(matched) == 1:
+            return matched[0]
+        if len(matched) > 1:
+            lines = [
+                f"Multiple local {model_family} models found under {', '.join(_models_roots())}.",
+                "Pass --model_path <dir> to choose one:",
+            ]
+            lines.extend(f"  - {p}" for p in matched)
+            raise AmbiguousModelError("\n".join(lines))
+        return None
+
+    if len(scanned) == 1:
+        return scanned[0]
+
+    lines = [
+        "Multiple local models found; auto mode cannot choose.",
+        f"Searched under: {', '.join(_models_roots())}",
+        "Pass --model_path <dir> or --model_family qwen|llama.",
+        "Found:",
+    ]
+    for path in scanned:
+        lines.append(f"  - {describe_local_model(path)}: {path}")
+    raise AmbiguousModelError("\n".join(lines))
 
 
 def local_model_candidates() -> List[str]:
@@ -103,6 +186,7 @@ def local_model_candidates() -> List[str]:
         os.environ.get("KVMEM_MODEL_PATH", "").strip(),
         os.environ.get("LOCAL_MODEL_PATH", "").strip(),
     ]
+    candidates.extend(scan_local_model_dirs())
     for family in MODEL_FAMILIES:
         path = find_local_model_for_family(family)
         if path:
@@ -161,9 +245,19 @@ def _resolve_auto_model_path(model_family: str = "auto") -> str:
     for env_name in ("KVMEM_MODEL_PATH", "LOCAL_MODEL_PATH"):
         env_path = os.environ.get(env_name, "").strip()
         if is_local_model_dir(env_path):
-            family = infer_model_family(env_path) or "custom"
-            print(f"[INFO] Using model from {env_name}: {env_path} ({family})")
+            print(
+                f"[INFO] Using model from {env_name}: {env_path} "
+                f"({describe_local_model(env_path)})"
+            )
             return env_path
+
+    scanned = _pick_scanned_model(model_family=model_family)
+    if scanned is not None:
+        print(
+            f"[INFO] Auto-detected local model under {_models_roots()[0]}: "
+            f"{describe_local_model(scanned)} -> {scanned}"
+        )
+        return scanned
 
     available = detect_available_models()
     if model_family in MODEL_FAMILIES:
@@ -180,9 +274,11 @@ def _resolve_auto_model_path(model_family: str = "auto") -> str:
         )
 
     if not available:
+        roots = ", ".join(_models_roots())
         raise FileNotFoundError(
-            "No local Qwen or Llama model found. Pass --model_path, set "
-            "KVMEM_MODEL_PATH / LOCAL_MODEL_PATH, or use --model_family qwen|llama "
+            f"No local model found under {roots}. "
+            "Place a HF model dir (with config.json) there, pass --model_path, "
+            "set KVMEM_MODEL_PATH / LOCAL_MODEL_PATH, or use --model_family qwen|llama "
             "to download one."
         )
     if len(available) == 1:
@@ -209,7 +305,7 @@ def resolve_local_model_path(explicit: str = "auto", *, model_family: str = "aut
 
     - explicit local path -> use directly
     - HF repo id -> map to $HF_HOME/models/<basename>
-    - "auto" -> detect Qwen/Llama; error if both exist unless model_family is set
+    - "auto" -> scan $HF_HOME/models and /root/autodl-tmp/hf_cache/models
     """
     explicit = (explicit or "auto").strip()
     if is_local_model_dir(explicit):

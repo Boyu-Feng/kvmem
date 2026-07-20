@@ -21,8 +21,8 @@ METRICS_SCRIPT=record_experiment_metrics.py
 LOGDIR=logs
 
 # Model resolution (see models/model_paths.py):
-#   MODEL_PATH=auto          -> detect local Qwen/Llama (or env KVMEM_MODEL_PATH)
-#   MODEL_FAMILY=qwen|llama  -> force family when both exist, or choose download target
+#   MODEL_PATH=auto          -> scan $HF_HOME/models (default /root/autodl-tmp/hf_cache/models)
+#   MODEL_FAMILY=qwen|llama  -> pick that family when multiple models exist
 #   NO_DOWNLOAD_MODEL=1      -> fail instead of downloading
 MODEL_PATH="${MODEL_PATH:-auto}"
 MODEL_FAMILY="${MODEL_FAMILY:-auto}"
@@ -47,7 +47,7 @@ import os
 import sys
 
 sys.path.insert(0, os.getcwd())
-from models.model_paths import ensure_local_model_path, infer_model_family
+from models.model_paths import ensure_local_model_path, describe_local_model, model_slug
 
 explicit = os.environ.get("MODEL_PATH", "auto").strip()
 family = os.environ.get("MODEL_FAMILY", "auto").strip().lower()
@@ -59,21 +59,23 @@ path = ensure_local_model_path(
     model_family=family,
     allow_download=allow_download,
 )
-detected = infer_model_family(path) or "model"
 print(path)
-print(detected)
+print(model_slug(path))
+print(describe_local_model(path))
 PY
 }
 
 {
   read -r MODEL_PATH
-  read -r DETECTED_MODEL_FAMILY
+  read -r DETECTED_MODEL_SLUG
+  read -r DETECTED_MODEL_LABEL
 } < <(resolve_model_info)
-echo "$(date): Auto-detected model family=${DETECTED_MODEL_FAMILY}, path=${MODEL_PATH}"
+echo "$(date): Auto-detected model: ${DETECTED_MODEL_LABEL}"
+echo "$(date): Model path: ${MODEL_PATH}"
 
-# If OUTPUT_ROOT was not customized, tag it with the detected model family.
+# If OUTPUT_ROOT was not customized, tag it with the detected model slug.
 if [ "$OUTPUT_ROOT" = "results/tokenskipping_baseline" ]; then
-  OUTPUT_ROOT="results/tokenskipping_baseline_${DETECTED_MODEL_FAMILY}"
+  OUTPUT_ROOT="results/tokenskipping_baseline_${DETECTED_MODEL_SLUG}"
 fi
 echo "$(date): Output root -> ${OUTPUT_ROOT}"
 
