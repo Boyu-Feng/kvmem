@@ -762,29 +762,38 @@ def _panel_x_span(points: Sequence[Dict[str, Any]]) -> int:
 
 
 def _plot_style(mode: str) -> Dict[str, float]:
+    from scripts.paper_figure_style import (
+        FONT_AXIS_LABEL,
+        FONT_LEGEND,
+        FONT_METHOD_TITLE,
+        FONT_TICK,
+        panel_height,
+    )
+
+    panel_h = panel_height(3)
     if mode == "dropped":
         return {
-            "axis_label": 26,
-            "tick": 22,
+            "axis_label": FONT_AXIS_LABEL,
+            "tick": FONT_TICK,
             "title": 18,
-            "method_title": 24,
-            "legend_font": 21,
+            "method_title": FONT_METHOD_TITLE,
+            "legend_font": FONT_LEGEND,
             "legend_marker": 14,
             "legend_ncol": 4,
-            "panel_h": 3.8,
+            "panel_h": panel_h,
             "fig_w": 16.0,
             "labelpad": 6,
             "hspace": 0.38,
         }
     return {
-        "axis_label": 24,
-        "tick": 21,
+        "axis_label": FONT_AXIS_LABEL,
+        "tick": FONT_TICK,
         "title": 18,
-        "method_title": 22,
-        "legend_font": 19,
+        "method_title": FONT_METHOD_TITLE,
+        "legend_font": FONT_LEGEND,
         "legend_marker": 12,
         "legend_ncol": 4,
-        "panel_h": 2.6,
+        "panel_h": panel_h,
         "fig_w": 14.0,
         "fig_w_min": 16.0,
         "fig_w_max": 32.0,
@@ -804,12 +813,20 @@ def _bottom_axis_labelpad() -> int:
 
 
 def _multi_panel_chart_style() -> Dict[str, float]:
+    from scripts.paper_figure_style import (
+        FONT_AXIS_LABEL,
+        FONT_LEGEND,
+        FONT_METHOD_TITLE,
+        FONT_TICK,
+        panel_height,
+    )
+
     return {
-        "axis_label": 26,
-        "tick": 22,
-        "legend": 21,
-        "method_title": 24,
-        "panel_h": 3.8,
+        "axis_label": FONT_AXIS_LABEL,
+        "tick": FONT_TICK,
+        "legend": FONT_LEGEND,
+        "method_title": FONT_METHOD_TITLE,
+        "panel_h": panel_height(3),
         "hspace": 0.28,
         "labelpad": 6,
     }
@@ -944,27 +961,24 @@ def _plot_three_methods(
     )
 
     n_panels = len(method_plot_data)
+    from scripts.paper_figure_style import FIG_H, FIG_W, SUBPLOTS_TOP, apply_top_legend
+
     if mode == "dropped":
-        fig_w = float(style["fig_w"])
-        fig_h = style["panel_h"] * n_panels
+        fig_w = FIG_W
+        fig_h = FIG_H
     else:
         fig_w = max(style["fig_w_min"], min(style["fig_w_max"], 10.0 + panel_max_x * style["fig_w_scale"]))
         fig_h = style["panel_h"] * n_panels
     fig, axes = plt.subplots(n_panels, 1, figsize=(fig_w, fig_h), sharex=False)
     if n_panels == 1:
         axes = [axes]
-    has_bottom_legend = bool(legend_handles)
-    legend_ncol = _step_legend_ncol(len(legend_labels)) if has_bottom_legend else 4
-    bottom_margin = (
-        _legend_bottom_margin(len(legend_labels), legend_ncol)
-        if has_bottom_legend
-        else 0.06
-    )
+    has_top_legend = bool(legend_handles)
+    legend_ncol = _step_legend_ncol(len(legend_labels)) if has_top_legend else 4
     panel_hspace = float(style.get("hspace", 0.12))
     fig.subplots_adjust(
         hspace=panel_hspace,
-        bottom=bottom_margin,
-        top=0.96,
+        bottom=0.06,
+        top=SUBPLOTS_TOP if has_top_legend else 0.96,
         left=0.10,
         right=0.98,
     )
@@ -1065,20 +1079,8 @@ def _plot_three_methods(
     )
     axes[-1].tick_params(axis="x", which="major", labelsize=style["tick"], pad=3)
 
-    if has_bottom_legend:
-        fig.legend(
-            legend_handles,
-            legend_labels,
-            loc="upper center",
-            bbox_to_anchor=(0.5, -0.02),
-            ncol=legend_ncol,
-            frameon=False,
-            fontsize=style["legend_font"],
-            handlelength=2.0,
-            handletextpad=0.8,
-            columnspacing=1.8,
-            borderaxespad=0.0,
-        )
+    if has_top_legend:
+        apply_top_legend(fig, legend_handles, legend_labels, ncol=legend_ncol)
 
     os.makedirs(os.path.dirname(output_pdf) or ".", exist_ok=True)
     fig.savefig(output_pdf, bbox_inches="tight", pad_inches=0.10)
@@ -1450,8 +1452,10 @@ def _plot_cohort_survival(
         }
     )
 
+    from scripts.paper_figure_style import FIG_H, FIG_W, FONT_ANNOT, SUBPLOTS_TOP, apply_top_legend
+
     n_panels = len(method_plot_data)
-    fig, axes = plt.subplots(n_panels, 1, figsize=(14.0, style["panel_h"] * n_panels), sharex=True)
+    fig, axes = plt.subplots(n_panels, 1, figsize=(FIG_W, FIG_H), sharex=True)
     if n_panels == 1:
         axes = [axes]
 
@@ -1519,7 +1523,7 @@ def _plot_cohort_survival(
                     textcoords="offset points",
                     ha="left",
                     va="center",
-                    fontsize=12,
+                    fontsize=FONT_ANNOT,
                     color=color,
                     fontweight="bold",
                 )
@@ -1561,25 +1565,19 @@ def _plot_cohort_survival(
         for s in global_owner_steps
     ]
     legend_ncol = _step_legend_ncol(len(global_owner_steps))
-    bottom = _legend_bottom_margin(len(global_owner_steps), legend_ncol) + 0.01 if has_any else 0.06
     fig.subplots_adjust(
         hspace=style["hspace"],
-        top=0.96,
-        bottom=bottom,
+        top=SUBPLOTS_TOP if has_any else 0.96,
+        bottom=0.06,
         left=0.10,
         right=0.97,
     )
     if has_any:
-        fig.legend(
-            handles=legend_handles,
-            loc="upper center",
-            bbox_to_anchor=(0.5, -0.02),
+        apply_top_legend(
+            fig,
+            legend_handles,
+            [f"Step {s}" for s in global_owner_steps],
             ncol=legend_ncol,
-            frameon=False,
-            fontsize=style["legend"],
-            handlelength=2.0,
-            handletextpad=0.8,
-            columnspacing=1.8,
         )
     os.makedirs(os.path.dirname(output_pdf) or ".", exist_ok=True)
     fig.savefig(output_pdf, bbox_inches="tight", pad_inches=0.12)

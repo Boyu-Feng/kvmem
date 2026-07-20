@@ -16,10 +16,26 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import sys
 from typing import Any, Dict, List, Tuple
 
 import matplotlib.pyplot as plt
 import numpy as np
+
+_SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+if _SCRIPT_DIR not in sys.path:
+    sys.path.insert(0, _SCRIPT_DIR)
+
+from paper_figure_style import (
+    FONT_ANNOT,
+    FONT_AXIS_LABEL,
+    FONT_BAR_VALUE,
+    FONT_TICK,
+    FIG_H,
+    FIG_W,
+    SUBPLOTS_TOP,
+    apply_top_legend,
+)
 
 
 # Palette aligned with other StepKV figures
@@ -75,19 +91,33 @@ def generate_results_figure(summary: Dict[str, Any], output_base: str) -> None:
     n = len(labels)
     x = np.arange(n)
     bar_width = 0.34
-    fig_w = max(6.0, 1.35 * n + 2.0)
-    fig_h = fig_w / 1.2
-    fig, ax = plt.subplots(figsize=(fig_w, fig_h))
+    fig, ax = plt.subplots(figsize=(FIG_W, FIG_H))
 
-    bars_em = ax.bar(x - bar_width / 2, ems, bar_width, label="EM", color=C_EM, edgecolor="white", linewidth=0.8)
-    bars_f1 = ax.bar(x + bar_width / 2, f1s, bar_width, label="F1", color=C_F1, edgecolor="white", linewidth=0.8)
+    bars_em = ax.bar(
+        x - bar_width / 2,
+        ems,
+        bar_width,
+        label="EM",
+        color=C_EM,
+        edgecolor="white",
+        linewidth=0.8,
+    )
+    bars_f1 = ax.bar(
+        x + bar_width / 2,
+        f1s,
+        bar_width,
+        label="F1",
+        color=C_F1,
+        edgecolor="white",
+        linewidth=0.8,
+    )
 
     ymax = max(max(ems), max(f1s))
     ax.set_ylim(0, min(100, ymax + 12))
-    ax.set_ylabel("Score (%)", fontsize=14, color=C_TEXT)
+    ax.set_ylabel("Score (%)", fontsize=FONT_AXIS_LABEL, color=C_TEXT)
     ax.set_xticks(x)
-    ax.set_xticklabels(labels, fontsize=13)
-    ax.tick_params(axis="both", labelsize=13)
+    ax.set_xticklabels(labels, fontsize=FONT_TICK)
+    ax.tick_params(axis="both", labelsize=FONT_TICK)
     ax.grid(axis="y", linestyle="--", alpha=0.35, linewidth=0.8)
     ax.set_axisbelow(True)
 
@@ -99,7 +129,7 @@ def generate_results_figure(summary: Dict[str, Any], output_base: str) -> None:
             f"{h:.1f}",
             ha="center",
             va="bottom",
-            fontsize=8.5,
+            fontsize=FONT_BAR_VALUE,
             color=C_TEXT,
         )
 
@@ -114,12 +144,12 @@ def generate_results_figure(summary: Dict[str, Any], output_base: str) -> None:
                 f"ΔEM {dem:+.1f}",
                 ha="center",
                 va="bottom",
-                fontsize=8,
+                fontsize=FONT_ANNOT,
                 color=C_MUTED,
             )
 
-    ax.legend(loc="upper right", frameon=False, fontsize=10)
-    fig.tight_layout()
+    fig.subplots_adjust(top=SUBPLOTS_TOP, bottom=0.10, left=0.10, right=0.98)
+    apply_top_legend(fig, *ax.get_legend_handles_labels(), ncol=2)
 
     os.makedirs(os.path.dirname(output_base) or ".", exist_ok=True)
     for ext in ("png", "pdf"):
