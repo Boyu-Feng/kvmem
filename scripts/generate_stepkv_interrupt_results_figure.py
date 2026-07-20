@@ -33,6 +33,8 @@ from paper_figure_style import (
     FONT_TICK,
     FIG_H,
     FIG_W,
+    SUBPLOTS_LEFT,
+    SUBPLOTS_RIGHT,
     SUBPLOTS_TOP,
     apply_top_legend,
 )
@@ -159,8 +161,8 @@ def generate_results_figure(summary: Dict[str, Any], output_base: str) -> None:
                     color=C_MUTED,
                 )
 
-    fig.subplots_adjust(top=SUBPLOTS_TOP, bottom=0.12, left=0.10, right=0.98)
-    apply_top_legend(fig, *ax.get_legend_handles_labels(), ncol=2)
+    fig.subplots_adjust(top=SUBPLOTS_TOP, bottom=0.12, left=SUBPLOTS_LEFT, right=SUBPLOTS_RIGHT)
+    apply_top_legend(fig, *ax.get_legend_handles_labels(), ncol=2, ax=ax)
 
     os.makedirs(os.path.dirname(output_base) or ".", exist_ok=True)
     for ext in ("png", "pdf"):

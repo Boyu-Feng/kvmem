@@ -961,7 +961,7 @@ def _plot_three_methods(
     )
 
     n_panels = len(method_plot_data)
-    from scripts.paper_figure_style import FIG_H, FIG_W, SUBPLOTS_TOP, apply_top_legend
+    from scripts.paper_figure_style import FIG_H, FIG_W, SUBPLOTS_LEFT, SUBPLOTS_RIGHT, SUBPLOTS_TOP, apply_top_legend
 
     if mode == "dropped":
         fig_w = FIG_W
@@ -979,8 +979,8 @@ def _plot_three_methods(
         hspace=panel_hspace,
         bottom=0.06,
         top=SUBPLOTS_TOP if has_top_legend else 0.96,
-        left=0.10,
-        right=0.98,
+        left=SUBPLOTS_LEFT,
+        right=SUBPLOTS_RIGHT,
     )
 
     y_label = "Cumulative keep after step" if mode == "kept" else "Evicted at ReAct step"
@@ -1452,7 +1452,15 @@ def _plot_cohort_survival(
         }
     )
 
-    from scripts.paper_figure_style import FIG_H, FIG_W, FONT_ANNOT, SUBPLOTS_TOP, apply_top_legend
+    from scripts.paper_figure_style import (
+        FIG_H,
+        FIG_W,
+        FONT_ANNOT,
+        SUBPLOTS_LEFT,
+        SUBPLOTS_RIGHT,
+        SUBPLOTS_TOP,
+        apply_top_legend,
+    )
 
     n_panels = len(method_plot_data)
     fig, axes = plt.subplots(n_panels, 1, figsize=(FIG_W, FIG_H), sharex=True)
@@ -1569,8 +1577,8 @@ def _plot_cohort_survival(
         hspace=style["hspace"],
         top=SUBPLOTS_TOP if has_any else 0.96,
         bottom=0.06,
-        left=0.10,
-        right=0.97,
+        left=SUBPLOTS_LEFT,
+        right=SUBPLOTS_RIGHT,
     )
     if has_any:
         apply_top_legend(
@@ -1578,6 +1586,8 @@ def _plot_cohort_survival(
             legend_handles,
             [f"Step {s}" for s in global_owner_steps],
             ncol=legend_ncol,
+            left=SUBPLOTS_LEFT,
+            right=SUBPLOTS_RIGHT,
         )
     os.makedirs(os.path.dirname(output_pdf) or ".", exist_ok=True)
     fig.savefig(output_pdf, bbox_inches="tight", pad_inches=0.12)
