@@ -584,8 +584,8 @@ def plot_radar_single(
     output_prefix: str,
     *,
     title: Optional[str] = None,
-    labelsize: int = 42,
-    ticksize: int = 32,
+    labelsize: int = 24,
+    ticksize: int = 20,
     fill_alpha: float = 0.10,
 ) -> None:
     """One polar plot: FullKV + StepKV r50 + StepKV r20 together."""
@@ -743,12 +743,12 @@ def main() -> None:
     parser.add_argument(
         "--labelsize",
         type=int,
-        default=42,
+        default=24,
     )
     parser.add_argument(
         "--ticksize",
         type=int,
-        default=32,
+        default=20,
     )
     args = parser.parse_args()
 
