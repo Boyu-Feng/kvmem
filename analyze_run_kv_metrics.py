@@ -59,7 +59,7 @@ METHOD_CONFIGS: List[Tuple[str, str, Optional[str], str]] = [
 ]
 
 METHOD_ORDER = ["FullKV", "H2O", "TOVA", "StepKV"]
-CACHE_METHOD_ORDER = [*METHOD_ORDER, "TokenSkipping"]
+CACHE_METHOD_ORDER = ["FullKV", "H2O", "TOVA", "TokenSkipping", "StepKV"]
 METHOD_DISPLAY = {
     "FullKV": "FullKV",
     "H2O": r"H$_2$O",
@@ -129,9 +129,19 @@ class MethodRunStats:
 def _add_hardcoded_tokenskipping_rows(
     rows: List[MethodRunStats],
     dataset_suffix: str,
+    run_dir: str,
 ) -> None:
     """Append externally measured TokenSkipping final-cache statistics."""
-    dataset_key = "hotpotqa" if dataset_suffix.lower() in ("wiki", "hotpotqa") else dataset_suffix.lower()
+    suffix = dataset_suffix.lower()
+    run_dir_lower = os.path.abspath(run_dir).lower()
+    if suffix == "2wiki" or "2wiki_qwen25_7b_v2" in run_dir_lower:
+        dataset_key = "2wiki"
+    elif suffix == "musique" or "musique_qwen25_7b_v2" in run_dir_lower:
+        dataset_key = "musique"
+    elif suffix in ("wiki", "hotpotqa") or "wiki_qwen25_7b_v2" in run_dir_lower:
+        dataset_key = "hotpotqa"
+    else:
+        dataset_key = suffix
     stats = TOKEN_SKIPPING_FINAL_CACHE.get(dataset_key)
     if not stats:
         return
@@ -818,7 +828,7 @@ def _analyze_and_write_dataset(
     skip_individual_plots: bool = False,
 ) -> Optional[List[MethodRunStats]]:
     rows = analyze_one_run(run_dir, dataset_suffix)
-    _add_hardcoded_tokenskipping_rows(rows, dataset_suffix)
+    _add_hardcoded_tokenskipping_rows(rows, dataset_suffix, run_dir)
     if not rows:
         print(f"[WARN] No results for dataset={dataset_suffix}")
         return None
