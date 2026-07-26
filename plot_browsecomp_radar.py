@@ -85,12 +85,12 @@ BROWSECOMP_METRICS_SERIES: List[Tuple[str, str, List[str], str]] = [
 ]
 
 AXIS_SPECS: List[Tuple[str, str, str, str]] = [
-    ("em", "EM ↑", "em", "quality"),
-    ("f1", "F1 ↑", "f1", "quality"),
-    ("avg_sample_time_s", "Avg Time ↓", "avg_sample_time_s", "cost"),
-    ("max_sample_time_s", "Max Time ↓", "max_sample_time_s", "cost"),
-    ("avg_cache", "Avg Cache ↓", "avg_cache", "cost"),
-    ("max_cache", "Max Cache ↓", "max_cache", "cost"),
+    ("em", r"EM $\uparrow$", "em", "quality"),
+    ("f1", r"F1 $\uparrow$", "f1", "quality"),
+    ("avg_sample_time_s", r"Avg Time $\downarrow$", "avg_sample_time_s", "cost"),
+    ("max_sample_time_s", r"Max Time $\downarrow$", "max_sample_time_s", "cost"),
+    ("avg_cache", r"Avg Cache $\downarrow$", "avg_cache", "cost"),
+    ("max_cache", r"Max Cache $\downarrow$", "max_cache", "cost"),
 ]
 
 QUALITY_AXIS_KEYS = frozenset(k for k, _, _, g in AXIS_SPECS if g == "quality")
