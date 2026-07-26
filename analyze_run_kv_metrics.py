@@ -59,13 +59,32 @@ METHOD_CONFIGS: List[Tuple[str, str, Optional[str], str]] = [
 ]
 
 METHOD_ORDER = ["FullKV", "H2O", "TOVA", "StepKV"]
+CACHE_METHOD_ORDER = [*METHOD_ORDER, "TokenSkipping"]
 METHOD_DISPLAY = {
     "FullKV": "FullKV",
     "H2O": r"H$_2$O",
     "TOVA": "TOVA",
     "StepKV": "StepKV",
+    "TokenSkipping": "TokenSkipping",
 }
 RATIO_ORDER = ["r50", "r20", "full"]
+
+# TokenSkipping was run on another machine. These final decode-cache statistics
+# are embedded here so the cache-size figures remain reproducible locally.
+TOKEN_SKIPPING_FINAL_CACHE = {
+    "hotpotqa": {
+        "r50": (404.6, 977.0),
+        "r20": (333.6, 394.0),
+    },
+    "2wiki": {
+        "r50": (421.3, 1024.0),
+        "r20": (336.0, 443.0),
+    },
+    "musique": {
+        "r50": (658.6, 1612.0),
+        "r20": (594.0, 683.0),
+    },
+}
 
 # Preferred column order when combining Qwen multi-dataset figures.
 # hotpotqa uses results/wiki_qwen25_7b_v2 (folder key "wiki").
@@ -105,6 +124,39 @@ class MethodRunStats:
         if self.ratio == "full":
             return self.method
         return f"{self.method} ({self.ratio.replace('r', '')}%)"
+
+
+def _add_hardcoded_tokenskipping_rows(
+    rows: List[MethodRunStats],
+    dataset_suffix: str,
+) -> None:
+    """Append externally measured TokenSkipping final-cache statistics."""
+    dataset_key = "hotpotqa" if dataset_suffix.lower() in ("wiki", "hotpotqa") else dataset_suffix.lower()
+    stats = TOKEN_SKIPPING_FINAL_CACHE.get(dataset_key)
+    if not stats:
+        return
+
+    rows[:] = [row for row in rows if row.method != "TokenSkipping"]
+    for ratio in ("r50", "r20"):
+        avg_final, max_final = stats[ratio]
+        rows.append(
+            MethodRunStats(
+                key=f"TokenSkipping_{ratio}",
+                method="TokenSkipping",
+                ratio=ratio,
+                subdir="hardcoded_external",
+                result_json="hardcoded: external TokenSkipping run",
+                n_samples=0,
+                em=None,
+                f1=None,
+                avg_sample_time_s=None,
+                max_sample_time_s=None,
+                avg_peak_kv_tokens=None,
+                max_peak_kv_tokens=None,
+                avg_final_kv_tokens=avg_final,
+                max_final_kv_tokens=max_final,
+            )
+        )
 
 
 def _decode_cache_len(total_len: int, prompt_len: int) -> int:
@@ -361,8 +413,8 @@ def _lookup(rows: List[MethodRunStats], method: str, ratio: str) -> Optional[Met
     return None
 
 
-def _method_tick_labels() -> List[str]:
-    return [METHOD_DISPLAY[m] for m in METHOD_ORDER]
+def _method_tick_labels(method_order: List[str]) -> List[str]:
+    return [METHOD_DISPLAY[m] for m in method_order]
 
 
 def _setup_matplotlib_style() -> None:
@@ -396,9 +448,11 @@ def _draw_method_ratio_bars(
     show_xticklabels: bool = True,
     show_ylabel: bool = True,
     xtick_rotation: float = 0,
+    method_order: Optional[List[str]] = None,
 ) -> None:
     """Grouped bars: FullKV + r50/r20 per method on one axes."""
-    n_methods = len(METHOD_ORDER)
+    methods = method_order or METHOD_ORDER
+    n_methods = len(methods)
     group_width = 0.34
     x = list(range(n_methods))
 
@@ -406,7 +460,7 @@ def _draw_method_ratio_bars(
     vals_r20: List[float] = []
     vals_full: List[float] = []
 
-    for method in METHOD_ORDER:
+    for method in methods:
         full_row = _lookup(rows, method, "full")
         r50_row = _lookup(rows, method, "r50")
         r20_row = _lookup(rows, method, "r20")
@@ -443,7 +497,7 @@ def _draw_method_ratio_bars(
         linewidth=0.6,
     )
 
-    full_idx = METHOD_ORDER.index("FullKV")
+    full_idx = methods.index("FullKV")
     if vals_full[full_idx] > 0:
         for b in (bar_r50[full_idx], bar_r20[full_idx]):
             b.set_visible(False)
@@ -460,7 +514,7 @@ def _draw_method_ratio_bars(
     ax.set_xticks(x)
     if show_xticklabels:
         labels = ax.set_xticklabels(
-            _method_tick_labels(),
+            _method_tick_labels(methods),
             rotation=xtick_rotation,
             ha="center",
             rotation_mode="anchor",
@@ -521,6 +575,7 @@ def plot_multi_dataset_grid(
     max_ylabel: str,
     output_prefix: str,
     stem: str,
+    method_order: Optional[List[str]] = None,
 ) -> None:
     """2×N grid: top row = avg, bottom row = max; one column per dataset."""
     if plt is None:
@@ -552,6 +607,7 @@ def plot_multi_dataset_grid(
             show_xticklabels=True,
             show_ylabel=(col == 0),
             xtick_rotation=12,
+            method_order=method_order,
         )
         ax_avg.set_title(display_name, fontsize=13, pad=6)
 
@@ -566,6 +622,7 @@ def plot_multi_dataset_grid(
             show_xticklabels=True,
             show_ylabel=(col == 0),
             xtick_rotation=12,
+            method_order=method_order,
         )
 
     _add_bottom_legend(fig, color_r50, color_r20, color_full, fontsize=13, y_anchor=-0.002)
@@ -595,12 +652,13 @@ def plot_combined_qwen_figures(
     )
     plot_multi_dataset_grid(
         rows_by_dataset,
-        avg_field="avg_peak_kv_tokens",
-        avg_ylabel="Avg. Peak KV Cache",
-        max_field="max_peak_kv_tokens",
-        max_ylabel="Max Peak KV Cache",
+        avg_field="avg_final_kv_tokens",
+        avg_ylabel="Avg. Final Decode KV Cache",
+        max_field="max_final_kv_tokens",
+        max_ylabel="Max Final Decode KV Cache",
         output_prefix=output_prefix,
         stem="qwen_multi_cache",
+        method_order=CACHE_METHOD_ORDER,
     )
 
 
@@ -610,8 +668,8 @@ TIME_BAR_METRICS: List[Tuple[str, str]] = [
 ]
 
 CACHE_BAR_METRICS: List[Tuple[str, str]] = [
-    ("avg_peak_kv_tokens", "Avg. Peak KV Cache"),
-    ("max_peak_kv_tokens", "Max Peak KV Cache"),
+    ("avg_final_kv_tokens", "Avg. Final Decode KV Cache"),
+    ("max_final_kv_tokens", "Max Final Decode KV Cache"),
 ]
 
 
@@ -670,6 +728,7 @@ def plot_cache_bars(
         _draw_method_ratio_bars(
             ax, rows, field, ylabel,
             color_r50=color_r50, color_r20=color_r20, color_full=color_full,
+            method_order=CACHE_METHOD_ORDER,
         )
 
     _add_bottom_legend(fig, color_r50, color_r20, color_full)
@@ -759,6 +818,7 @@ def _analyze_and_write_dataset(
     skip_individual_plots: bool = False,
 ) -> Optional[List[MethodRunStats]]:
     rows = analyze_one_run(run_dir, dataset_suffix)
+    _add_hardcoded_tokenskipping_rows(rows, dataset_suffix)
     if not rows:
         print(f"[WARN] No results for dataset={dataset_suffix}")
         return None
