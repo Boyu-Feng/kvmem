@@ -584,8 +584,8 @@ def plot_radar_single(
     output_prefix: str,
     *,
     title: Optional[str] = None,
-    labelsize: int = 24,
-    ticksize: int = 20,
+    labelsize: int = 30,
+    ticksize: int = 24,
     fill_alpha: float = 0.10,
 ) -> None:
     """One polar plot: FullKV + StepKV r50 + StepKV r20 together."""
@@ -596,7 +596,9 @@ def plot_radar_single(
     angles = np.linspace(0, 2 * np.pi, n_axes, endpoint=False).tolist()
     angles_closed = angles + angles[:1]
 
-    fig, ax = plt.subplots(figsize=(8.0, 8.0), subplot_kw={"polar": True})
+    # Keep the source canvas compact so text remains legible after two radar
+    # figures are scaled down and placed side by side in a paper column.
+    fig, ax = plt.subplots(figsize=(6.0, 6.0), subplot_kw={"polar": True})
     fig.subplots_adjust(left=0.06, right=0.94, top=0.94, bottom=0.06)
     ax.set_theta_offset(np.pi / 2)
     ax.set_theta_direction(-1)
@@ -743,12 +745,12 @@ def main() -> None:
     parser.add_argument(
         "--labelsize",
         type=int,
-        default=24,
+        default=30,
     )
     parser.add_argument(
         "--ticksize",
         type=int,
-        default=20,
+        default=24,
     )
     args = parser.parse_args()
 
