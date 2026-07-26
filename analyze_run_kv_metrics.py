@@ -586,6 +586,7 @@ def plot_multi_dataset_grid(
     output_prefix: str,
     stem: str,
     method_order: Optional[List[str]] = None,
+    figure_height: float = 6.6,
 ) -> None:
     """2×N grid: top row = avg, bottom row = max; one column per dataset."""
     if plt is None:
@@ -600,7 +601,12 @@ def plot_multi_dataset_grid(
     color_r50, color_r20, color_full = "#0072B2", "#E69F00", "#009E73"
     n_cols = len(rows_by_dataset)
 
-    fig, axes = plt.subplots(2, n_cols, figsize=(3.4 * n_cols + 1.4, 6.6), squeeze=False)
+    fig, axes = plt.subplots(
+        2,
+        n_cols,
+        figsize=(3.4 * n_cols + 1.4, figure_height),
+        squeeze=False,
+    )
 
     for col, (display_name, _suffix, rows) in enumerate(rows_by_dataset):
         ax_avg = axes[0, col]
@@ -669,6 +675,7 @@ def plot_combined_qwen_figures(
         output_prefix=output_prefix,
         stem="qwen_multi_cache",
         method_order=CACHE_METHOD_ORDER,
+        figure_height=5.2,
     )
 
 
