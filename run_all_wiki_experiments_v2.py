@@ -1428,7 +1428,7 @@ def _run_react_kv_episode(
     step_scores = {}
     step_meta = {}
     use_step_scores = bool(pruning_mode == "step_aware_h2o")
-    seen_obs_anchor_terms = set()
+    seen_anchor_terms = set()
     seen_action_args = {}
     reward_weight = float(getattr(llm, "kv_config", {}).get("step_reward_weight", 0.7))
     citation_weight = float(getattr(llm, "kv_config", {}).get("step_citation_weight", 0.3))
@@ -2397,12 +2397,19 @@ def _run_react_kv_episode(
                             if prev_action_norm:
                                 seen_action_args[prev_action_norm] = prev_action_repeat + 1
                             prev_obs_text = obs or ""
-                            prev_obs_terms = extract_anchor_terms(prev_obs_text)
-                            novelty_terms = prev_obs_terms.difference(seen_obs_anchor_terms)
-                            novelty_ratio = (len(novelty_terms) / max(1, len(prev_obs_terms))) if prev_obs_terms else 0.0
+                            prev_thought_text = thought or ""
+                            # Anchor extraction is ordered and capped at 64 terms:
+                            # prefer Observation anchors, then fill any remaining
+                            # capacity with anchors from the corresponding Thought.
+                            prev_anchor_text = "\n".join((prev_obs_text, prev_thought_text))
+                            prev_anchor_terms = extract_anchor_terms(prev_anchor_text)
+                            novelty_terms = prev_anchor_terms.difference(seen_anchor_terms)
+                            novelty_ratio = (
+                                len(novelty_terms) / max(1, len(prev_anchor_terms))
+                            ) if prev_anchor_terms else 0.0
                             if ablate_novelty:
                                 novelty_ratio = 0.0
-                            seen_obs_anchor_terms.update(prev_obs_terms)
+                            seen_anchor_terms.update(prev_anchor_terms)
                             success_flag = 1.0
                             obs_lower = prev_obs_text.lower()
                             if not ablate_success and (
@@ -2416,7 +2423,7 @@ def _run_react_kv_episode(
                             else:
                                 reward_val = success_flag + novelty_ratio - repeat_penalty * float(prev_action_repeat)
                             step_meta.setdefault(prev_step, {})
-                            step_meta[prev_step]["anchors"] = prev_obs_terms
+                            step_meta[prev_step]["anchors"] = prev_anchor_terms
                             step_meta[prev_step]["reward"] = float(reward_val)
                             step_meta[prev_step].setdefault("citation", 0.0)
                             if use_step_scores:

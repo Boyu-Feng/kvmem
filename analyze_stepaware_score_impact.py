@@ -72,7 +72,7 @@ def _rebuild_step_scores(trajectory: List[Dict[str, Any]]) -> Dict[int, Dict[str
     step_meta: Dict[int, Dict[str, Any]] = {}
     step_scores: Dict[int, float] = {}
 
-    seen_obs_anchor_terms: Set[str] = set()
+    seen_anchor_terms: Set[str] = set()
     seen_action_args: Counter = Counter()
 
     # Pass 1: reward + anchors per step from each observation.
@@ -81,16 +81,21 @@ def _rebuild_step_scores(trajectory: List[Dict[str, Any]]) -> Dict[int, Dict[str
         if step <= 0:
             continue
         obs = str(step_item.get("observation", "") or "")
+        thought = str(step_item.get("thought", "") or "")
         action_arg = str(step_item.get("action_arg", "") or "")
         action_norm = _normalize_action_arg(action_arg)
         action_repeat = seen_action_args.get(action_norm, 0) if action_norm else 0
         if action_norm:
             seen_action_args[action_norm] += 1
 
-        obs_terms = _extract_anchor_terms(obs)
-        novelty_terms = obs_terms.difference(seen_obs_anchor_terms)
-        novelty_ratio = (len(novelty_terms) / max(1, len(obs_terms))) if obs_terms else 0.0
-        seen_obs_anchor_terms.update(obs_terms)
+        # Prefer Observation anchors; if fewer than the 64-anchor cap are found,
+        # the ordered extractor fills the remaining capacity from Thought.
+        anchor_terms = _extract_anchor_terms("\n".join((obs, thought)))
+        novelty_terms = anchor_terms.difference(seen_anchor_terms)
+        novelty_ratio = (
+            len(novelty_terms) / max(1, len(anchor_terms))
+        ) if anchor_terms else 0.0
+        seen_anchor_terms.update(anchor_terms)
 
         obs_lower = obs.lower()
         success_flag = 1.0
@@ -99,7 +104,7 @@ def _rebuild_step_scores(trajectory: List[Dict[str, Any]]) -> Dict[int, Dict[str
         reward_val = success_flag + novelty_ratio - 0.3 * float(action_repeat)
 
         step_meta[step] = {
-            "anchors": obs_terms,
+            "anchors": anchor_terms,
             "reward": float(reward_val),
             "citation": 0.0,
             "observation": obs,
