@@ -669,9 +669,9 @@ def plot_combined_qwen_figures(
     plot_multi_dataset_grid(
         rows_by_dataset,
         avg_field="avg_final_kv_tokens",
-        avg_ylabel="Avg. Final Decode KV Cache",
+        avg_ylabel="Avg Cache",
         max_field="max_final_kv_tokens",
-        max_ylabel="Max Final Decode KV Cache",
+        max_ylabel="Max Cache",
         output_prefix=output_prefix,
         stem="qwen_multi_cache",
         method_order=CACHE_METHOD_ORDER,
@@ -685,8 +685,8 @@ TIME_BAR_METRICS: List[Tuple[str, str]] = [
 ]
 
 CACHE_BAR_METRICS: List[Tuple[str, str]] = [
-    ("avg_final_kv_tokens", "Avg. Final Decode KV Cache"),
-    ("max_final_kv_tokens", "Max Final Decode KV Cache"),
+    ("avg_final_kv_tokens", "Avg Cache"),
+    ("max_final_kv_tokens", "Max Cache"),
 ]
 
 
