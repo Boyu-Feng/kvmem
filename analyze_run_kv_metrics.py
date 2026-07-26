@@ -65,7 +65,7 @@ METHOD_DISPLAY = {
     "H2O": r"H$_2$O",
     "TOVA": "TOVA",
     "StepKV": "StepKV",
-    "TokenSkipping": "TokenSkipping",
+    "TokenSkipping": "TSkip",
 }
 RATIO_ORDER = ["r50", "r20", "full"]
 
