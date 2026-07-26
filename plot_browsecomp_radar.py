@@ -584,8 +584,8 @@ def plot_radar_single(
     output_prefix: str,
     *,
     title: Optional[str] = None,
-    labelsize: int = 30,
-    ticksize: int = 24,
+    labelsize: int = 42,
+    ticksize: int = 32,
     fill_alpha: float = 0.10,
 ) -> None:
     """One polar plot: FullKV + StepKV r50 + StepKV r20 together."""
@@ -596,14 +596,12 @@ def plot_radar_single(
     angles = np.linspace(0, 2 * np.pi, n_axes, endpoint=False).tolist()
     angles_closed = angles + angles[:1]
 
-    # Keep the source canvas compact so text remains legible after two radar
-    # figures are scaled down and placed side by side in a paper column.
-    fig, ax = plt.subplots(figsize=(6.0, 6.0), subplot_kw={"polar": True})
+    fig, ax = plt.subplots(figsize=(8.0, 8.0), subplot_kw={"polar": True})
     fig.subplots_adjust(left=0.06, right=0.94, top=0.94, bottom=0.06)
     ax.set_theta_offset(np.pi / 2)
     ax.set_theta_direction(-1)
     ax.set_xticks(angles)
-    ax.set_xticklabels(axis_labels, fontsize=labelsize)
+    ax.set_xticklabels(axis_labels, fontsize=labelsize, fontweight="bold")
 
     all_norm_vals = [
         float(v) for spec in series_list for v in spec["normalized"].values()
@@ -658,11 +656,11 @@ def plot_radar_single(
         loc="upper right",
         bbox_to_anchor=(1.22, 1.10),
         frameon=False,
-        fontsize=ticksize,
+        prop={"size": ticksize, "weight": "bold"},
     )
 
     if title:
-        ax.set_title(title, fontsize=labelsize + 2, pad=24)
+        ax.set_title(title, fontsize=labelsize + 2, fontweight="bold", pad=24)
 
     for ext in ("pdf", "png"):
         out = f"{output_prefix}_radar.{ext}"
@@ -745,12 +743,12 @@ def main() -> None:
     parser.add_argument(
         "--labelsize",
         type=int,
-        default=30,
+        default=42,
     )
     parser.add_argument(
         "--ticksize",
         type=int,
-        default=24,
+        default=32,
     )
     args = parser.parse_args()
 
