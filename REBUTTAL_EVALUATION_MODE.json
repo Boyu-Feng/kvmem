@@ -1,0 +1,171 @@
+{
+  "mode": "restored_original_evaluator_v1",
+  "changed_at": 1790569029.64978,
+  "user_instruction": "改回之前的评测模式，使用之前的结果",
+  "model": "Qwen2.5-7B-Instruct",
+  "seeds": [
+    233
+  ],
+  "ratios": [
+    0.2,
+    0.5
+  ],
+  "original_results": "ORIGINAL_RESULTS_REFERENCE.md",
+  "entrypoint": "run_rebuttal_legacy.py",
+  "queue": "scripts/run_rebuttal_legacy_queue.py",
+  "active_output": "results/rebuttal_20260928/legacy_baselines",
+  "original_method_main_reruns": false,
+  "retired_outputs": [
+    "results/rebuttal_20260927/controlled_v2",
+    "results/rebuttal_20260928/new_baselines"
+  ],
+  "restored_core_hashes": {
+    "run_all_wiki_experiments_v2.py": "85dcba9c5914774ea90c623974549b71843faf0bba6c0edaf1973b7de8a5b759",
+    "models/QwenLLMWithKVCache.py": "2b0403e9f4eab546a44d7a52d84c1ad7ed2e654a17e7781b348798b47e69c5ad",
+    "models/QwenLLM.py": "5f700265c6a7e726098372f273f2c26671b0933562120c6427eb74af55860a97",
+    "models/model_paths.py": "e7123e920751f5ac4e9c972b69e720dddc9b22b872b13cd4eb09463e4faf380e",
+    "kv_cache/kv_cache_manager.py": "746317d07bbfad1b5edddb4e446f9417b859a79f2c74c2f7bac8c37b84b30f1c",
+    "kv_cache/pruning_strategy.py": "b47706f03a2cfb20030a6d2fd7cdaf63b6cb4b105f38af770790df34778bb692",
+    "kv_cache/h2o_scorer.py": "faafb1d484f1e50ab343ee2c9128f3c55d9d236cc58d97e63013c0430c06ab92",
+    "token_tracker.py": "beddfeffd1f29b28197e952cd847f45b2a4df31665030c6bf8ab9182bb2df4e0",
+    "retrievers/WikiBM25Retriever.py": "17845f89b27911eb7a7251f30d9d3e5fbd0998562646db9f4e48c9614225334b"
+  },
+  "original_runtime_smoke": {
+    "stepkv": {
+      "samples": 2,
+      "status": "passed"
+    },
+    "h2o": {
+      "samples": 2,
+      "status": "passed"
+    }
+  },
+  "intentkv": "Deferred by user; do not run Phase1 or train a head",
+  "step_controls": {
+    "entrypoint": "run_rebuttal_legacy_step.py",
+    "queue": "scripts/run_rebuttal_legacy_step_queue.py",
+    "output": "results/rebuttal_20260928/legacy_step_controls",
+    "methods": [
+      "h2o_step",
+      "tova_step"
+    ],
+    "gpu": 0,
+    "change": "Only defer subsequent pruning until legacy generation and stop truncation finish; retain original first-block pruning"
+  },
+  "efficiency_supplement": {
+    "requested_for": "W3",
+    "entrypoint": "scripts/run_rebuttal_efficiency.py",
+    "queue": "scripts/run_rebuttal_efficiency_queue.py",
+    "output": "results/rebuttal_20260928/efficiency_legacy_v1",
+    "gpu": 0,
+    "model": "Qwen2.5-7B-Instruct",
+    "seed": 233,
+    "methods": [
+      "fullkv",
+      "stepkv",
+      "h2o",
+      "tova"
+    ],
+    "compressed_ratios": [
+      0.2,
+      0.5
+    ],
+    "samples": 20,
+    "clean_repeats": 2,
+    "diagnostic_replays": 1,
+    "warmup_selection_positions_1_based": [
+      501,
+      502
+    ],
+    "accuracy_results_policy": "retain original paper table; supplemental subset does not replace EM/F1",
+    "scheduling": "current GPU0 accuracy worker completes first; next accuracy job waits; auto-release when profiling finishes/fails",
+    "core_hashes_verified": {
+      "run_all_wiki_experiments_v2.py": "85dcba9c5914774ea90c623974549b71843faf0bba6c0edaf1973b7de8a5b759",
+      "models/QwenLLMWithKVCache.py": "2b0403e9f4eab546a44d7a52d84c1ad7ed2e654a17e7781b348798b47e69c5ad",
+      "models/QwenLLM.py": "5f700265c6a7e726098372f273f2c26671b0933562120c6427eb74af55860a97",
+      "models/model_paths.py": "e7123e920751f5ac4e9c972b69e720dddc9b22b872b13cd4eb09463e4faf380e",
+      "kv_cache/kv_cache_manager.py": "746317d07bbfad1b5edddb4e446f9417b859a79f2c74c2f7bac8c37b84b30f1c",
+      "kv_cache/pruning_strategy.py": "b47706f03a2cfb20030a6d2fd7cdaf63b6cb4b105f38af770790df34778bb692",
+      "kv_cache/h2o_scorer.py": "faafb1d484f1e50ab343ee2c9128f3c55d9d236cc58d97e63013c0430c06ab92",
+      "token_tracker.py": "beddfeffd1f29b28197e952cd847f45b2a4df31665030c6bf8ab9182bb2df4e0",
+      "retrievers/WikiBM25Retriever.py": "17845f89b27911eb7a7251f30d9d3e5fbd0998562646db9f4e48c9614225334b"
+    },
+    "registered_at": 1790581070.0821624
+  },
+  "multidataset_supplement": {
+    "requested_at": 1790599313.0030735,
+    "datasets": [
+      "2wiki",
+      "musique"
+    ],
+    "methods": [
+      "flowkv_style",
+      "lazyeviction",
+      "h2o_step",
+      "tova_step"
+    ],
+    "ratios": [
+      0.2,
+      0.5
+    ],
+    "samples": 500,
+    "seed": 233,
+    "main_jobs": 16,
+    "runner": "run_rebuttal_multidataset.py",
+    "queue": "scripts/run_rebuttal_multidataset_queue.py",
+    "documentation": "REBUTTAL_MULTIDATASET.md"
+  },
+  "sidequest_pilot": {
+    "paper": "https://arxiv.org/abs/2602.22603v2",
+    "scope": "untrained Qwen inference mechanism pilot, not official result reproduction",
+    "samples": 20,
+    "sample_start": 502,
+    "interval": 4,
+    "documentation": "SIDEQUEST_PILOT.md",
+    "replacement_for": "rkv",
+    "formal_comparison": "Separate untrained adaptation; independent decoder; not an official or matched-runtime legacy reproduction"
+  },
+  "rkv": "Cancelled by user 2026-09-28 in all three datasets; unstarted jobs removed with cancellation audit",
+  "sidequest_replacement": {
+    "datasets": [
+      "hotpotqa",
+      "2wiki",
+      "musique"
+    ],
+    "method": "sidequest_untrained",
+    "budget": "adaptive",
+    "samples": 500,
+    "main_jobs": 3,
+    "queue": "scripts/run_sidequest_queue.py",
+    "output": "/home/fengboyu/kvmem/results/rebuttal_20260928/sidequest_adaptive_v1",
+    "training": false,
+    "pilot_gate": "20 pairs complete and actual cursor eviction",
+    "gpu": 3
+  },
+  "thinkkv_candidate": {
+    "paper": "https://arxiv.org/html/2510.01290v2",
+    "ratios": [
+      0.2,
+      0.5
+    ],
+    "datasets": [
+      "hotpotqa",
+      "2wiki",
+      "musique"
+    ],
+    "samples": 500,
+    "main_jobs": 6,
+    "seed": 233,
+    "model": "Qwen2.5-7B-Instruct",
+    "budget_unit": "retained nonprompt trajectory tokens; quantized storage bytes reported separately",
+    "plan": "/home/fengboyu/kvmem/results/rebuttal_20260928/thinkkv_candidate_v1/experiment_plan.json",
+    "calibration": "/home/fengboyu/kvmem/results/rebuttal_20260928/thinkkv_preflight/calibration_qa20",
+    "stage": "blocked_by_calibration",
+    "main_controller": null,
+    "documentation": "THINKKV_REBUTTAL.md",
+    "calibration_samples_completed": 20,
+    "calibration_gate": "not_applicable_under_strict_calibration",
+    "eligible_layers": [],
+    "main_jobs_completed": 0
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "status": "waiting_for_previous_queue",
+  "supervisor_pid": 2378560,
+  "updated": 1790651385.9687662,
+  "total_jobs": 6,
+  "job": {
+    "dataset": "2wiki",
+    "method": "sidequest_untrained",
+    "budget": "adaptive",
+    "purpose": "smoke",
+    "samples": 2,
+    "sample_start": 500,
+    "name": "2wiki/smoke/sidequest_untrained"
+  },
+  "completed_jobs": 2,
+  "predecessor": "/home/fengboyu/kvmem/results/rebuttal_20260928/multidataset_baselines",
+  "predecessor_status": "running"
+}

@@ -1,0 +1,259 @@
+[
+  {
+    "id": "326202060bde11eba7f7acde48001122",
+    "index": 4450,
+    "num_steps": 7,
+    "sample_time": 31.766268491744995,
+    "peak_memory_mb": 178.51806640625,
+    "prompt_token_count": 357,
+    "step_remaining_tokens": [
+      357,
+      33,
+      97,
+      137,
+      206,
+      233,
+      253,
+      263
+    ],
+    "llm_stats": {
+      "prefill_time": 2.7676814556121827,
+      "decode_time": 26.860267305374144,
+      "scoring_time": 1.091686487197876,
+      "pruning_time": 0.23345208168029785,
+      "total_prune_count": 27,
+      "final_cache_len": 263
+    },
+    "em": 0.0,
+    "f1": 0.0,
+    "cache_audit": {
+      "recent_window": 32,
+      "resident_tokens": 620,
+      "bookkeeping_tokens": 620,
+      "cache_bytes": 35553280,
+      "boundary_peak_cache_bytes": 36241408,
+      "suppressed_prune_calls": 764,
+      "suppressed_prefill_probes": 6
+    }
+  },
+  {
+    "id": "7fad3adc087b11ebbd68ac1f6bf848b6",
+    "index": 4379,
+    "num_steps": 7,
+    "sample_time": 42.26470756530762,
+    "peak_memory_mb": 179.7880859375,
+    "prompt_token_count": 370,
+    "step_remaining_tokens": [
+      370,
+      33,
+      58,
+      87,
+      100,
+      147,
+      195,
+      219
+    ],
+    "llm_stats": {
+      "prefill_time": 2.3390116453170777,
+      "decode_time": 38.75509955883026,
+      "scoring_time": 0.3706495761871338,
+      "pruning_time": 0.04932880401611328,
+      "total_prune_count": 8,
+      "final_cache_len": 219
+    },
+    "em": 0.0,
+    "f1": 0.0,
+    "cache_audit": {
+      "recent_window": 32,
+      "resident_tokens": 589,
+      "bookkeeping_tokens": 589,
+      "cache_bytes": 33775616,
+      "boundary_peak_cache_bytes": 35151872,
+      "suppressed_prune_calls": 1248,
+      "suppressed_prefill_probes": 6
+    }
+  },
+  {
+    "id": "eebc066c08c411ebbd8eac1f6bf848b6",
+    "index": 181,
+    "num_steps": 7,
+    "sample_time": 39.28063631057739,
+    "peak_memory_mb": 212.8525390625,
+    "prompt_token_count": 367,
+    "step_remaining_tokens": [
+      367,
+      33,
+      84,
+      112,
+      121,
+      131,
+      162,
+      205
+    ],
+    "llm_stats": {
+      "prefill_time": 1.4461230516433716,
+      "decode_time": 34.92816622257233,
+      "scoring_time": 1.2378737926483154,
+      "pruning_time": 0.20107054710388184,
+      "total_prune_count": 32,
+      "final_cache_len": 205
+    },
+    "em": 0.0,
+    "f1": 0.0,
+    "cache_audit": {
+      "recent_window": 32,
+      "resident_tokens": 572,
+      "bookkeeping_tokens": 572,
+      "cache_bytes": 32800768,
+      "boundary_peak_cache_bytes": 35323904,
+      "suppressed_prune_calls": 1175,
+      "suppressed_prefill_probes": 6
+    }
+  },
+  {
+    "id": "217b0c620bde11eba7f7acde48001122",
+    "index": 9664,
+    "num_steps": 7,
+    "sample_time": 49.80313682556152,
+    "peak_memory_mb": 217.1796875,
+    "prompt_token_count": 356,
+    "step_remaining_tokens": [
+      356,
+      33,
+      80,
+      114,
+      170,
+      238,
+      266,
+      286
+    ],
+    "llm_stats": {
+      "prefill_time": 2.3080813407897947,
+      "decode_time": 45.21234993934631,
+      "scoring_time": 0.7615013122558594,
+      "pruning_time": 0.12410283088684082,
+      "total_prune_count": 19,
+      "final_cache_len": 286
+    },
+    "em": 0.0,
+    "f1": 0.0,
+    "cache_audit": {
+      "recent_window": 32,
+      "resident_tokens": 642,
+      "bookkeeping_tokens": 642,
+      "cache_bytes": 36814848,
+      "boundary_peak_cache_bytes": 37961728,
+      "suppressed_prune_calls": 1522,
+      "suppressed_prefill_probes": 6
+    }
+  },
+  {
+    "id": "bb8e4d040bda11eba7f7acde48001122",
+    "index": 310,
+    "num_steps": 7,
+    "sample_time": 32.89578127861023,
+    "peak_memory_mb": 233.0732421875,
+    "prompt_token_count": 358,
+    "step_remaining_tokens": [
+      358,
+      33,
+      90,
+      186,
+      233,
+      253,
+      262,
+      271
+    ],
+    "llm_stats": {
+      "prefill_time": 2.2314545154571532,
+      "decode_time": 29.282772636413576,
+      "scoring_time": 1.0700247287750244,
+      "pruning_time": 0.19169306755065918,
+      "total_prune_count": 29,
+      "final_cache_len": 271
+    },
+    "em": 0.0,
+    "f1": 0.0,
+    "cache_audit": {
+      "recent_window": 32,
+      "resident_tokens": 629,
+      "bookkeeping_tokens": 629,
+      "cache_bytes": 36069376,
+      "boundary_peak_cache_bytes": 36700160,
+      "suppressed_prune_calls": 947,
+      "suppressed_prefill_probes": 6
+    }
+  },
+  {
+    "id": "86fd761308ad11ebbd83ac1f6bf848b6",
+    "index": 7334,
+    "num_steps": 5,
+    "sample_time": 20.226245164871216,
+    "peak_memory_mb": 180.80712890625,
+    "prompt_token_count": 359,
+    "step_remaining_tokens": [
+      359,
+      33,
+      63,
+      124,
+      223,
+      272
+    ],
+    "llm_stats": {
+      "prefill_time": 1.634902811050415,
+      "decode_time": 16.64686026573181,
+      "scoring_time": 0.41107821464538574,
+      "pruning_time": 0.06712794303894043,
+      "total_prune_count": 10,
+      "final_cache_len": 272
+    },
+    "em": 0.0,
+    "f1": 0.0,
+    "cache_audit": {
+      "recent_window": 32,
+      "resident_tokens": 631,
+      "bookkeeping_tokens": 631,
+      "cache_bytes": 36184064,
+      "boundary_peak_cache_bytes": 39051264,
+      "suppressed_prune_calls": 489,
+      "suppressed_prefill_probes": 4
+    }
+  },
+  {
+    "id": "66b49bda0bda11eba7f7acde48001122",
+    "index": 11612,
+    "num_steps": 7,
+    "sample_time": 31.34856390953064,
+    "peak_memory_mb": 185.03125,
+    "prompt_token_count": 363,
+    "step_remaining_tokens": [
+      363,
+      33,
+      89,
+      166,
+      227,
+      236,
+      262,
+      274
+    ],
+    "llm_stats": {
+      "prefill_time": 1.9602863073349,
+      "decode_time": 28.188833546638488,
+      "scoring_time": 0.9438087940216064,
+      "pruning_time": 0.1578044891357422,
+      "total_prune_count": 25,
+      "final_cache_len": 274
+    },
+    "em": 0.0,
+    "f1": 0.0,
+    "cache_audit": {
+      "recent_window": 32,
+      "resident_tokens": 637,
+      "bookkeeping_tokens": 637,
+      "cache_bytes": 36528128,
+      "boundary_peak_cache_bytes": 37330944,
+      "suppressed_prune_calls": 913,
+      "suppressed_prefill_probes": 6
+    }
+  }
+]

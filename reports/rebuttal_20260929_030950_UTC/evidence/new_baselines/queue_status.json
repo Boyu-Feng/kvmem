@@ -1,0 +1,20 @@
+{
+  "status": "stopped_by_user_protocol_restore",
+  "supervisor_pid": 1991360,
+  "updated": 1790566112.5283427,
+  "total_jobs": 12,
+  "job": {
+    "method": "flowkv_style",
+    "purpose": "main",
+    "samples": 500,
+    "sample_start": 0,
+    "seed": 233,
+    "ratio": 0.2,
+    "name": "flowkv_style/seed233/r20/flowkv_style"
+  },
+  "completed_jobs": 2,
+  "child_pid": 1983725,
+  "adopted_worker": true,
+  "stopped_at": 1790568150.0146995,
+  "reason": "User requested original evaluation mode and retention of original paper results"
+}

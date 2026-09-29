@@ -1,0 +1,69 @@
+{
+  "protocol": "thinkkv_qa_calibration_preflight_v1",
+  "paper": "https://arxiv.org/html/2510.01290v2",
+  "original_source_hashes": {
+    "run_all_wiki_experiments_v2.py": "85dcba9c5914774ea90c623974549b71843faf0bba6c0edaf1973b7de8a5b759",
+    "models/QwenLLMWithKVCache.py": "2b0403e9f4eab546a44d7a52d84c1ad7ed2e654a17e7781b348798b47e69c5ad",
+    "models/QwenLLM.py": "5f700265c6a7e726098372f273f2c26671b0933562120c6427eb74af55860a97",
+    "models/model_paths.py": "e7123e920751f5ac4e9c972b69e720dddc9b22b872b13cd4eb09463e4faf380e",
+    "kv_cache/kv_cache_manager.py": "746317d07bbfad1b5edddb4e446f9417b859a79f2c74c2f7bac8c37b84b30f1c",
+    "kv_cache/pruning_strategy.py": "b47706f03a2cfb20030a6d2fd7cdaf63b6cb4b105f38af770790df34778bb692",
+    "kv_cache/h2o_scorer.py": "faafb1d484f1e50ab343ee2c9128f3c55d9d236cc58d97e63013c0430c06ab92",
+    "token_tracker.py": "beddfeffd1f29b28197e952cd847f45b2a4df31665030c6bf8ab9182bb2df4e0",
+    "retrievers/WikiBM25Retriever.py": "17845f89b27911eb7a7251f30d9d3e5fbd0998562646db9f4e48c9614225334b"
+  },
+  "source_sha256": "53d43557f435ffc5615b3031f17a17b20146434b6bb6a510126fea376d872dc9",
+  "samples": 20,
+  "sample_start": 522,
+  "ids": [
+    "5a7380e055429908901be2d6",
+    "5a7cb84a554299683c1c6350",
+    "5a7666095542992d0ec060db",
+    "5a7b73ad5542997c3ec9718c",
+    "5abccb235542996583600497",
+    "5adecc7755429975fa854f9d",
+    "5a7b60605542995eb53be931",
+    "5ac507725542994611c8b32a",
+    "5abe731255429965af743f0e",
+    "5ae4ce835542990ba0bbb14d",
+    "5ab2b2a7554299295394681d",
+    "5ae1054055429920d5234284",
+    "5a8ec6fd55429917b4a5bdc1",
+    "5ae3f7575542995dadf24277",
+    "5a825bb455429940e5e1a874",
+    "5add4dd35542992ae4cec507",
+    "5a74bdce55429929fddd84e1",
+    "5a799dfb5542994bb9457029",
+    "5a81711455429938b614233e",
+    "5a85d4395542996432c570f5"
+  ],
+  "seed": 233,
+  "assets": {
+    "model": {
+      "repo": "Qwen/Qwen2.5-7B-Instruct",
+      "revision": "a09a35458c702b33eeacc393d103063234e8bc28",
+      "path": "/data/experiment/fengboyu/stepkv/models/Qwen2.5-7B-Instruct",
+      "elapsed_seconds": 509.6713626384735
+    },
+    "data": {
+      "hotpotqa": {
+        "repo": "hotpotqa/hotpot_qa",
+        "revision": "1908d6afbbead072334abe2965f91bd2709910ab",
+        "path": "/data/experiment/fengboyu/stepkv/datasets/hotpotqa"
+      },
+      "longrag": {
+        "repo": "TIGER-Lab/LongRAG",
+        "revision": "d3983d83a3bf90cd3c489303fe392f0a426b3b73",
+        "path": "/data/experiment/fengboyu/stepkv/datasets/longrag"
+      },
+      "wiki_index": "/data/experiment/fengboyu/stepkv/wiki_index",
+      "elapsed_seconds": 813.5351002216339
+    }
+  },
+  "torch": "2.7.0+cu126",
+  "transformers": "5.0.0",
+  "scope": "Compatibility check using held-out QA; paper uses 100 s1K prompts and reasoning models",
+  "runtime": "Original FullKV generator and attention output; read-only real-decode-query observer",
+  "sparsity": "Paper C.2 GQA logit max pooling, softmax, mean across groups, fraction below 1% row max",
+  "no_weight_training": true
+}

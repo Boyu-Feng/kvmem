@@ -1,0 +1,2 @@
+# Preserve upstream reference bytes (including whitespace) for frozen SHA256 checks.
+rebuttal/adapters/lazyeviction/vendor/lazyeviction_reference/*.py -whitespace -text

@@ -1,0 +1,18 @@
+{
+  "status": "running",
+  "supervisor_pid": 2374064,
+  "updated": 1790643932.6163647,
+  "total_jobs": 16,
+  "job": {
+    "dataset": "2wiki",
+    "method": "flowkv_style",
+    "purpose": "main",
+    "samples": 500,
+    "sample_start": 0,
+    "ratio": 0.2,
+    "seed": 233,
+    "name": "2wiki/flowkv_style/seed233/r20/flowkv_style"
+  },
+  "completed_jobs": 2,
+  "child_pid": 2862033
+}

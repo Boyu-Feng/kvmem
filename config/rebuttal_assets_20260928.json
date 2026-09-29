@@ -1,0 +1,52 @@
+{
+  "model": {
+    "repo": "Qwen/Qwen2.5-7B-Instruct",
+    "revision": "a09a35458c702b33eeacc393d103063234e8bc28",
+    "path": "/data/experiment/fengboyu/stepkv/models/Qwen2.5-7B-Instruct",
+    "elapsed_seconds": 509.6713626384735
+  },
+  "data": {
+    "hotpotqa": {
+      "repo": "hotpotqa/hotpot_qa",
+      "revision": "1908d6afbbead072334abe2965f91bd2709910ab",
+      "path": "/data/experiment/fengboyu/stepkv/datasets/hotpotqa"
+    },
+    "longrag": {
+      "repo": "TIGER-Lab/LongRAG",
+      "revision": "d3983d83a3bf90cd3c489303fe392f0a426b3b73",
+      "path": "/data/experiment/fengboyu/stepkv/datasets/longrag"
+    },
+    "wiki_index": "/data/experiment/fengboyu/stepkv/wiki_index",
+    "elapsed_seconds": 813.5351002216339
+  },
+  "additional_datasets": {
+    "2wiki": {
+      "dataset": "2wiki",
+      "repository": "voidful/2WikiMultihopQA",
+      "revision": "16852fde9d85cba158cf7e6517e7a3f9415a28c0",
+      "split": "dev",
+      "url": "https://huggingface.co/datasets/voidful/2WikiMultihopQA/resolve/16852fde9d85cba158cf7e6517e7a3f9415a28c0/dev.json",
+      "raw_path": "/data/experiment/fengboyu/stepkv/datasets/2wiki/dev.json",
+      "raw_sha256": "48b9bdc69654dc580fda5f935a48b88cb89f11887587310af60d406c8d0111a6",
+      "path": "/data/experiment/fengboyu/stepkv/datasets/2wiki/normalized_dev.json",
+      "sha256": "a23bfc850065b33c6e7c9403da5d42cb17974dcaa41a4df4fe24b577fcf9fb4c",
+      "rows": 12576,
+      "normalizer": "run_all_2wiki_experiments_v2._load_2wiki_from_local",
+      "normalizer_sha256": "620502fae857c1e68070907e254febb046136ae1ddc716c49bb552a03ec8c550"
+    },
+    "musique": {
+      "dataset": "musique",
+      "repository": "dgslibisey/MuSiQue",
+      "revision": "c8f4f8c9465fb69d31a8eae894c3fd509c4ca321",
+      "split": "dev",
+      "url": "https://huggingface.co/datasets/dgslibisey/MuSiQue/resolve/c8f4f8c9465fb69d31a8eae894c3fd509c4ca321/musique_ans_v1.0_dev.jsonl",
+      "raw_path": "/data/experiment/fengboyu/stepkv/datasets/musique/musique_ans_v1.0_dev.jsonl",
+      "raw_sha256": "15fa63794d18a94ce12411aca6e2327e65b6e83b0b1490efab3f1962e48abf3b",
+      "path": "/data/experiment/fengboyu/stepkv/datasets/musique/normalized_dev.json",
+      "sha256": "0203959fcd5df30a49fcdd6e3aa6c268eb38f286c6af339dbf2284f596156b16",
+      "rows": 2417,
+      "normalizer": "run_all_musique_experiments_v2._load_musique_from_local",
+      "normalizer_sha256": "ccb86f838584f398d2dd044977b82f65eccc7cf67b15f8ee09fa6969fc05281f"
+    }
+  }
+}

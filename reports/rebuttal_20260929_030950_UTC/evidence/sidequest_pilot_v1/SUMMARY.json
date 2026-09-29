@@ -1,0 +1,32 @@
+{
+  "status": "complete",
+  "paired_samples": 20,
+  "expected_pairs": 20,
+  "arms": {
+    "fullkv_pilot": {
+      "n": 20,
+      "em": 25.0,
+      "f1": 32.291666666666664,
+      "completion_rate": 0.5,
+      "mean_peak_main_kv_MiB": 52.16640625,
+      "mean_episode_seconds": 8.434821978001855,
+      "auxiliary_calls": 0,
+      "invalid_commands": 0,
+      "applied_deletion_events": 0,
+      "removed_tokens": 0
+    },
+    "sidequest_untrained": {
+      "n": 20,
+      "em": 25.0,
+      "f1": 32.291666666666664,
+      "completion_rate": 0.55,
+      "mean_peak_main_kv_MiB": 47.148828125,
+      "mean_episode_seconds": 8.561996652407107,
+      "auxiliary_calls": 11,
+      "invalid_commands": 1,
+      "applied_deletion_events": 9,
+      "removed_tokens": 2019
+    }
+  },
+  "scope": "Untrained Qwen pilot; not paper reproduction or legacy-table accuracy/efficiency evidence"
+}

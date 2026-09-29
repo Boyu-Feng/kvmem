@@ -1,0 +1,74 @@
+{
+  "protocol": "sidequest_untrained_qwen_pilot_v1",
+  "paper": "https://arxiv.org/abs/2602.22603v2",
+  "trained": false,
+  "assets": {
+    "model": {
+      "repo": "Qwen/Qwen2.5-7B-Instruct",
+      "revision": "a09a35458c702b33eeacc393d103063234e8bc28",
+      "path": "/data/experiment/fengboyu/stepkv/models/Qwen2.5-7B-Instruct",
+      "elapsed_seconds": 509.6713626384735
+    },
+    "data": {
+      "hotpotqa": {
+        "repo": "hotpotqa/hotpot_qa",
+        "revision": "1908d6afbbead072334abe2965f91bd2709910ab",
+        "path": "/data/experiment/fengboyu/stepkv/datasets/hotpotqa"
+      },
+      "longrag": {
+        "repo": "TIGER-Lab/LongRAG",
+        "revision": "d3983d83a3bf90cd3c489303fe392f0a426b3b73",
+        "path": "/data/experiment/fengboyu/stepkv/datasets/longrag"
+      },
+      "wiki_index": "/data/experiment/fengboyu/stepkv/wiki_index",
+      "elapsed_seconds": 813.5351002216339
+    }
+  },
+  "original_source_hashes": {
+    "run_all_wiki_experiments_v2.py": "85dcba9c5914774ea90c623974549b71843faf0bba6c0edaf1973b7de8a5b759",
+    "models/QwenLLMWithKVCache.py": "2b0403e9f4eab546a44d7a52d84c1ad7ed2e654a17e7781b348798b47e69c5ad",
+    "models/QwenLLM.py": "5f700265c6a7e726098372f273f2c26671b0933562120c6427eb74af55860a97",
+    "models/model_paths.py": "e7123e920751f5ac4e9c972b69e720dddc9b22b872b13cd4eb09463e4faf380e",
+    "kv_cache/kv_cache_manager.py": "746317d07bbfad1b5edddb4e446f9417b859a79f2c74c2f7bac8c37b84b30f1c",
+    "kv_cache/pruning_strategy.py": "b47706f03a2cfb20030a6d2fd7cdaf63b6cb4b105f38af770790df34778bb692",
+    "kv_cache/h2o_scorer.py": "faafb1d484f1e50ab343ee2c9128f3c55d9d236cc58d97e63013c0430c06ab92",
+    "token_tracker.py": "beddfeffd1f29b28197e952cd847f45b2a4df31665030c6bf8ab9182bb2df4e0",
+    "retrievers/WikiBM25Retriever.py": "17845f89b27911eb7a7251f30d9d3e5fbd0998562646db9f4e48c9614225334b"
+  },
+  "sources": {
+    "scripts/run_sidequest_pilot.py": "da17dfee56f6996a36bef48bf1ef4a83529583a5d17780db4e63038e45e910eb",
+    "scripts/sidequest_runtime.py": "c62216233de22472a50b3e7ebfea0fe771b181541c92c6ed2967f1a4897e6510",
+    "models/RebuttalLLM.py": "04089494e5a0ea1a839feb2c43d649d8ed6bc3d408de3c00b8bd314e33166ab6",
+    "token_tracker.py": "beddfeffd1f29b28197e952cd847f45b2a4df31665030c6bf8ab9182bb2df4e0"
+  },
+  "ids": [
+    "5ab7c3df5542993667794003",
+    "5a73235c5542994cef4bc475",
+    "5ab29b07554299194fa93440",
+    "5a8a367a55429930ff3c0d03",
+    "5abe87cb5542993f32c2a156",
+    "5ab94ade554299743d22eac7",
+    "5a7ce0bc55429909bec76863",
+    "5a8f97305542997ba9cb32e3",
+    "5a90991d5542990a9849366b",
+    "5a7d54165542995f4f402256",
+    "5a7744555542994aec3b725b",
+    "5a8753d95542994846c1cd63",
+    "5ac1ff2255429964131be2b3",
+    "5ac0d9a35542992a796ded90",
+    "5ae7376f5542992ae0d163d2",
+    "5abb8a9b5542996cc5e4a016",
+    "5adfb4b8554299603e418381",
+    "5a88981c554299206df2b307",
+    "5a8de02b554299068b959e13",
+    "5ab9788155429970cfb8eb1a"
+  ],
+  "seed": 233,
+  "sample_start": 502,
+  "max_steps": 7,
+  "interval": 4,
+  "aux_max_tokens": 128,
+  "decoding": "shared independent greedy loop; logical RoPE; same cursor labels in both arms",
+  "torch": "2.7.0+cu126",
+  "transformers": "5.0.0"
+}

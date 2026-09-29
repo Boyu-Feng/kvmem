@@ -1,0 +1,54 @@
+{
+  "status": "validated",
+  "method": "h2o_step",
+  "created_utc": "2026-09-28T04:29:07.452504+00:00",
+  "tests": {
+    "command": "OMP_NUM_THREADS=2 /home/fengboyu/kvmem/.runtime/rebuttal/bin/python -m pytest -q tests/test_legacy_step.py",
+    "result": "9 passed in 6.69s",
+    "gpu_used": false,
+    "checks": [
+      "nine snapshot core files byte-identical",
+      "original decode/manual token loop/EOS probe/stop crop inherited",
+      "no-eviction exact output/KV/tracker parity and generation_config unchanged",
+      "first generation exact original output/KV/pruning history at ratios 0.2 and 0.5",
+      "later pruning and fresh EOS scoring only after original stop crop",
+      "post-stop selected KV matches original batch and top-up selector at ratios 0.2 and 0.5",
+      "empty generation still prunes completed observation",
+      "exception clears deferred flag without pruning partial block",
+      "sidecar audit, original window floor and reset"
+    ]
+  },
+  "original_source_hashes": {
+    "run_all_wiki_experiments_v2.py": "85dcba9c5914774ea90c623974549b71843faf0bba6c0edaf1973b7de8a5b759",
+    "models/QwenLLMWithKVCache.py": "2b0403e9f4eab546a44d7a52d84c1ad7ed2e654a17e7781b348798b47e69c5ad",
+    "models/QwenLLM.py": "5f700265c6a7e726098372f273f2c26671b0933562120c6427eb74af55860a97",
+    "models/model_paths.py": "e7123e920751f5ac4e9c972b69e720dddc9b22b872b13cd4eb09463e4faf380e",
+    "kv_cache/kv_cache_manager.py": "746317d07bbfad1b5edddb4e446f9417b859a79f2c74c2f7bac8c37b84b30f1c",
+    "kv_cache/pruning_strategy.py": "b47706f03a2cfb20030a6d2fd7cdaf63b6cb4b105f38af770790df34778bb692",
+    "kv_cache/h2o_scorer.py": "faafb1d484f1e50ab343ee2c9128f3c55d9d236cc58d97e63013c0430c06ab92",
+    "token_tracker.py": "beddfeffd1f29b28197e952cd847f45b2a4df31665030c6bf8ab9182bb2df4e0",
+    "retrievers/WikiBM25Retriever.py": "17845f89b27911eb7a7251f30d9d3e5fbd0998562646db9f4e48c9614225334b"
+  },
+  "source_hashes": {
+    "run_all_wiki_experiments_v2.py": "85dcba9c5914774ea90c623974549b71843faf0bba6c0edaf1973b7de8a5b759",
+    "token_tracker.py": "beddfeffd1f29b28197e952cd847f45b2a4df31665030c6bf8ab9182bb2df4e0",
+    "models/LegacyBaseline.py": "85c115b08674681726427a58267389f26c9bb6a25b72c6b89b1d1ce350a07cf6",
+    "models/QwenLLM.py": "5f700265c6a7e726098372f273f2c26671b0933562120c6427eb74af55860a97",
+    "models/QwenLLMWithKVCache.py": "2b0403e9f4eab546a44d7a52d84c1ad7ed2e654a17e7781b348798b47e69c5ad",
+    "models/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "models/model_paths.py": "e7123e920751f5ac4e9c972b69e720dddc9b22b872b13cd4eb09463e4faf380e",
+    "kv_cache/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "kv_cache/anchor_utils.py": "43afb24ccf61256acba3d63050e8ea5bb96bedbc0a1e5ee534bd8d017e8b25a6",
+    "kv_cache/h2o_scorer.py": "faafb1d484f1e50ab343ee2c9128f3c55d9d236cc58d97e63013c0430c06ab92",
+    "kv_cache/kv_cache_manager.py": "746317d07bbfad1b5edddb4e446f9417b859a79f2c74c2f7bac8c37b84b30f1c",
+    "kv_cache/ours.py": "ec91c8dee82d746bb05f199e5589467b9ea6fd2e534e1fac571293ecf6f8c2d4",
+    "kv_cache/position_remapper.py": "562b2bc8afc30bb5418bbd2004a33357f667b18251f8b318724f0b97f8f1a5e4",
+    "kv_cache/pruning_strategy.py": "b47706f03a2cfb20030a6d2fd7cdaf63b6cb4b105f38af770790df34778bb692",
+    "kv_cache/step_interrupt.py": "9329aa4a313d8e5c8ea347fca7eb1d0e98607647a8c2aa5bee702748231dc4a1",
+    "retrievers/BM25Retriever.py": "4b823990fb819a9151b2e9af358dd2c8bdce1e5e19aa333575cc83aaef66283e",
+    "retrievers/BrowseCompBM25Retriever.py": "c99916161dc551bf9e9bd0b16c5004a55944d09ed5821ee834e5bc3f533ec26d",
+    "retrievers/WebSearchRetriever.py": "eaa40ee71b42d1b63dedd56d1c01bd2a74e065b69a45cdb834c2537c03c43568",
+    "retrievers/WikiBM25Retriever.py": "17845f89b27911eb7a7251f30d9d3e5fbd0998562646db9f4e48c9614225334b",
+    "retrievers/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  }
+}

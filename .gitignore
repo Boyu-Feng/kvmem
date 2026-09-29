@@ -22,3 +22,13 @@ figures/
 __pycache__/
 .ipynb_checkpoints/
 .DS_Store
+
+# Isolated rebuttal environment (do not modify shared Python environments).
+.runtime/
+.pytest_cache/
+
+# Local credentials and runtime logs; publish curated snapshots under reports/.
+.env
+.env.*
+!.env.example
+*.log

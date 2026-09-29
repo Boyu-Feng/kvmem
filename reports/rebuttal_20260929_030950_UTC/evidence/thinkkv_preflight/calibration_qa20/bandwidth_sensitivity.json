@@ -1,0 +1,135 @@
+{
+  "status": "diagnostic_only_not_used_for_inference",
+  "prompts": 13,
+  "sample_ids": [
+    "5a7380e055429908901be2d6",
+    "5a7cb84a554299683c1c6350",
+    "5a7666095542992d0ec060db",
+    "5a7b73ad5542997c3ec9718c",
+    "5abccb235542996583600497",
+    "5adecc7755429975fa854f9d",
+    "5a7b60605542995eb53be931",
+    "5ac507725542994611c8b32a",
+    "5abe731255429965af743f0e",
+    "5ae4ce835542990ba0bbb14d",
+    "5ab2b2a7554299295394681d",
+    "5ae1054055429920d5234284",
+    "5a8ec6fd55429917b4a5bdc1"
+  ],
+  "results": [
+    {
+      "bandwidth": 0.1,
+      "common_layers": [],
+      "three_mode_layer_counts": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "bandwidth": 0.2,
+      "common_layers": [],
+      "three_mode_layer_counts": [
+        13,
+        9,
+        7,
+        12,
+        10,
+        9,
+        11,
+        7,
+        7,
+        10,
+        13,
+        6,
+        7
+      ]
+    },
+    {
+      "bandwidth": 0.3,
+      "common_layers": [],
+      "three_mode_layer_counts": [
+        3,
+        1,
+        7,
+        3,
+        7,
+        8,
+        10,
+        4,
+        3,
+        3,
+        7,
+        4,
+        5
+      ]
+    },
+    {
+      "bandwidth": 0.5,
+      "common_layers": [],
+      "three_mode_layer_counts": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "bandwidth": "scott",
+      "common_layers": [],
+      "three_mode_layer_counts": [
+        1,
+        1,
+        5,
+        1,
+        1,
+        7,
+        4,
+        1,
+        1,
+        1,
+        4,
+        4,
+        1
+      ]
+    },
+    {
+      "bandwidth": "silverman",
+      "common_layers": [],
+      "three_mode_layer_counts": [
+        1,
+        1,
+        5,
+        0,
+        0,
+        5,
+        3,
+        1,
+        1,
+        1,
+        3,
+        4,
+        0
+      ]
+    }
+  ]
+}
