@@ -124,6 +124,7 @@ def export(source, destination):
 
     for rel in ("sidequest_pilot_v1/SUMMARY.json", "sidequest_pilot_v1/RETENTION_SUMMARY.json",
                 "sidequest_pilot_v1/manifest.json", "sidequest_pilot_v1/status.json",
+                "sidequest_adaptive_v1/hotpotqa/main/sidequest_untrained/RETENTION_SUMMARY.json",
                 "thinkkv_candidate_v1/status.json", "thinkkv_candidate_v1/experiment_plan.json",
                 "thinkkv_preflight/calibration_qa20/calibration.json", "thinkkv_preflight/calibration_qa20/manifest.json",
                 "thinkkv_preflight/calibration_qa20/bandwidth_sensitivity.json",

@@ -1,0 +1,21 @@
+{
+  "status": "blocked_by_calibration",
+  "updated": 1790617457.7530704,
+  "calibration_saved": 20,
+  "calibration_expected": 20,
+  "calibration_status": {
+    "status": "complete",
+    "gate_status": "not_applicable_under_strict_calibration",
+    "pid": 2590487,
+    "updated": 1790617446.722447,
+    "samples": 20
+  },
+  "calibration_gate": "not_applicable_under_strict_calibration",
+  "eligible_layers": [],
+  "required_layers": 4,
+  "completed_main_jobs": 0,
+  "planned_main_jobs": 6,
+  "main_runner": null,
+  "main_controller": null,
+  "reason": "Fewer than four layers show exactly three KDE modes on every calibration prompt"
+}

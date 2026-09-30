@@ -1,0 +1,18 @@
+{
+  "status": "running",
+  "supervisor_pid": 2374064,
+  "updated": 1790743619.013669,
+  "total_jobs": 16,
+  "job": {
+    "dataset": "musique",
+    "method": "flowkv_style",
+    "purpose": "main",
+    "samples": 500,
+    "sample_start": 0,
+    "ratio": 0.5,
+    "seed": 233,
+    "name": "musique/flowkv_style/seed233/r50/flowkv_style"
+  },
+  "completed_jobs": 11,
+  "child_pid": 2675321
+}

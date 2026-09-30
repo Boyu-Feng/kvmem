@@ -1,0 +1,145 @@
+{
+  "request": "用户要求取消 R-KV，改成 SideQuest",
+  "at": 1790599393.8988702,
+  "old_status": {
+    "status": "running",
+    "supervisor_pid": 2026174,
+    "updated": 1790587760.7361126,
+    "total_jobs": 12,
+    "job": {
+      "method": "flowkv_style",
+      "purpose": "main",
+      "samples": 500,
+      "sample_start": 0,
+      "ratio": 0.5,
+      "seed": 233,
+      "name": "flowkv_style/seed233/r50/flowkv_style"
+    },
+    "completed_jobs": 3,
+    "child_pid": 2234799
+  },
+  "old_plan": {
+    "runtime": "restored_original_evaluator_v1",
+    "jobs": [
+      {
+        "method": "flowkv_style",
+        "purpose": "smoke",
+        "samples": 2,
+        "sample_start": 500,
+        "ratio": 0.2,
+        "seed": 233,
+        "name": "flowkv_style/smoke/r20/flowkv_style"
+      },
+      {
+        "method": "flowkv_style",
+        "purpose": "smoke",
+        "samples": 2,
+        "sample_start": 500,
+        "ratio": 0.5,
+        "seed": 233,
+        "name": "flowkv_style/smoke/r50/flowkv_style"
+      },
+      {
+        "method": "flowkv_style",
+        "purpose": "main",
+        "samples": 500,
+        "sample_start": 0,
+        "ratio": 0.2,
+        "seed": 233,
+        "name": "flowkv_style/seed233/r20/flowkv_style"
+      },
+      {
+        "method": "flowkv_style",
+        "purpose": "main",
+        "samples": 500,
+        "sample_start": 0,
+        "ratio": 0.5,
+        "seed": 233,
+        "name": "flowkv_style/seed233/r50/flowkv_style"
+      },
+      {
+        "method": "rkv",
+        "purpose": "smoke",
+        "samples": 2,
+        "sample_start": 500,
+        "ratio": 0.2,
+        "seed": 233,
+        "name": "rkv/smoke/r20/rkv"
+      },
+      {
+        "method": "rkv",
+        "purpose": "smoke",
+        "samples": 2,
+        "sample_start": 500,
+        "ratio": 0.5,
+        "seed": 233,
+        "name": "rkv/smoke/r50/rkv"
+      },
+      {
+        "method": "rkv",
+        "purpose": "main",
+        "samples": 500,
+        "sample_start": 0,
+        "ratio": 0.2,
+        "seed": 233,
+        "name": "rkv/seed233/r20/rkv"
+      },
+      {
+        "method": "rkv",
+        "purpose": "main",
+        "samples": 500,
+        "sample_start": 0,
+        "ratio": 0.5,
+        "seed": 233,
+        "name": "rkv/seed233/r50/rkv"
+      },
+      {
+        "method": "lazyeviction",
+        "purpose": "smoke",
+        "samples": 2,
+        "sample_start": 500,
+        "ratio": 0.2,
+        "seed": 233,
+        "name": "lazyeviction/smoke/r20/lazyeviction"
+      },
+      {
+        "method": "lazyeviction",
+        "purpose": "smoke",
+        "samples": 2,
+        "sample_start": 500,
+        "ratio": 0.5,
+        "seed": 233,
+        "name": "lazyeviction/smoke/r50/lazyeviction"
+      },
+      {
+        "method": "lazyeviction",
+        "purpose": "main",
+        "samples": 500,
+        "sample_start": 0,
+        "ratio": 0.2,
+        "seed": 233,
+        "name": "lazyeviction/seed233/r20/lazyeviction"
+      },
+      {
+        "method": "lazyeviction",
+        "purpose": "main",
+        "samples": 500,
+        "sample_start": 0,
+        "ratio": 0.5,
+        "seed": 233,
+        "name": "lazyeviction/seed233/r50/lazyeviction"
+      }
+    ],
+    "gpu": 2,
+    "sources": {
+      "flowkv_style": "/data/experiment/fengboyu/stepkv/rebuttal_legacy_20260928/flowkv_source",
+      "rkv": "/data/experiment/fengboyu/stepkv/rebuttal_legacy_20260928/rkv_source",
+      "lazyeviction": "/data/experiment/fengboyu/stepkv/rebuttal_legacy_20260928/lazy_source"
+    },
+    "seeds": [
+      233
+    ],
+    "model": "Qwen2.5-7B-Instruct",
+    "original_results": "retain user-provided paper table; no original-method main reruns"
+  }
+}

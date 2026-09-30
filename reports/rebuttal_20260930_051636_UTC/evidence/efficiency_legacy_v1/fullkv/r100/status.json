@@ -1,0 +1,6 @@
+{
+  "status": "failed",
+  "pid": 2210341,
+  "updated": 1790586050.0163352,
+  "traceback": "Traceback (most recent call last):\n  File \"/home/fengboyu/kvmem/scripts/run_rebuttal_efficiency.py\", line 282, in main\n    base.run_react_kv_experiment(data, todo, retriever, MODES[args.method],\n  File \"/home/fengboyu/kvmem/run_all_wiki_experiments_v2.py\", line 1315, in run_react_kv_experiment\n    pred_answer, trajectory_log, step_timings, debug_payload = _run_react_kv_episode(\n                                                               ^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/fengboyu/kvmem/scripts/run_rebuttal_efficiency.py\", line 236, in measured_episode\n    return once(question, llm, episode_args, episode_kwargs)[0]\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/fengboyu/kvmem/scripts/run_rebuttal_efficiency.py\", line 225, in once\n    require_exclusive()\n  File \"/home/fengboyu/kvmem/scripts/run_rebuttal_efficiency.py\", line 46, in require_exclusive\n    raise RuntimeError(f\"GPU has other compute processes; timing invalid: {state}\")\nRuntimeError: GPU has other compute processes; timing invalid: {'uuid': 'GPU-233f80c8-31c4-b7d7-0c33-b827cc4a79ac', 'name': 'NVIDIA A100-SXM4-40GB', 'memory_total_MiB': 40960, 'driver': '580.178.04', 'other_compute_pids': [2211232]}\n"
+}

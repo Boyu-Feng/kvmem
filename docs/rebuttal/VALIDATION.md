@@ -1,4 +1,18 @@
-# 本次发布验证
+# 发布验证记录
+
+## 2026-09-30 结果快照
+
+验证对象：[05:16:36 UTC 快照](../../reports/rebuttal_20260930_051636_UTC/README.md)。本次只读取运行结果，生成新快照并更新发布文档；实验 runner、adapter、队列配置和原始输出均未修改。
+
+- 禁用 CUDA 运行 `pytest tests/test_rebuttal_publication.py -q`：**3 passed**。
+- 从快照逐题 JSON 独立重算 **10,206 条记录**的 EM/F1，与汇总一致；**20/27 组完成**，完成组均为 500 个唯一 ID，且与 manifest 登记集合完全一致。
+- 导出时逐组核对已完成 checkpoint 与 results 的 ID/EM/F1；未完成结果保留 `partial_not_ranked` 标识。
+- 新增保存 HotpotQA 500 题 SideQuest 保留率汇总；其 provenance 中 results 和 manifest 的 SHA256 与本次捕获的源文件哈希一致。
+- 快照共 **95 个文件、10,015,505 bytes**，最大单文件 610,109 bytes；`git diff --check` 通过。
+
+以下为上一次发布的历史验证记录，未在本次重复执行其全部测试。
+
+## 2026-09-29 代码与结果发布
 
 验证日期：2026-09-29。验证对象为本轮新增 rebuttal 代码、冻结 adapter 包和 [03:09:50 UTC 结果快照](../../reports/rebuttal_20260929_030950_UTC/README.md)。全部测试禁止 CUDA，未占用 GPU 启动模型实验。
 

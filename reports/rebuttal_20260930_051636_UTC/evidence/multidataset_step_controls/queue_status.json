@@ -1,0 +1,18 @@
+{
+  "status": "running",
+  "supervisor_pid": 2365869,
+  "updated": 1790738837.5778909,
+  "total_jobs": 16,
+  "job": {
+    "dataset": "musique",
+    "method": "tova_step",
+    "purpose": "main",
+    "samples": 500,
+    "sample_start": 0,
+    "ratio": 0.2,
+    "seed": 233,
+    "name": "musique/tova_step/seed233/r20/tova_step"
+  },
+  "completed_jobs": 14,
+  "child_pid": 2587751
+}

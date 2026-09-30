@@ -1,0 +1,270 @@
+{
+  "request": "用户要求取消 R-KV，改成 SideQuest",
+  "at": 1790599394.001297,
+  "old_status": {
+    "status": "waiting_for_previous_queue",
+    "supervisor_pid": 2365867,
+    "updated": 1790599384.6172376,
+    "total_jobs": 24,
+    "predecessor": "/home/fengboyu/kvmem/results/rebuttal_20260928/legacy_baselines",
+    "predecessor_status": "running",
+    "completed_jobs": 0
+  },
+  "old_plan": {
+    "runtime": "restored_original_evaluator_multidataset_v1",
+    "after": "/home/fengboyu/kvmem/results/rebuttal_20260928/legacy_baselines",
+    "jobs": [
+      {
+        "dataset": "2wiki",
+        "method": "flowkv_style",
+        "purpose": "smoke",
+        "samples": 2,
+        "sample_start": 500,
+        "ratio": 0.2,
+        "seed": 233,
+        "name": "2wiki/flowkv_style/smoke/r20/flowkv_style"
+      },
+      {
+        "dataset": "2wiki",
+        "method": "flowkv_style",
+        "purpose": "smoke",
+        "samples": 2,
+        "sample_start": 500,
+        "ratio": 0.5,
+        "seed": 233,
+        "name": "2wiki/flowkv_style/smoke/r50/flowkv_style"
+      },
+      {
+        "dataset": "2wiki",
+        "method": "flowkv_style",
+        "purpose": "main",
+        "samples": 500,
+        "sample_start": 0,
+        "ratio": 0.2,
+        "seed": 233,
+        "name": "2wiki/flowkv_style/seed233/r20/flowkv_style"
+      },
+      {
+        "dataset": "2wiki",
+        "method": "flowkv_style",
+        "purpose": "main",
+        "samples": 500,
+        "sample_start": 0,
+        "ratio": 0.5,
+        "seed": 233,
+        "name": "2wiki/flowkv_style/seed233/r50/flowkv_style"
+      },
+      {
+        "dataset": "2wiki",
+        "method": "rkv",
+        "purpose": "smoke",
+        "samples": 2,
+        "sample_start": 500,
+        "ratio": 0.2,
+        "seed": 233,
+        "name": "2wiki/rkv/smoke/r20/rkv"
+      },
+      {
+        "dataset": "2wiki",
+        "method": "rkv",
+        "purpose": "smoke",
+        "samples": 2,
+        "sample_start": 500,
+        "ratio": 0.5,
+        "seed": 233,
+        "name": "2wiki/rkv/smoke/r50/rkv"
+      },
+      {
+        "dataset": "2wiki",
+        "method": "rkv",
+        "purpose": "main",
+        "samples": 500,
+        "sample_start": 0,
+        "ratio": 0.2,
+        "seed": 233,
+        "name": "2wiki/rkv/seed233/r20/rkv"
+      },
+      {
+        "dataset": "2wiki",
+        "method": "rkv",
+        "purpose": "main",
+        "samples": 500,
+        "sample_start": 0,
+        "ratio": 0.5,
+        "seed": 233,
+        "name": "2wiki/rkv/seed233/r50/rkv"
+      },
+      {
+        "dataset": "2wiki",
+        "method": "lazyeviction",
+        "purpose": "smoke",
+        "samples": 2,
+        "sample_start": 500,
+        "ratio": 0.2,
+        "seed": 233,
+        "name": "2wiki/lazyeviction/smoke/r20/lazyeviction"
+      },
+      {
+        "dataset": "2wiki",
+        "method": "lazyeviction",
+        "purpose": "smoke",
+        "samples": 2,
+        "sample_start": 500,
+        "ratio": 0.5,
+        "seed": 233,
+        "name": "2wiki/lazyeviction/smoke/r50/lazyeviction"
+      },
+      {
+        "dataset": "2wiki",
+        "method": "lazyeviction",
+        "purpose": "main",
+        "samples": 500,
+        "sample_start": 0,
+        "ratio": 0.2,
+        "seed": 233,
+        "name": "2wiki/lazyeviction/seed233/r20/lazyeviction"
+      },
+      {
+        "dataset": "2wiki",
+        "method": "lazyeviction",
+        "purpose": "main",
+        "samples": 500,
+        "sample_start": 0,
+        "ratio": 0.5,
+        "seed": 233,
+        "name": "2wiki/lazyeviction/seed233/r50/lazyeviction"
+      },
+      {
+        "dataset": "musique",
+        "method": "flowkv_style",
+        "purpose": "smoke",
+        "samples": 2,
+        "sample_start": 500,
+        "ratio": 0.2,
+        "seed": 233,
+        "name": "musique/flowkv_style/smoke/r20/flowkv_style"
+      },
+      {
+        "dataset": "musique",
+        "method": "flowkv_style",
+        "purpose": "smoke",
+        "samples": 2,
+        "sample_start": 500,
+        "ratio": 0.5,
+        "seed": 233,
+        "name": "musique/flowkv_style/smoke/r50/flowkv_style"
+      },
+      {
+        "dataset": "musique",
+        "method": "flowkv_style",
+        "purpose": "main",
+        "samples": 500,
+        "sample_start": 0,
+        "ratio": 0.2,
+        "seed": 233,
+        "name": "musique/flowkv_style/seed233/r20/flowkv_style"
+      },
+      {
+        "dataset": "musique",
+        "method": "flowkv_style",
+        "purpose": "main",
+        "samples": 500,
+        "sample_start": 0,
+        "ratio": 0.5,
+        "seed": 233,
+        "name": "musique/flowkv_style/seed233/r50/flowkv_style"
+      },
+      {
+        "dataset": "musique",
+        "method": "rkv",
+        "purpose": "smoke",
+        "samples": 2,
+        "sample_start": 500,
+        "ratio": 0.2,
+        "seed": 233,
+        "name": "musique/rkv/smoke/r20/rkv"
+      },
+      {
+        "dataset": "musique",
+        "method": "rkv",
+        "purpose": "smoke",
+        "samples": 2,
+        "sample_start": 500,
+        "ratio": 0.5,
+        "seed": 233,
+        "name": "musique/rkv/smoke/r50/rkv"
+      },
+      {
+        "dataset": "musique",
+        "method": "rkv",
+        "purpose": "main",
+        "samples": 500,
+        "sample_start": 0,
+        "ratio": 0.2,
+        "seed": 233,
+        "name": "musique/rkv/seed233/r20/rkv"
+      },
+      {
+        "dataset": "musique",
+        "method": "rkv",
+        "purpose": "main",
+        "samples": 500,
+        "sample_start": 0,
+        "ratio": 0.5,
+        "seed": 233,
+        "name": "musique/rkv/seed233/r50/rkv"
+      },
+      {
+        "dataset": "musique",
+        "method": "lazyeviction",
+        "purpose": "smoke",
+        "samples": 2,
+        "sample_start": 500,
+        "ratio": 0.2,
+        "seed": 233,
+        "name": "musique/lazyeviction/smoke/r20/lazyeviction"
+      },
+      {
+        "dataset": "musique",
+        "method": "lazyeviction",
+        "purpose": "smoke",
+        "samples": 2,
+        "sample_start": 500,
+        "ratio": 0.5,
+        "seed": 233,
+        "name": "musique/lazyeviction/smoke/r50/lazyeviction"
+      },
+      {
+        "dataset": "musique",
+        "method": "lazyeviction",
+        "purpose": "main",
+        "samples": 500,
+        "sample_start": 0,
+        "ratio": 0.2,
+        "seed": 233,
+        "name": "musique/lazyeviction/seed233/r20/lazyeviction"
+      },
+      {
+        "dataset": "musique",
+        "method": "lazyeviction",
+        "purpose": "main",
+        "samples": 500,
+        "sample_start": 0,
+        "ratio": 0.5,
+        "seed": 233,
+        "name": "musique/lazyeviction/seed233/r50/lazyeviction"
+      }
+    ],
+    "gpu": 2,
+    "sources": {
+      "flowkv_style": "/data/experiment/fengboyu/stepkv/rebuttal_legacy_20260928/flowkv_source",
+      "rkv": "/data/experiment/fengboyu/stepkv/rebuttal_legacy_20260928/rkv_source",
+      "lazyeviction": "/data/experiment/fengboyu/stepkv/rebuttal_legacy_20260928/lazy_source"
+    },
+    "seeds": [
+      233
+    ],
+    "model": "Qwen2.5-7B-Instruct",
+    "original_results": "retain user-provided paper table; no original-method main reruns"
+  }
+}

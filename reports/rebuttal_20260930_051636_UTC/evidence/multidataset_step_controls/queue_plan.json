@@ -1,0 +1,176 @@
+{
+  "runtime": "restored_original_evaluator_multidataset_v1",
+  "after": "/home/fengboyu/kvmem/results/rebuttal_20260928/legacy_step_controls",
+  "jobs": [
+    {
+      "dataset": "2wiki",
+      "method": "h2o_step",
+      "purpose": "smoke",
+      "samples": 2,
+      "sample_start": 500,
+      "ratio": 0.2,
+      "seed": 233,
+      "name": "2wiki/h2o_step/smoke/r20/h2o_step"
+    },
+    {
+      "dataset": "2wiki",
+      "method": "h2o_step",
+      "purpose": "smoke",
+      "samples": 2,
+      "sample_start": 500,
+      "ratio": 0.5,
+      "seed": 233,
+      "name": "2wiki/h2o_step/smoke/r50/h2o_step"
+    },
+    {
+      "dataset": "2wiki",
+      "method": "h2o_step",
+      "purpose": "main",
+      "samples": 500,
+      "sample_start": 0,
+      "ratio": 0.2,
+      "seed": 233,
+      "name": "2wiki/h2o_step/seed233/r20/h2o_step"
+    },
+    {
+      "dataset": "2wiki",
+      "method": "h2o_step",
+      "purpose": "main",
+      "samples": 500,
+      "sample_start": 0,
+      "ratio": 0.5,
+      "seed": 233,
+      "name": "2wiki/h2o_step/seed233/r50/h2o_step"
+    },
+    {
+      "dataset": "2wiki",
+      "method": "tova_step",
+      "purpose": "smoke",
+      "samples": 2,
+      "sample_start": 500,
+      "ratio": 0.2,
+      "seed": 233,
+      "name": "2wiki/tova_step/smoke/r20/tova_step"
+    },
+    {
+      "dataset": "2wiki",
+      "method": "tova_step",
+      "purpose": "smoke",
+      "samples": 2,
+      "sample_start": 500,
+      "ratio": 0.5,
+      "seed": 233,
+      "name": "2wiki/tova_step/smoke/r50/tova_step"
+    },
+    {
+      "dataset": "2wiki",
+      "method": "tova_step",
+      "purpose": "main",
+      "samples": 500,
+      "sample_start": 0,
+      "ratio": 0.2,
+      "seed": 233,
+      "name": "2wiki/tova_step/seed233/r20/tova_step"
+    },
+    {
+      "dataset": "2wiki",
+      "method": "tova_step",
+      "purpose": "main",
+      "samples": 500,
+      "sample_start": 0,
+      "ratio": 0.5,
+      "seed": 233,
+      "name": "2wiki/tova_step/seed233/r50/tova_step"
+    },
+    {
+      "dataset": "musique",
+      "method": "h2o_step",
+      "purpose": "smoke",
+      "samples": 2,
+      "sample_start": 500,
+      "ratio": 0.2,
+      "seed": 233,
+      "name": "musique/h2o_step/smoke/r20/h2o_step"
+    },
+    {
+      "dataset": "musique",
+      "method": "h2o_step",
+      "purpose": "smoke",
+      "samples": 2,
+      "sample_start": 500,
+      "ratio": 0.5,
+      "seed": 233,
+      "name": "musique/h2o_step/smoke/r50/h2o_step"
+    },
+    {
+      "dataset": "musique",
+      "method": "h2o_step",
+      "purpose": "main",
+      "samples": 500,
+      "sample_start": 0,
+      "ratio": 0.2,
+      "seed": 233,
+      "name": "musique/h2o_step/seed233/r20/h2o_step"
+    },
+    {
+      "dataset": "musique",
+      "method": "h2o_step",
+      "purpose": "main",
+      "samples": 500,
+      "sample_start": 0,
+      "ratio": 0.5,
+      "seed": 233,
+      "name": "musique/h2o_step/seed233/r50/h2o_step"
+    },
+    {
+      "dataset": "musique",
+      "method": "tova_step",
+      "purpose": "smoke",
+      "samples": 2,
+      "sample_start": 500,
+      "ratio": 0.2,
+      "seed": 233,
+      "name": "musique/tova_step/smoke/r20/tova_step"
+    },
+    {
+      "dataset": "musique",
+      "method": "tova_step",
+      "purpose": "smoke",
+      "samples": 2,
+      "sample_start": 500,
+      "ratio": 0.5,
+      "seed": 233,
+      "name": "musique/tova_step/smoke/r50/tova_step"
+    },
+    {
+      "dataset": "musique",
+      "method": "tova_step",
+      "purpose": "main",
+      "samples": 500,
+      "sample_start": 0,
+      "ratio": 0.2,
+      "seed": 233,
+      "name": "musique/tova_step/seed233/r20/tova_step"
+    },
+    {
+      "dataset": "musique",
+      "method": "tova_step",
+      "purpose": "main",
+      "samples": 500,
+      "sample_start": 0,
+      "ratio": 0.5,
+      "seed": 233,
+      "name": "musique/tova_step/seed233/r50/tova_step"
+    }
+  ],
+  "gpu": 0,
+  "sources": {
+    "h2o_step": "/data/experiment/fengboyu/stepkv/rebuttal_legacy_20260928/h2o_step_source",
+    "tova_step": "/data/experiment/fengboyu/stepkv/rebuttal_legacy_20260928/tova_step_source"
+  },
+  "seeds": [
+    233
+  ],
+  "model": "Qwen2.5-7B-Instruct",
+  "original_results": "retain user-provided paper table; no original-method main reruns"
+}
