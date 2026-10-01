@@ -60,7 +60,7 @@ def main():
     parser.add_argument("--method", choices=[*CORE_METHODS, *EXTENSIONS], required=True)
     parser.add_argument("--source", type=Path, default=ROOT)
     parser.add_argument("--ratio", type=float, choices=[.2, .5], default=.2)
-    parser.add_argument("--seed", type=int, choices=[233], default=233)
+    parser.add_argument("--seed", type=int, choices=[233, 42, 3407], default=233)
     parser.add_argument("--samples", type=int, default=500)
     parser.add_argument("--sample-start", type=int, default=0)
     parser.add_argument("--max-steps", type=int, default=7)

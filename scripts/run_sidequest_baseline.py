@@ -65,6 +65,7 @@ def main():
     parser.add_argument('--dataset', choices=['hotpotqa', '2wiki', 'musique'], required=True)
     parser.add_argument('--purpose', choices=['smoke', 'main'], required=True)
     parser.add_argument('--sample-start', type=int, default=0)
+    parser.add_argument('--seed', type=int, choices=[233, 42, 3407], default=233)
     parser.add_argument('--interval', type=int, default=4)
     parser.add_argument('--max-steps', type=int, default=7)
     args = parser.parse_args()
@@ -94,7 +95,7 @@ def main():
                 raise RuntimeError('Dataset checksum mismatch')
             data = json.loads(data_path.read_text())
             metadata['evaluation_dataset'] = dataset_asset
-        base.RANDOM_SEED = 233
+        base.RANDOM_SEED = args.seed
         base.NUM_SAMPLES = args.sample_start + args.samples
         selected = base.select_samples(data)[args.sample_start:]
         if len(selected) != args.samples:
@@ -103,7 +104,7 @@ def main():
         manifest = dict(protocol='sidequest_untrained_qwen_baseline_v1', dataset=args.dataset, purpose=args.purpose, budget='adaptive', paper='https://arxiv.org/abs/2602.22603v2',
                         trained=False, assets=metadata, original_source_hashes=original,
                         sources={p: hashlib.sha256((ROOT / p).read_bytes()).hexdigest() for p in code},
-                        ids=[r['id'] for _, r in selected], seed=233, sample_start=args.sample_start,
+                        ids=[r['id'] for _, r in selected], seed=args.seed, sample_start=args.sample_start,
                         max_steps=args.max_steps, interval=args.interval, aux_max_tokens=128,
                         decoding='shared independent greedy loop; logical RoPE; same cursor labels in both arms',
                         torch=torch.__version__, transformers=transformers.__version__)

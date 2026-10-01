@@ -6,6 +6,7 @@
 
 - **[实验结果总表：数据集 × 方法](reports/rebuttal_20261001_053953_UTC/RESULTS.md)**：27/27 组完成，13,500 条逐题评测，包含 20%/50% 的 EM/F1。
 - **[Rebuttal 当前进展与结果](docs/rebuttal/STATUS.md)**：上传时的静态快照、完成情况及已知阻塞。
+- **[三 seed 扩展实验](docs/rebuttal/MULTISEED_20261001.md)**：新增 seed 42/3407 和 ThinKV 仅淘汰适配的运行范围、状态入口。
 - **[后续执行计划](docs/rebuttal/NEXT_STEPS.md)**：主实验完成记录、待修复的效率测量、ThinKV 单类分支和统计核验。
 - **[代码与复现说明](docs/rebuttal/REPRODUCING.md)**：冻结适配代码、环境、资产版本和启动方式。
 - **[协议边界](docs/rebuttal/PROTOCOL.md)**：预算、模型、数据划分、计时与对照范围。
