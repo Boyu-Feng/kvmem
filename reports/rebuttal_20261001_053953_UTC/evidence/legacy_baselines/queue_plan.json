@@ -1,0 +1,87 @@
+{
+  "runtime": "restored_original_evaluator_v1",
+  "jobs": [
+    {
+      "method": "flowkv_style",
+      "purpose": "smoke",
+      "samples": 2,
+      "sample_start": 500,
+      "ratio": 0.2,
+      "seed": 233,
+      "name": "flowkv_style/smoke/r20/flowkv_style"
+    },
+    {
+      "method": "flowkv_style",
+      "purpose": "smoke",
+      "samples": 2,
+      "sample_start": 500,
+      "ratio": 0.5,
+      "seed": 233,
+      "name": "flowkv_style/smoke/r50/flowkv_style"
+    },
+    {
+      "method": "flowkv_style",
+      "purpose": "main",
+      "samples": 500,
+      "sample_start": 0,
+      "ratio": 0.2,
+      "seed": 233,
+      "name": "flowkv_style/seed233/r20/flowkv_style"
+    },
+    {
+      "method": "flowkv_style",
+      "purpose": "main",
+      "samples": 500,
+      "sample_start": 0,
+      "ratio": 0.5,
+      "seed": 233,
+      "name": "flowkv_style/seed233/r50/flowkv_style"
+    },
+    {
+      "method": "lazyeviction",
+      "purpose": "smoke",
+      "samples": 2,
+      "sample_start": 500,
+      "ratio": 0.2,
+      "seed": 233,
+      "name": "lazyeviction/smoke/r20/lazyeviction"
+    },
+    {
+      "method": "lazyeviction",
+      "purpose": "smoke",
+      "samples": 2,
+      "sample_start": 500,
+      "ratio": 0.5,
+      "seed": 233,
+      "name": "lazyeviction/smoke/r50/lazyeviction"
+    },
+    {
+      "method": "lazyeviction",
+      "purpose": "main",
+      "samples": 500,
+      "sample_start": 0,
+      "ratio": 0.2,
+      "seed": 233,
+      "name": "lazyeviction/seed233/r20/lazyeviction"
+    },
+    {
+      "method": "lazyeviction",
+      "purpose": "main",
+      "samples": 500,
+      "sample_start": 0,
+      "ratio": 0.5,
+      "seed": 233,
+      "name": "lazyeviction/seed233/r50/lazyeviction"
+    }
+  ],
+  "gpu": 2,
+  "sources": {
+    "flowkv_style": "/data/experiment/fengboyu/stepkv/rebuttal_legacy_20260928/flowkv_source",
+    "lazyeviction": "/data/experiment/fengboyu/stepkv/rebuttal_legacy_20260928/lazy_source"
+  },
+  "seeds": [
+    233
+  ],
+  "model": "Qwen2.5-7B-Instruct",
+  "original_results": "retain user-provided paper table; no original-method main reruns"
+}

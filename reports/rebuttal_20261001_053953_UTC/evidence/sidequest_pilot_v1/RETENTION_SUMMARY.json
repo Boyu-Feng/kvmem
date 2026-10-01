@@ -1,0 +1,58 @@
+{
+  "schema_version": 1,
+  "created_utc": "2026-09-28T16:22:43.739617+00:00",
+  "method": "sidequest_untrained",
+  "dataset": "hotpotqa",
+  "seed": 233,
+  "trained": false,
+  "protocol": "sidequest_untrained_qwen_pilot_v1",
+  "sample_start": 502,
+  "scope": "main branch only; excludes auxiliary cache; logical denominator uses each arm own realized trajectory",
+  "metrics": {
+    "n": 20,
+    "questions_with_eviction": 9,
+    "deleted_tokens": 2019,
+    "initial_prompt_tokens": 7269,
+    "trajectory_logical_tokens": 11718,
+    "trajectory_retained_tokens": 9699,
+    "final_logical_tokens": 18987,
+    "final_resident_tokens": 16968,
+    "mean_final_trajectory_retention": 0.8689217789543364,
+    "pooled_final_trajectory_retention": 0.8277009728622632,
+    "mean_step_trajectory_retention": 0.9594367917150994,
+    "mean_final_total_retention": 0.9115572234694621,
+    "pooled_final_total_retention": 0.8936640859535472,
+    "mean_step_total_retention": 0.9733421097089251
+  },
+  "definitions": {
+    "mean_final_trajectory_retention": "mean_i((K_i_final - P_i)/(L_i_final - P_i))",
+    "pooled_final_trajectory_retention": "sum_i(K_i_final - P_i)/sum_i(L_i_final - P_i)",
+    "mean_step_trajectory_retention": "mean_i(mean_t((K_it - P_i)/(L_it - P_i)))",
+    "mean_final_total_retention": "mean_i(K_i_final/L_i_final)",
+    "pooled_final_total_retention": "sum_i(K_i_final)/sum_i(L_i_final)",
+    "mean_step_total_retention": "mean_i(mean_t(K_it/L_it))",
+    "P": "protected initial system/user/chat-template prompt tokens",
+    "K": "resident main-branch KV tokens",
+    "L": "valid logical main-branch tokens, including evicted entries, excluding cropped stop suffix and auxiliary tokens",
+    "t": "recorded post-generation boundary; not wall-clock or per-token time average",
+    "no_eviction": "all questions included; no-eviction questions contribute retention 1.0",
+    "empty_trajectory": "retention defined as 1.0 for zero valid trajectory tokens and zero deletions"
+  },
+  "provenance": {
+    "results_sha256": "e25043381b159d7b72293df1e8eb37d8ae67b46a42cff41987ca523d00edea41",
+    "manifest_sha256": "06bb4e38f5153b849d47c1aa11b489e59b969f76ec56d03adc4ac5ff163e2ca6",
+    "analysis_sha256": "b118340ae00f7220e5743a6b5fd72cfe382e92d7efd39910ae24a2478e2f6109",
+    "prompt_and_runtime_sources": {
+      "run_all_wiki_experiments_v2.py": "85dcba9c5914774ea90c623974549b71843faf0bba6c0edaf1973b7de8a5b759",
+      "models/RebuttalLLM.py": "04089494e5a0ea1a839feb2c43d649d8ed6bc3d408de3c00b8bd314e33166ab6",
+      "scripts/sidequest_runtime.py": "c62216233de22472a50b3e7ebfea0fe771b181541c92c6ed2967f1a4897e6510"
+    },
+    "tokenizer_sha256": {
+      "merges.txt": "599bab54075088774b1733fde865d5bd747cbcc7a547c5bc12610e874e26f5e3",
+      "tokenizer.json": "c0382117ea329cdf097041132f6d735924b697924d6f6fc3945713e96ce87539",
+      "tokenizer_config.json": "5b5d4f65d0acd3b2d56a35b56d374a36cbc1c8fa5cf3b3febbbfabf22f359583",
+      "vocab.json": "ca10d7e9fb3ed18575dd1e277a2579c16d108e32f27439684afa0e10b1440910"
+    },
+    "transformers": "5.0.0"
+  }
+}

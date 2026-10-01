@@ -1,0 +1,12 @@
+{
+  "status": "complete",
+  "samples": 500,
+  "expected_samples": 500,
+  "exact_match": 24.0,
+  "f1_score": 33.521215337110895,
+  "auxiliary_calls": 308,
+  "invalid_commands": 68,
+  "applied_deletion_events": 151,
+  "removed_tokens": 38183,
+  "scope": "Untrained Qwen adaptation with independent decoder; no fixed ratio; not comparable as a matched-runtime legacy baseline"
+}

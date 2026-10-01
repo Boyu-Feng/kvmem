@@ -1,5 +1,16 @@
 # 发布验证记录
 
+## 2026-10-01 完整主实验结果
+
+验证对象：[05:39:53 UTC 快照与横向结果表](../../reports/rebuttal_20261001_053953_UTC/RESULTS.md)。本次更新导出器以生成数据集为行、方法为列的 Markdown 总表，并归档全部主实验指标；原始实验输出保持不变。
+
+- `CUDA_VISIBLE_DEVICES='' OMP_NUM_THREADS=2 MKL_NUM_THREADS=2 .runtime/rebuttal/bin/python -m pytest tests/test_rebuttal_publication.py -q`：**3 passed**。
+- **27/27 组、13,500 条记录**均已完成；每组为 500 个唯一 ID，与 manifest 登记集合完全一致。
+- 从逐题 JSON 独立重算全部 EM/F1，与机器可读汇总一致；逐一核对总表 15 个方法–数据集单元格中的预算与分数，覆盖全部 27 组。
+- 导出时核对 checkpoint 与最终 results 的 ID/EM/F1；导出后复核 **242 份源文件 SHA256 和文件大小**，均未变化。导出器代码哈希与快照登记值一致。
+- 快照包含 **114 个文件、12,894,626 bytes**，最大单文件 610,109 bytes；JSON 解析、相关 Markdown 相对链接及 `git diff --check` 通过。
+- 保存 SideQuest 三个数据集的最终汇总，保留 ThinkKV 校准未通过和效率测量失败状态；未启动新的 GPU 实验。
+
 ## 2026-09-30 结果快照
 
 验证对象：[05:16:36 UTC 快照](../../reports/rebuttal_20260930_051636_UTC/README.md)。本次只读取运行结果，生成新快照并更新发布文档；实验 runner、adapter、队列配置和原始输出均未修改。

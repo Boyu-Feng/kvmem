@@ -44,6 +44,50 @@ def normalize_rows(rows, expected_ids):
     return exported
 
 
+def render_results_table(summary):
+    """Render datasets as rows and methods as columns from audited scores."""
+    dataset_labels = {"hotpotqa": "HotpotQA", "2wiki": "2WikiMultihopQA", "musique": "MuSiQue"}
+    method_labels = {"h2o_step": "H2O-step", "tova_step": "TOVA-step",
+                     "flowkv_style": "FlowKV-style", "lazyeviction": "LazyEviction",
+                     "sidequest_untrained": "SideQuest-untrained"}
+    conditions = summary["main_conditions"]
+    datasets = list(dict.fromkeys(c["dataset"] for c in conditions))
+    methods = [m for m in method_labels if any(c["method"] == m for c in conditions)]
+    methods += sorted({c["method"] for c in conditions} - set(methods))
+    lines = ["# KVMem 实验结果总表", "",
+             f"快照时间：{summary['captured_to_utc']}。",
+             f"已完成 **{summary['completed_main']}/{summary['planned_main']} 组**，"
+             f"已保存 **{summary['saved_main']:,}/{summary['expected_main']:,} 条逐题评测**。", "",
+             "模型为 Qwen2.5-7B-Instruct，抽样 seed 为 233；本轮每组计划评测 500 题。",
+             "每格为 **EM / F1（%）**；20% 和 50% 表示名义轨迹 token 保留档位。仅列已完成组的分数。", "",
+             "| 数据集 | " + " | ".join(method_labels.get(m, m) for m in methods) + " |",
+             "|---|" + "---:|" * len(methods)]
+    for dataset in datasets:
+        cells = []
+        for method in methods:
+            group = [c for c in conditions if c["dataset"] == dataset and c["method"] == method
+                     and c["status"] == "complete"]
+            group.sort(key=lambda c: (not isinstance(c["budget"], (int, float)), str(c["budget"])))
+            values = []
+            for c in group:
+                budget = f"{c['budget']:.0%}" if isinstance(c["budget"], (int, float)) else "自适应"
+                values.append(f"{budget}：{c['em_percent']:.2f} / {c['f1_percent']:.2f}")
+            cells.append("<br>".join(values) or "—")
+        lines.append("| " + dataset_labels.get(dataset, dataset) + " | " + " | ".join(cells) + " |")
+    lines += ["", "## 读表说明", "",
+              "- SideQuest-untrained 使用独立解码器、自适应预算和未微调模型；与其余方法同表展示，但不能作为等预算或等运行协议的排名。",
+              "- 20%/50% 是名义 token 比例，不是物理显存比例。LazyEviction 将 4 个原生 KV 头展开为 28 个头，实际 KV 字节需单独比较。",
+              "- 本轮只有一个抽样 seed，未计算跨 seed 标准差。所有分数均由对应逐题 EM/F1 重新计算。",
+              "- 本表覆盖本批 27 组主实验。StepKV、FullKV 等原论文数值见[历史参考表](../../ORIGINAL_RESULTS_REFERENCE.md)，未混入本轮结果。",
+              "- ThinkKV 的 6 组候选主实验和 7 条件效率补测尚未完成；未将缺失结果记作零分。逐题时间仅作诊断，不能作为独占 GPU 效率结论。", "",
+              "## 完整结果与证据", "",
+              "- [逐题指标与缓存审计](per_question/)：全部已保存主实验记录。",
+              "- [机器可读汇总](summary.json)：完整精度分数、题数、预算和状态。",
+              "- [运行配置和状态](evidence/)及[源文件 SHA256](source_bindings.json)。",
+              "- [详细快照说明](README.md)及[后续计划](../../docs/rebuttal/NEXT_STEPS.md)。"]
+    return "\n".join(lines) + "\n"
+
+
 def export(source, destination):
     if destination.exists():
         raise FileExistsError("Snapshots are immutable; choose a new output directory")
@@ -91,6 +135,9 @@ def export(source, destination):
                     artifacts[f"evidence/{prefix}/manifest.json"] = manifest
                     artifacts[f"evidence/{prefix}/status.json"] = status
                     audits = read(f"{prefix}/baseline_audit.json")
+                    run_summary = read(f"{prefix}/SUMMARY.json")
+                    if run_summary is not None:
+                        artifacts[f"evidence/{prefix}/SUMMARY.json"] = run_summary
                     if audits is not None:
                         for row in rows:
                             if row["id"] not in audits:
@@ -148,7 +195,8 @@ def export(source, destination):
                    source_git_base_commit=subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=ROOT, text=True).strip(),
                    exporter_sha256=hashlib.sha256(Path(__file__).read_bytes()).hexdigest())
     lines = ["# Rebuttal 实验快照", "", f"读取时间：{started} 至 {summary['captured_to_utc']}。",
-             "这是上传时的静态快照；在线任务继续运行。各源文件的读取时间和 SHA256 见 `source_bindings.json`。", "",
+             "这是上传时的静态快照；导出只读取源结果。各源文件的读取时间和 SHA256 见 `source_bindings.json`。", "",
+             "**[按数据集 × 方法查看结果总表](RESULTS.md)**", "",
              f"已完成 **{summary['completed_main']}/{summary['planned_main']} 组**可运行主实验；保存 **{summary['saved_main']}/{summary['expected_main']} 次题目评测**。",
              "主实验总数包含 24 组 legacy 补实验和 3 组 SideQuest 适配；不含 smoke、pilot、ThinkKV 候选和效率补测。", "",
              "## 队列进展", "", "| 队列 | 状态 | 完成主实验 | 保存题数 |", "|---|---|---:|---:|"]
@@ -174,14 +222,19 @@ def export(source, destination):
     for c in conditions:
         if c["status"] != "complete":
             lines.append(f"| {c['dataset']} | {c['method']} | {c['budget']} | {c['status']} | {c['saved']}/{c['expected']} |")
-    lines += ["", "## 已知阻塞与后续", "",
-              "- SideQuest 后两集等待 `multidataset_baselines` 整条队列完成。",
+    sidequest_queue = queues.get("sidequest_adaptive_v1", {})
+    if sidequest_queue.get("status", {}).get("status") == "complete":
+        sidequest_progress = "- SideQuest 三个数据集均已完成，各 500 题，结果已纳入本快照。"
+    else:
+        sidequest_progress = "- SideQuest 进展见上方队列表；后两集依赖 `multidataset_baselines` 整条队列完成。"
+    lines += ["", "## 已知阻塞与后续", "", sidequest_progress,
               "- ThinkKV：三类 thought 校准 20/20 完成，共同三峰层为 0，主实验 0/6；普通 LLM 单类分支尚未实现，不能据此认定方法不适用。",
               "- 效率补测：0/7，因同卡出现其他计算进程而失败；没有有效独占效率结论。",
               "- LazyEviction：4 个原生 KV 头展开至 28 个，须报告实际 KV 字节、跟踪状态及副本，不能把 slot 比例当成显存比例。",
               "- 原表逐题结果与原环境仍待溯源；原表参考值不与本轮单 seed 拼接为配对统计。", "",
               "详细执行顺序与验收条件见 [后续计划](../../docs/rebuttal/NEXT_STEPS.md)。", "",
-              "## 产物", "", "- `summary.json`：完整进度、最终/阶段指标和统计口径。",
+              "## 产物", "", "- `RESULTS.md`：数据集为行、方法为列的 EM/F1 结果总表。",
+              "- `summary.json`：完整进度、最终/阶段指标和统计口径。",
               "- `per_question/`：已保存主实验的逐题 EM/F1、诊断计时及紧凑缓存审计；不复制题目正文、答案或权重。",
               "- `evidence/`：运行 manifest、队列计划、失败状态、校准与 pilot 结果。",
               "- `source_bindings.json`：所有读取的本地源文件 SHA256。"]
@@ -191,6 +244,7 @@ def export(source, destination):
     write_json(destination / "summary.json", summary)
     write_json(destination / "source_bindings.json", bindings)
     (destination / "README.md").write_text("\n".join(lines) + "\n")
+    (destination / "RESULTS.md").write_text(render_results_table(summary))
     return summary
 
 

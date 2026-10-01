@@ -1,0 +1,72 @@
+{
+  "jobs": [
+    {
+      "dataset": "hotpotqa",
+      "method": "sidequest_untrained",
+      "budget": "adaptive",
+      "purpose": "smoke",
+      "samples": 2,
+      "sample_start": 500,
+      "name": "hotpotqa/smoke/sidequest_untrained"
+    },
+    {
+      "dataset": "hotpotqa",
+      "method": "sidequest_untrained",
+      "budget": "adaptive",
+      "purpose": "main",
+      "samples": 500,
+      "sample_start": 0,
+      "name": "hotpotqa/main/sidequest_untrained"
+    },
+    {
+      "dataset": "2wiki",
+      "method": "sidequest_untrained",
+      "budget": "adaptive",
+      "purpose": "smoke",
+      "samples": 2,
+      "sample_start": 500,
+      "name": "2wiki/smoke/sidequest_untrained"
+    },
+    {
+      "dataset": "2wiki",
+      "method": "sidequest_untrained",
+      "budget": "adaptive",
+      "purpose": "main",
+      "samples": 500,
+      "sample_start": 0,
+      "name": "2wiki/main/sidequest_untrained"
+    },
+    {
+      "dataset": "musique",
+      "method": "sidequest_untrained",
+      "budget": "adaptive",
+      "purpose": "smoke",
+      "samples": 2,
+      "sample_start": 500,
+      "name": "musique/smoke/sidequest_untrained"
+    },
+    {
+      "dataset": "musique",
+      "method": "sidequest_untrained",
+      "budget": "adaptive",
+      "purpose": "main",
+      "samples": 500,
+      "sample_start": 0,
+      "name": "musique/main/sidequest_untrained"
+    }
+  ],
+  "gpu": 3,
+  "source_hashes": {
+    "scripts/run_sidequest_baseline.py": "738938d3b079b9598125cc804ecf7ba7d3fcd6499c145d031e3b695d42d2f0fc",
+    "scripts/sidequest_runtime.py": "c62216233de22472a50b3e7ebfea0fe771b181541c92c6ed2967f1a4897e6510",
+    "models/RebuttalLLM.py": "04089494e5a0ea1a839feb2c43d649d8ed6bc3d408de3c00b8bd314e33166ab6",
+    "token_tracker.py": "beddfeffd1f29b28197e952cd847f45b2a4df31665030c6bf8ab9182bb2df4e0",
+    "scripts/run_sidequest_queue.py": "82567c253b7b534531b7a53d63835042015ff998f71044b11cee3bd09b2f4e64"
+  },
+  "replaces": "rkv",
+  "trained": false,
+  "original_results": "retained",
+  "main_jobs": 3,
+  "main_evaluations": 1500,
+  "protocol": "independent untrained adaptation; not matched-runtime legacy comparison"
+}
