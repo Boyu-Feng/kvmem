@@ -2,6 +2,8 @@
 
 本文件记录 2026-10-01 新启动的扩展实验。此前 [seed233 结果快照](../../reports/rebuttal_20261001_053953_UTC/RESULTS.md)保留为已完成的静态结果；本轮运行中的 checkpoint 不计入该快照。
 
+截至 **2026-10-02 21:08 北京时间**，[新增结果快照](../../reports/multiseed_20261002_1308_UTC/RESULTS.md)已核对并归档 **36/72 组、18,000 条逐题结果**：SideQuest 6/6、ThinKV 仅淘汰 18/18、两个新 seed 的固定预算实验各 6/24。其余条件仍在运行或待运行，未发布阶段分数。快照的[机器可读汇总](../../reports/multiseed_20261002_1308_UTC/summary.json)记录每组状态；原始运行目录保持 Git 忽略。
+
 | 方法 | 数据集 | seed | 预算 | 每组主实验 |
 |---|---|---|---|---:|
 | H2O-step、TOVA-step、FlowKV-style、LazyEviction | HotpotQA、2Wiki、MuSiQue | 新增 42、3407；233 已完成 | 20%、50% | 500 题 |
