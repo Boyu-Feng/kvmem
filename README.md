@@ -4,7 +4,7 @@
 
 ## 当前实验入口
 
-- **[三 seed 扩展实验最新已完成结果](reports/multiseed_20261002_1308_UTC/RESULTS.md)**：36/72 组完成，18,000 条逐题评测；其余组继续运行，阶段分数未列入。
+- **[三 seed 扩展实验最新结果](reports/multiseed_20261007_065533_UTC/RESULTS.md)**：72/72 组完成，36,000 条逐题评测；包含全部完成组的 EM/F1、逐题分数和源文件哈希。
 - **[实验结果总表：数据集 × 方法](reports/rebuttal_20261001_053953_UTC/RESULTS.md)**：27/27 组完成，13,500 条逐题评测，包含 20%/50% 的 EM/F1。
 - **[Rebuttal 当前进展与结果](docs/rebuttal/STATUS.md)**：上传时的静态快照、完成情况及已知阻塞。
 - **[三 seed 扩展实验](docs/rebuttal/MULTISEED_20261001.md)**：新增 seed 42/3407 和 ThinKV 仅淘汰适配的运行范围、状态入口。
