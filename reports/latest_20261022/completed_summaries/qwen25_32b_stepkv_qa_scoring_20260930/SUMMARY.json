@@ -1,0 +1,71 @@
+{
+  "protocol": "alfworld_shared_h200_accuracy_v1",
+  "model": [
+    "Qwen/Qwen2.5-32B-Instruct",
+    "5ede1c97bbab6ce5cda5812749b4c0bdf79b18dd"
+  ],
+  "completed_main": 2,
+  "expected_main": 2,
+  "results": [
+    {
+      "method": "stepkv",
+      "keep_ratio": 0.2,
+      "n": 134,
+      "successes": 59,
+      "success_rate_percent": 44.02985074626866,
+      "mean_environment_steps": 34.17910447761194,
+      "kv_cache_statistics": {
+        "episodes_with_cache_audit": 134,
+        "episodes_missing_cache_audit": 0,
+        "mean": {
+          "episode_mean_boundary_total_kv_mib": 294.5254668498615,
+          "episode_mean_boundary_total_kv_tokens": 1178.101867399446,
+          "episode_mean_boundary_trajectory_kv_mib": 186.1523325215033,
+          "final_prompt_kv_mib": 108.3731343283582,
+          "final_total_kv_mib": 471.2108208955224,
+          "final_total_kv_tokens": 1884.8432835820895,
+          "final_trajectory_kv_mib": 362.83768656716416,
+          "final_trajectory_kv_tokens": 1451.3507462686566,
+          "final_trajectory_retention": 0.20299329743443242,
+          "peak_active_total_kv_mib": 511.9925373134328
+        },
+        "max_peak_active_total_kv_mib": 790.0,
+        "mean_peak_kv_mib_by_device": {
+          "cuda:0": 247.99638526119404,
+          "cuda:1": 263.9961520522388
+        }
+      }
+    },
+    {
+      "method": "stepkv",
+      "keep_ratio": 0.5,
+      "n": 134,
+      "successes": 65,
+      "success_rate_percent": 48.507462686567166,
+      "mean_environment_steps": 31.149253731343283,
+      "kv_cache_statistics": {
+        "episodes_with_cache_audit": 134,
+        "episodes_missing_cache_audit": 0,
+        "mean": {
+          "episode_mean_boundary_total_kv_mib": 534.7002854331679,
+          "episode_mean_boundary_total_kv_tokens": 2138.8011417326716,
+          "episode_mean_boundary_trajectory_kv_mib": 426.3271511048097,
+          "final_prompt_kv_mib": 108.3731343283582,
+          "final_total_kv_mib": 932.3507462686567,
+          "final_total_kv_tokens": 3729.402985074627,
+          "final_trajectory_kv_mib": 823.9776119402985,
+          "final_trajectory_kv_tokens": 3295.910447761194,
+          "final_trajectory_retention": 0.5022111084338072,
+          "peak_active_total_kv_mib": 956.9253731343283
+        },
+        "max_peak_active_total_kv_mib": 1763.0,
+        "mean_peak_kv_mib_by_device": {
+          "cuda:0": 463.5107276119403,
+          "cuda:1": 493.41464552238807
+        }
+      }
+    }
+  ],
+  "timing_policy": "Shared-GPU diagnostic times only; no latency claims",
+  "statistics": "Single seed, matched task set. No across-seed standard deviation or significance claim."
+}

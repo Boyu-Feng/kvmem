@@ -1,0 +1,13 @@
+{
+  "schema": "webbench_migration_host_resources_v1",
+  "devices": [0, 1, 2],
+  "actor_allocator_gib": 26,
+  "gpu_budget_gib": 26,
+  "headroom_gib": 2,
+  "judge_cpu_offload_gb": 48,
+  "minimum_available_host_ram_gib": 96,
+  "workers_per_gpu": 1,
+  "tensor_parallel_size": 1,
+  "dtype": "bfloat16",
+  "endpoint": "http://127.0.0.1:8313/v1"
+}

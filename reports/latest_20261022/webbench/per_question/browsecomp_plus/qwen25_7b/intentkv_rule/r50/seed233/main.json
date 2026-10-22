@@ -1,0 +1,252 @@
+[
+  {
+    "id": "503",
+    "task_sha256": "f2695642e2db7f3186d740a194ae871dd011c08ca1856260699e8069d429634e",
+    "termination": "context_budget",
+    "status": "context_budget",
+    "audit_sha256": "275f805731f62b1f6b045e9a4158ae7ae71095447214ead968f110151a3ac171",
+    "score": null,
+    "score_recorded": false,
+    "environment_failed": false,
+    "seconds": 59.29957260005176,
+    "logical_budget_used": 31973,
+    "tool_call_counts": {
+      "search": 12
+    },
+    "peak_cuda_allocated_bytes": 18073771008
+  },
+  {
+    "id": "371",
+    "task_sha256": "5cfc08380bd44dfa408b4e7ca75e53734ec99a37cc3d86312195129f8001df7a",
+    "termination": "context_budget",
+    "status": "context_budget",
+    "audit_sha256": "f64a2c6f2a62b3cc0a1cdc780bd711772b6f482ebea5ae4f9670bf5cc7df9f71",
+    "score": null,
+    "score_recorded": false,
+    "environment_failed": false,
+    "seconds": 54.01056814752519,
+    "logical_budget_used": 29927,
+    "tool_call_counts": {
+      "search": 11,
+      "lookup": 1
+    },
+    "peak_cuda_allocated_bytes": 17921373184
+  },
+  {
+    "id": "245",
+    "task_sha256": "a5983380f289deec4cf385f195bdb292f01d6161cf859db89bb5c5148f27f217",
+    "termination": "finish",
+    "status": "completed",
+    "audit_sha256": "56e387705ad88c674f01b3d396f5d02d4b39a3f2f0ad22046489a40cdec3dc71",
+    "score": null,
+    "score_recorded": false,
+    "environment_failed": false,
+    "seconds": 63.60285418108106,
+    "logical_budget_used": 12868,
+    "tool_call_counts": {
+      "search": 3,
+      "lookup": 2,
+      "null": 11
+    },
+    "peak_cuda_allocated_bytes": 16431649280
+  },
+  {
+    "id": "350",
+    "task_sha256": "a510972d16d244a6a5a70c327769a6a2e89bd86667daa01403c5f4883d5da5da",
+    "termination": "finish",
+    "status": "completed",
+    "audit_sha256": "c8b83247fe589500c59e8547a1b8ad7b7c97d44c11993191f361114ebe5d4575",
+    "score": null,
+    "score_recorded": false,
+    "environment_failed": false,
+    "seconds": 12.712904999032617,
+    "logical_budget_used": 6168,
+    "tool_call_counts": {
+      "search": 2
+    },
+    "peak_cuda_allocated_bytes": 16408633856
+  },
+  {
+    "id": "619",
+    "task_sha256": "ff1d643f2bb1470f5e378f92b5bb207d6363c0d0793264f58da746eda45e3c95",
+    "termination": "context_budget",
+    "status": "context_budget",
+    "audit_sha256": "3bc9364c36a65c49313bb484495462c0506fdfed3878c1dcaa73de8f3978e7d1",
+    "score": null,
+    "score_recorded": false,
+    "environment_failed": false,
+    "seconds": 65.48870187997818,
+    "logical_budget_used": 32754,
+    "tool_call_counts": {
+      "search": 12,
+      "lookup": 1
+    },
+    "peak_cuda_allocated_bytes": 18160493568
+  },
+  {
+    "id": "389",
+    "task_sha256": "8b6e8979670e5220756b49cea8cf030c236536c8e4747e3690ec691d1d2189c4",
+    "termination": "context_budget",
+    "status": "context_budget",
+    "audit_sha256": "3ff8c5976d9d701cd88d6964c19e3f24c31ea48b322e6329f013eb3b60bcd3f7",
+    "score": null,
+    "score_recorded": false,
+    "environment_failed": false,
+    "seconds": 62.47859695367515,
+    "logical_budget_used": 31967,
+    "tool_call_counts": {
+      "search": 12
+    },
+    "peak_cuda_allocated_bytes": 18102845952
+  },
+  {
+    "id": "643",
+    "task_sha256": "968c98f1f4d6e831e295238f824fe04ee6db3f49748d3d60522261d9bf3acbfd",
+    "termination": "context_budget",
+    "status": "context_budget",
+    "audit_sha256": "b2599b0223c4ddab43718a425d0ac105a563a6fae5ea90e59e54ab9758243a1e",
+    "score": null,
+    "score_recorded": false,
+    "environment_failed": false,
+    "seconds": 54.314410638064146,
+    "logical_budget_used": 32008,
+    "tool_call_counts": {
+      "search": 12
+    },
+    "peak_cuda_allocated_bytes": 18021184512
+  },
+  {
+    "id": "548",
+    "task_sha256": "18426f66b65f9fa2eb10123f64bb0e1b8b4961a289f7d4eb9ae8e2d1ec59a160",
+    "termination": "context_budget",
+    "status": "context_budget",
+    "audit_sha256": "36ef9d90d0deaae5ff53bbcb0a2a7b95422143c205c21e9cd73e76791194fd98",
+    "score": null,
+    "score_recorded": false,
+    "environment_failed": false,
+    "seconds": 103.08881096541882,
+    "logical_budget_used": 31917,
+    "tool_call_counts": {
+      "search": 11,
+      "lookup": 3,
+      "null": 7
+    },
+    "peak_cuda_allocated_bytes": 18052388352
+  },
+  {
+    "id": "353",
+    "task_sha256": "11bba8fdcf3fa7d57ff056dd111bb2b86f349de62dc68d6fbf647bf22d589a23",
+    "termination": "step_budget",
+    "status": "step_budget",
+    "audit_sha256": "8d25de0c1e4330c33e327319bf7a564fdf22cb00bb62a556f16d121dd431f7b5",
+    "score": null,
+    "score_recorded": false,
+    "environment_failed": false,
+    "seconds": 180.8698517382145,
+    "logical_budget_used": 27970,
+    "tool_call_counts": {
+      "search": 7,
+      "null": 27,
+      "lookup": 6
+    },
+    "peak_cuda_allocated_bytes": 17532313600
+  },
+  {
+    "id": "169",
+    "task_sha256": "3d01d1d7f0e7c25872dd6b01cbbb2a6c31cd850fcedd535c19b962d36bdedc5d",
+    "termination": "finish",
+    "status": "completed",
+    "audit_sha256": "2d64273865f5e359754141947f87142c106e77906f253539a39a353c4212c05a",
+    "score": null,
+    "score_recorded": false,
+    "environment_failed": false,
+    "seconds": 14.703200574964285,
+    "logical_budget_used": 14827,
+    "tool_call_counts": {
+      "search": 5
+    },
+    "peak_cuda_allocated_bytes": 16577598976
+  },
+  {
+    "id": "883",
+    "task_sha256": "ca0d1de505b5ef4d85865c5b447faf8b274ba4e33547a8d21eedeb7ff87f1b36",
+    "termination": "finish",
+    "status": "completed",
+    "audit_sha256": "c2a2af078b4d3ea457384b049b91df07a1e78c6aa9b8d6ea7f906cc14b840748",
+    "score": null,
+    "score_recorded": false,
+    "environment_failed": false,
+    "seconds": 16.847613318823278,
+    "logical_budget_used": 7014,
+    "tool_call_counts": {
+      "search": 2,
+      "lookup": 1
+    },
+    "peak_cuda_allocated_bytes": 16374617600
+  },
+  {
+    "id": "669",
+    "task_sha256": "a6b6e1453920f3f029a715c95836598006c55fcad66c244c2351589d1f95aac5",
+    "termination": "finish",
+    "status": "completed",
+    "audit_sha256": "9b3f21d45224fbf6aa83c6439aa0fc1f9ba0838a944932cc28ecddcdc3d514ea",
+    "score": null,
+    "score_recorded": false,
+    "environment_failed": false,
+    "seconds": 10.448339181020856,
+    "logical_budget_used": 3352,
+    "tool_call_counts": {
+      "search": 1
+    },
+    "peak_cuda_allocated_bytes": 16280593920
+  },
+  {
+    "id": "521",
+    "task_sha256": "c7c3441f4dd304ba472c30857ed999f4b07e73306aaae6c310eca81e65e59aec",
+    "termination": "context_budget",
+    "status": "context_budget",
+    "audit_sha256": "02f74fe43cb0d9cf67f61ea8385f482d66b191c27506197142a38505c044a5f3",
+    "score": null,
+    "score_recorded": false,
+    "environment_failed": false,
+    "seconds": 26.23554965108633,
+    "logical_budget_used": 31988,
+    "tool_call_counts": {
+      "search": 12
+    },
+    "peak_cuda_allocated_bytes": 17921745408
+  },
+  {
+    "id": "1093",
+    "task_sha256": "3039c977714b0af1813ec263045f5446dd9e161ec243c756869613f91b5d3a9e",
+    "termination": "finish",
+    "status": "completed",
+    "audit_sha256": "bbf0b8cecaa10003f2efc3df0c56ef13a5a37c0286b6d0b3f8f87ca3922ae93b",
+    "score": null,
+    "score_recorded": false,
+    "environment_failed": false,
+    "seconds": 13.929472997784615,
+    "logical_budget_used": 9240,
+    "tool_call_counts": {
+      "search": 3,
+      "lookup": 1
+    },
+    "peak_cuda_allocated_bytes": 16328766464
+  },
+  {
+    "id": "894",
+    "task_sha256": "0d511983003c23f59056275788c48b9b5f358598ad2fa1395b697cbd36e505d9",
+    "termination": "finish",
+    "status": "completed",
+    "audit_sha256": "26bb39519acb9ab02708ee83c37842e1de83757d0dd8ecfc425cfa986b9c05db",
+    "score": null,
+    "score_recorded": false,
+    "environment_failed": false,
+    "seconds": 13.775382723659277,
+    "logical_budget_used": 6210,
+    "tool_call_counts": {
+      "search": 2
+    },
+    "peak_cuda_allocated_bytes": 16419328512
+  }
+]

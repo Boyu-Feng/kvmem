@@ -1,0 +1,19 @@
+{
+  "status": "failed",
+  "supervisor_pid": 2699406,
+  "updated": 1790756199.3531165,
+  "job": {
+    "name": "main/tova_token/r20",
+    "purpose": "main",
+    "method": "tova_token",
+    "ratio": 0.2,
+    "samples": 0,
+    "max_steps": 50
+  },
+  "completed_jobs": 8,
+  "total_jobs": 12,
+  "worker_identity": {
+    "pid": 3034142,
+    "start_ticks": 234902842
+  }
+}

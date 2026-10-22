@@ -1,0 +1,848 @@
+{
+  "completed_main": 42,
+  "expected_main": 42,
+  "results": [
+    {
+      "name": "qwen25_7b/seed233/hotpotqa/main/full",
+      "group": "qwen25_7b/seed233/hotpotqa",
+      "model": "qwen25_7b",
+      "seed": 233,
+      "dataset": "hotpotqa",
+      "purpose": "main",
+      "variant": "full",
+      "samples": 500,
+      "ratio": 0.5,
+      "max_steps": 7,
+      "completed_samples": 500,
+      "has_actual_eviction": true,
+      "summary": {
+        "total_samples": 500,
+        "exact_match": 22.2,
+        "f1_score": 32.17982572982573,
+        "total_diagnostic_seconds": 10933.37124498142
+      }
+    },
+    {
+      "name": "qwen25_7b/seed233/hotpotqa/main/no_repeat",
+      "group": "qwen25_7b/seed233/hotpotqa",
+      "model": "qwen25_7b",
+      "seed": 233,
+      "dataset": "hotpotqa",
+      "purpose": "main",
+      "variant": "no_repeat",
+      "samples": 500,
+      "ratio": 0.5,
+      "max_steps": 7,
+      "completed_samples": 500,
+      "has_actual_eviction": true,
+      "summary": {
+        "total_samples": 500,
+        "exact_match": 22.4,
+        "f1_score": 32.05390459213988,
+        "total_diagnostic_seconds": 10970.030129572377
+      }
+    },
+    {
+      "name": "qwen25_7b/seed233/hotpotqa/main/no_novelty",
+      "group": "qwen25_7b/seed233/hotpotqa",
+      "model": "qwen25_7b",
+      "seed": 233,
+      "dataset": "hotpotqa",
+      "purpose": "main",
+      "variant": "no_novelty",
+      "samples": 500,
+      "ratio": 0.5,
+      "max_steps": 7,
+      "completed_samples": 500,
+      "has_actual_eviction": true,
+      "summary": {
+        "total_samples": 500,
+        "exact_match": 23.0,
+        "f1_score": 32.30261942735627,
+        "total_diagnostic_seconds": 10640.18499508826
+      }
+    },
+    {
+      "name": "qwen25_7b/seed233/hotpotqa/main/no_success",
+      "group": "qwen25_7b/seed233/hotpotqa",
+      "model": "qwen25_7b",
+      "seed": 233,
+      "dataset": "hotpotqa",
+      "purpose": "main",
+      "variant": "no_success",
+      "samples": 500,
+      "ratio": 0.5,
+      "max_steps": 7,
+      "completed_samples": 500,
+      "has_actual_eviction": true,
+      "summary": {
+        "total_samples": 500,
+        "exact_match": 21.6,
+        "f1_score": 31.048058489414302,
+        "total_diagnostic_seconds": 12130.14668959193
+      }
+    },
+    {
+      "name": "qwen25_7b/seed233/hotpotqa/main/no_cite",
+      "group": "qwen25_7b/seed233/hotpotqa",
+      "model": "qwen25_7b",
+      "seed": 233,
+      "dataset": "hotpotqa",
+      "purpose": "main",
+      "variant": "no_cite",
+      "samples": 500,
+      "ratio": 0.5,
+      "max_steps": 7,
+      "completed_samples": 500,
+      "has_actual_eviction": true,
+      "summary": {
+        "total_samples": 500,
+        "exact_match": 22.2,
+        "f1_score": 32.29260864866128,
+        "total_diagnostic_seconds": 12123.030722292606
+      }
+    },
+    {
+      "name": "qwen25_7b/seed233/hotpotqa/main/no_token",
+      "group": "qwen25_7b/seed233/hotpotqa",
+      "model": "qwen25_7b",
+      "seed": 233,
+      "dataset": "hotpotqa",
+      "purpose": "main",
+      "variant": "no_token",
+      "samples": 500,
+      "ratio": 0.5,
+      "max_steps": 7,
+      "completed_samples": 500,
+      "has_actual_eviction": true,
+      "summary": {
+        "total_samples": 500,
+        "exact_match": 21.4,
+        "f1_score": 28.34357808857809,
+        "total_diagnostic_seconds": 10414.272408340126
+      }
+    },
+    {
+      "name": "qwen25_7b/seed233/hotpotqa/main/no_step",
+      "group": "qwen25_7b/seed233/hotpotqa",
+      "model": "qwen25_7b",
+      "seed": 233,
+      "dataset": "hotpotqa",
+      "purpose": "main",
+      "variant": "no_step",
+      "samples": 500,
+      "ratio": 0.5,
+      "max_steps": 7,
+      "completed_samples": 500,
+      "has_actual_eviction": true,
+      "summary": {
+        "total_samples": 500,
+        "exact_match": 16.6,
+        "f1_score": 24.381072261072262,
+        "total_diagnostic_seconds": 8991.55226432532
+      }
+    },
+    {
+      "name": "qwen25_7b/seed233/2wiki/main/full",
+      "group": "qwen25_7b/seed233/2wiki",
+      "model": "qwen25_7b",
+      "seed": 233,
+      "dataset": "2wiki",
+      "purpose": "main",
+      "variant": "full",
+      "samples": 500,
+      "ratio": 0.5,
+      "max_steps": 7,
+      "completed_samples": 500,
+      "has_actual_eviction": true,
+      "summary": {
+        "total_samples": 500,
+        "exact_match": 19.0,
+        "f1_score": 23.144332274715907,
+        "total_diagnostic_seconds": 12404.589000158478
+      }
+    },
+    {
+      "name": "qwen25_7b/seed233/2wiki/main/no_repeat",
+      "group": "qwen25_7b/seed233/2wiki",
+      "model": "qwen25_7b",
+      "seed": 233,
+      "dataset": "2wiki",
+      "purpose": "main",
+      "variant": "no_repeat",
+      "samples": 500,
+      "ratio": 0.5,
+      "max_steps": 7,
+      "completed_samples": 500,
+      "has_actual_eviction": true,
+      "summary": {
+        "total_samples": 500,
+        "exact_match": 20.2,
+        "f1_score": 24.039495673408716,
+        "total_diagnostic_seconds": 12405.695155725814
+      }
+    },
+    {
+      "name": "qwen25_7b/seed233/2wiki/main/no_novelty",
+      "group": "qwen25_7b/seed233/2wiki",
+      "model": "qwen25_7b",
+      "seed": 233,
+      "dataset": "2wiki",
+      "purpose": "main",
+      "variant": "no_novelty",
+      "samples": 500,
+      "ratio": 0.5,
+      "max_steps": 7,
+      "completed_samples": 500,
+      "has_actual_eviction": true,
+      "summary": {
+        "total_samples": 500,
+        "exact_match": 20.6,
+        "f1_score": 24.787303976217018,
+        "total_diagnostic_seconds": 11945.294123760425
+      }
+    },
+    {
+      "name": "qwen25_7b/seed233/2wiki/main/no_success",
+      "group": "qwen25_7b/seed233/2wiki",
+      "model": "qwen25_7b",
+      "seed": 233,
+      "dataset": "2wiki",
+      "purpose": "main",
+      "variant": "no_success",
+      "samples": 500,
+      "ratio": 0.5,
+      "max_steps": 7,
+      "completed_samples": 500,
+      "has_actual_eviction": true,
+      "summary": {
+        "total_samples": 500,
+        "exact_match": 19.4,
+        "f1_score": 23.529394663307706,
+        "total_diagnostic_seconds": 14790.209586571436
+      }
+    },
+    {
+      "name": "qwen25_7b/seed233/2wiki/main/no_cite",
+      "group": "qwen25_7b/seed233/2wiki",
+      "model": "qwen25_7b",
+      "seed": 233,
+      "dataset": "2wiki",
+      "purpose": "main",
+      "variant": "no_cite",
+      "samples": 500,
+      "ratio": 0.5,
+      "max_steps": 7,
+      "completed_samples": 500,
+      "has_actual_eviction": true,
+      "summary": {
+        "total_samples": 500,
+        "exact_match": 18.2,
+        "f1_score": 22.46933837972201,
+        "total_diagnostic_seconds": 16110.65057556238
+      }
+    },
+    {
+      "name": "qwen25_7b/seed233/2wiki/main/no_token",
+      "group": "qwen25_7b/seed233/2wiki",
+      "model": "qwen25_7b",
+      "seed": 233,
+      "dataset": "2wiki",
+      "purpose": "main",
+      "variant": "no_token",
+      "samples": 500,
+      "ratio": 0.5,
+      "max_steps": 7,
+      "completed_samples": 500,
+      "has_actual_eviction": true,
+      "summary": {
+        "total_samples": 500,
+        "exact_match": 23.8,
+        "f1_score": 26.930651921178235,
+        "total_diagnostic_seconds": 10370.117853149772
+      }
+    },
+    {
+      "name": "qwen25_7b/seed233/2wiki/main/no_step",
+      "group": "qwen25_7b/seed233/2wiki",
+      "model": "qwen25_7b",
+      "seed": 233,
+      "dataset": "2wiki",
+      "purpose": "main",
+      "variant": "no_step",
+      "samples": 500,
+      "ratio": 0.5,
+      "max_steps": 7,
+      "completed_samples": 500,
+      "has_actual_eviction": true,
+      "summary": {
+        "total_samples": 500,
+        "exact_match": 5.8,
+        "f1_score": 10.889314384109781,
+        "total_diagnostic_seconds": 10861.897471521981
+      }
+    },
+    {
+      "name": "qwen25_7b/seed233/musique/main/full",
+      "group": "qwen25_7b/seed233/musique",
+      "model": "qwen25_7b",
+      "seed": 233,
+      "dataset": "musique",
+      "purpose": "main",
+      "variant": "full",
+      "samples": 500,
+      "ratio": 0.5,
+      "max_steps": 7,
+      "completed_samples": 500,
+      "has_actual_eviction": true,
+      "summary": {
+        "total_samples": 500,
+        "exact_match": 4.2,
+        "f1_score": 8.370614250614251,
+        "total_diagnostic_seconds": 14838.05249064695
+      }
+    },
+    {
+      "name": "qwen25_7b/seed233/musique/main/no_repeat",
+      "group": "qwen25_7b/seed233/musique",
+      "model": "qwen25_7b",
+      "seed": 233,
+      "dataset": "musique",
+      "purpose": "main",
+      "variant": "no_repeat",
+      "samples": 500,
+      "ratio": 0.5,
+      "max_steps": 7,
+      "completed_samples": 500,
+      "has_actual_eviction": true,
+      "summary": {
+        "total_samples": 500,
+        "exact_match": 4.0,
+        "f1_score": 7.926487266487268,
+        "total_diagnostic_seconds": 14980.574196474627
+      }
+    },
+    {
+      "name": "qwen25_7b/seed233/musique/main/no_novelty",
+      "group": "qwen25_7b/seed233/musique",
+      "model": "qwen25_7b",
+      "seed": 233,
+      "dataset": "musique",
+      "purpose": "main",
+      "variant": "no_novelty",
+      "samples": 500,
+      "ratio": 0.5,
+      "max_steps": 7,
+      "completed_samples": 500,
+      "has_actual_eviction": true,
+      "summary": {
+        "total_samples": 500,
+        "exact_match": 3.8,
+        "f1_score": 6.7469206349206345,
+        "total_diagnostic_seconds": 15398.86969457753
+      }
+    },
+    {
+      "name": "qwen25_7b/seed233/musique/main/no_success",
+      "group": "qwen25_7b/seed233/musique",
+      "model": "qwen25_7b",
+      "seed": 233,
+      "dataset": "musique",
+      "purpose": "main",
+      "variant": "no_success",
+      "samples": 500,
+      "ratio": 0.5,
+      "max_steps": 7,
+      "completed_samples": 500,
+      "has_actual_eviction": true,
+      "summary": {
+        "total_samples": 500,
+        "exact_match": 4.2,
+        "f1_score": 7.552475722475722,
+        "total_diagnostic_seconds": 16642.020298596937
+      }
+    },
+    {
+      "name": "qwen25_7b/seed233/musique/main/no_cite",
+      "group": "qwen25_7b/seed233/musique",
+      "model": "qwen25_7b",
+      "seed": 233,
+      "dataset": "musique",
+      "purpose": "main",
+      "variant": "no_cite",
+      "samples": 500,
+      "ratio": 0.5,
+      "max_steps": 7,
+      "completed_samples": 500,
+      "has_actual_eviction": true,
+      "summary": {
+        "total_samples": 500,
+        "exact_match": 4.0,
+        "f1_score": 8.06966186966187,
+        "total_diagnostic_seconds": 12415.920027744025
+      }
+    },
+    {
+      "name": "qwen25_7b/seed233/musique/main/no_token",
+      "group": "qwen25_7b/seed233/musique",
+      "model": "qwen25_7b",
+      "seed": 233,
+      "dataset": "musique",
+      "purpose": "main",
+      "variant": "no_token",
+      "samples": 500,
+      "ratio": 0.5,
+      "max_steps": 7,
+      "completed_samples": 500,
+      "has_actual_eviction": true,
+      "summary": {
+        "total_samples": 500,
+        "exact_match": 2.4,
+        "f1_score": 4.0476190476190474,
+        "total_diagnostic_seconds": 13177.300807967316
+      }
+    },
+    {
+      "name": "qwen25_7b/seed233/musique/main/no_step",
+      "group": "qwen25_7b/seed233/musique",
+      "model": "qwen25_7b",
+      "seed": 233,
+      "dataset": "musique",
+      "purpose": "main",
+      "variant": "no_step",
+      "samples": 500,
+      "ratio": 0.5,
+      "max_steps": 7,
+      "completed_samples": 500,
+      "has_actual_eviction": true,
+      "summary": {
+        "total_samples": 500,
+        "exact_match": 3.0,
+        "f1_score": 6.557867475770702,
+        "total_diagnostic_seconds": 11844.592355705798
+      }
+    },
+    {
+      "name": "qwen25_7b/seed3407/hotpotqa/main/full",
+      "group": "qwen25_7b/seed3407/hotpotqa",
+      "model": "qwen25_7b",
+      "seed": 3407,
+      "dataset": "hotpotqa",
+      "purpose": "main",
+      "variant": "full",
+      "samples": 500,
+      "ratio": 0.5,
+      "max_steps": 7,
+      "completed_samples": 500,
+      "has_actual_eviction": true,
+      "summary": {
+        "total_samples": 500,
+        "exact_match": 22.4,
+        "f1_score": 30.576620397146712,
+        "total_diagnostic_seconds": 7092.269779792521
+      }
+    },
+    {
+      "name": "qwen25_7b/seed3407/hotpotqa/main/no_repeat",
+      "group": "qwen25_7b/seed3407/hotpotqa",
+      "model": "qwen25_7b",
+      "seed": 3407,
+      "dataset": "hotpotqa",
+      "purpose": "main",
+      "variant": "no_repeat",
+      "samples": 500,
+      "ratio": 0.5,
+      "max_steps": 7,
+      "completed_samples": 500,
+      "has_actual_eviction": true,
+      "summary": {
+        "total_samples": 500,
+        "exact_match": 22.0,
+        "f1_score": 30.67497537550169,
+        "total_diagnostic_seconds": 8642.54678149661
+      }
+    },
+    {
+      "name": "qwen25_7b/seed3407/hotpotqa/main/no_novelty",
+      "group": "qwen25_7b/seed3407/hotpotqa",
+      "model": "qwen25_7b",
+      "seed": 3407,
+      "dataset": "hotpotqa",
+      "purpose": "main",
+      "variant": "no_novelty",
+      "samples": 500,
+      "ratio": 0.5,
+      "max_steps": 7,
+      "completed_samples": 500,
+      "has_actual_eviction": true,
+      "summary": {
+        "total_samples": 500,
+        "exact_match": 21.2,
+        "f1_score": 29.846185756481898,
+        "total_diagnostic_seconds": 8920.624259036034
+      }
+    },
+    {
+      "name": "qwen25_7b/seed3407/hotpotqa/main/no_success",
+      "group": "qwen25_7b/seed3407/hotpotqa",
+      "model": "qwen25_7b",
+      "seed": 3407,
+      "dataset": "hotpotqa",
+      "purpose": "main",
+      "variant": "no_success",
+      "samples": 500,
+      "ratio": 0.5,
+      "max_steps": 7,
+      "completed_samples": 500,
+      "has_actual_eviction": true,
+      "summary": {
+        "total_samples": 500,
+        "exact_match": 21.6,
+        "f1_score": 30.190308714249667,
+        "total_diagnostic_seconds": 9365.397745753173
+      }
+    },
+    {
+      "name": "qwen25_7b/seed3407/hotpotqa/main/no_cite",
+      "group": "qwen25_7b/seed3407/hotpotqa",
+      "model": "qwen25_7b",
+      "seed": 3407,
+      "dataset": "hotpotqa",
+      "purpose": "main",
+      "variant": "no_cite",
+      "samples": 500,
+      "ratio": 0.5,
+      "max_steps": 7,
+      "completed_samples": 500,
+      "has_actual_eviction": true,
+      "summary": {
+        "total_samples": 500,
+        "exact_match": 22.2,
+        "f1_score": 30.35417284469916,
+        "total_diagnostic_seconds": 9344.049686700571
+      }
+    },
+    {
+      "name": "qwen25_7b/seed3407/hotpotqa/main/no_token",
+      "group": "qwen25_7b/seed3407/hotpotqa",
+      "model": "qwen25_7b",
+      "seed": 3407,
+      "dataset": "hotpotqa",
+      "purpose": "main",
+      "variant": "no_token",
+      "samples": 500,
+      "ratio": 0.5,
+      "max_steps": 7,
+      "completed_samples": 500,
+      "has_actual_eviction": true,
+      "summary": {
+        "total_samples": 500,
+        "exact_match": 20.8,
+        "f1_score": 28.26094424094424,
+        "total_diagnostic_seconds": 10086.348295458592
+      }
+    },
+    {
+      "name": "qwen25_7b/seed3407/hotpotqa/main/no_step",
+      "group": "qwen25_7b/seed3407/hotpotqa",
+      "model": "qwen25_7b",
+      "seed": 3407,
+      "dataset": "hotpotqa",
+      "purpose": "main",
+      "variant": "no_step",
+      "samples": 500,
+      "ratio": 0.5,
+      "max_steps": 7,
+      "completed_samples": 500,
+      "has_actual_eviction": true,
+      "summary": {
+        "total_samples": 500,
+        "exact_match": 14.6,
+        "f1_score": 22.616897879897877,
+        "total_diagnostic_seconds": 17607.99135406688
+      }
+    },
+    {
+      "name": "qwen25_7b/seed3407/2wiki/main/full",
+      "group": "qwen25_7b/seed3407/2wiki",
+      "model": "qwen25_7b",
+      "seed": 3407,
+      "dataset": "2wiki",
+      "purpose": "main",
+      "variant": "full",
+      "samples": 500,
+      "ratio": 0.5,
+      "max_steps": 7,
+      "completed_samples": 500,
+      "has_actual_eviction": true,
+      "summary": {
+        "total_samples": 500,
+        "exact_match": 20.0,
+        "f1_score": 26.35194322585627,
+        "total_diagnostic_seconds": 10301.603205842897
+      }
+    },
+    {
+      "name": "qwen25_7b/seed3407/2wiki/main/no_repeat",
+      "group": "qwen25_7b/seed3407/2wiki",
+      "model": "qwen25_7b",
+      "seed": 3407,
+      "dataset": "2wiki",
+      "purpose": "main",
+      "variant": "no_repeat",
+      "samples": 500,
+      "ratio": 0.5,
+      "max_steps": 7,
+      "completed_samples": 500,
+      "has_actual_eviction": true,
+      "summary": {
+        "total_samples": 500,
+        "exact_match": 21.4,
+        "f1_score": 27.337138031051076,
+        "total_diagnostic_seconds": 11473.387032367755
+      }
+    },
+    {
+      "name": "qwen25_7b/seed3407/2wiki/main/no_novelty",
+      "group": "qwen25_7b/seed3407/2wiki",
+      "model": "qwen25_7b",
+      "seed": 3407,
+      "dataset": "2wiki",
+      "purpose": "main",
+      "variant": "no_novelty",
+      "samples": 500,
+      "ratio": 0.5,
+      "max_steps": 7,
+      "completed_samples": 500,
+      "has_actual_eviction": true,
+      "summary": {
+        "total_samples": 500,
+        "exact_match": 19.8,
+        "f1_score": 24.756255482868387,
+        "total_diagnostic_seconds": 11124.777836987283
+      }
+    },
+    {
+      "name": "qwen25_7b/seed3407/2wiki/main/no_success",
+      "group": "qwen25_7b/seed3407/2wiki",
+      "model": "qwen25_7b",
+      "seed": 3407,
+      "dataset": "2wiki",
+      "purpose": "main",
+      "variant": "no_success",
+      "samples": 500,
+      "ratio": 0.5,
+      "max_steps": 7,
+      "completed_samples": 500,
+      "has_actual_eviction": true,
+      "summary": {
+        "total_samples": 500,
+        "exact_match": 19.8,
+        "f1_score": 25.584959098872144,
+        "total_diagnostic_seconds": 19545.886435141787
+      }
+    },
+    {
+      "name": "qwen25_7b/seed3407/2wiki/main/no_cite",
+      "group": "qwen25_7b/seed3407/2wiki",
+      "model": "qwen25_7b",
+      "seed": 3407,
+      "dataset": "2wiki",
+      "purpose": "main",
+      "variant": "no_cite",
+      "samples": 500,
+      "ratio": 0.5,
+      "max_steps": 7,
+      "completed_samples": 500,
+      "has_actual_eviction": true,
+      "summary": {
+        "total_samples": 500,
+        "exact_match": 19.4,
+        "f1_score": 25.503097627010668,
+        "total_diagnostic_seconds": 9456.284079643432
+      }
+    },
+    {
+      "name": "qwen25_7b/seed3407/2wiki/main/no_token",
+      "group": "qwen25_7b/seed3407/2wiki",
+      "model": "qwen25_7b",
+      "seed": 3407,
+      "dataset": "2wiki",
+      "purpose": "main",
+      "variant": "no_token",
+      "samples": 500,
+      "ratio": 0.5,
+      "max_steps": 7,
+      "completed_samples": 500,
+      "has_actual_eviction": true,
+      "summary": {
+        "total_samples": 500,
+        "exact_match": 22.4,
+        "f1_score": 27.080916101442412,
+        "total_diagnostic_seconds": 16796.44022568874
+      }
+    },
+    {
+      "name": "qwen25_7b/seed3407/2wiki/main/no_step",
+      "group": "qwen25_7b/seed3407/2wiki",
+      "model": "qwen25_7b",
+      "seed": 3407,
+      "dataset": "2wiki",
+      "purpose": "main",
+      "variant": "no_step",
+      "samples": 500,
+      "ratio": 0.5,
+      "max_steps": 7,
+      "completed_samples": 500,
+      "has_actual_eviction": true,
+      "summary": {
+        "total_samples": 500,
+        "exact_match": 8.4,
+        "f1_score": 13.886548517415392,
+        "total_diagnostic_seconds": 26382.338847986888
+      }
+    },
+    {
+      "name": "qwen25_7b/seed3407/musique/main/full",
+      "group": "qwen25_7b/seed3407/musique",
+      "model": "qwen25_7b",
+      "seed": 3407,
+      "dataset": "musique",
+      "purpose": "main",
+      "variant": "full",
+      "samples": 500,
+      "ratio": 0.5,
+      "max_steps": 7,
+      "completed_samples": 500,
+      "has_actual_eviction": true,
+      "summary": {
+        "total_samples": 500,
+        "exact_match": 5.4,
+        "f1_score": 9.277503607503608,
+        "total_diagnostic_seconds": 12011.647573172115
+      }
+    },
+    {
+      "name": "qwen25_7b/seed3407/musique/main/no_repeat",
+      "group": "qwen25_7b/seed3407/musique",
+      "model": "qwen25_7b",
+      "seed": 3407,
+      "dataset": "musique",
+      "purpose": "main",
+      "variant": "no_repeat",
+      "samples": 500,
+      "ratio": 0.5,
+      "max_steps": 7,
+      "completed_samples": 500,
+      "has_actual_eviction": true,
+      "summary": {
+        "total_samples": 500,
+        "exact_match": 5.0,
+        "f1_score": 9.06036075036075,
+        "total_diagnostic_seconds": 12493.117699442897
+      }
+    },
+    {
+      "name": "qwen25_7b/seed3407/musique/main/no_novelty",
+      "group": "qwen25_7b/seed3407/musique",
+      "model": "qwen25_7b",
+      "seed": 3407,
+      "dataset": "musique",
+      "purpose": "main",
+      "variant": "no_novelty",
+      "samples": 500,
+      "ratio": 0.5,
+      "max_steps": 7,
+      "completed_samples": 500,
+      "has_actual_eviction": true,
+      "summary": {
+        "total_samples": 500,
+        "exact_match": 5.0,
+        "f1_score": 8.521152122731069,
+        "total_diagnostic_seconds": 18579.862946453504
+      }
+    },
+    {
+      "name": "qwen25_7b/seed3407/musique/main/no_success",
+      "group": "qwen25_7b/seed3407/musique",
+      "model": "qwen25_7b",
+      "seed": 3407,
+      "dataset": "musique",
+      "purpose": "main",
+      "variant": "no_success",
+      "samples": 500,
+      "ratio": 0.5,
+      "max_steps": 7,
+      "completed_samples": 500,
+      "has_actual_eviction": true,
+      "summary": {
+        "total_samples": 500,
+        "exact_match": 4.8,
+        "f1_score": 8.07079365079365,
+        "total_diagnostic_seconds": 20181.114623112604
+      }
+    },
+    {
+      "name": "qwen25_7b/seed3407/musique/main/no_cite",
+      "group": "qwen25_7b/seed3407/musique",
+      "model": "qwen25_7b",
+      "seed": 3407,
+      "dataset": "musique",
+      "purpose": "main",
+      "variant": "no_cite",
+      "samples": 500,
+      "ratio": 0.5,
+      "max_steps": 7,
+      "completed_samples": 500,
+      "has_actual_eviction": true,
+      "summary": {
+        "total_samples": 500,
+        "exact_match": 5.0,
+        "f1_score": 9.444234268147312,
+        "total_diagnostic_seconds": 25808.94658737397
+      }
+    },
+    {
+      "name": "qwen25_7b/seed3407/musique/main/no_token",
+      "group": "qwen25_7b/seed3407/musique",
+      "model": "qwen25_7b",
+      "seed": 3407,
+      "dataset": "musique",
+      "purpose": "main",
+      "variant": "no_token",
+      "samples": 500,
+      "ratio": 0.5,
+      "max_steps": 7,
+      "completed_samples": 500,
+      "has_actual_eviction": true,
+      "summary": {
+        "total_samples": 500,
+        "exact_match": 2.6,
+        "f1_score": 4.873852813852814,
+        "total_diagnostic_seconds": 12128.13731142506
+      }
+    },
+    {
+      "name": "qwen25_7b/seed3407/musique/main/no_step",
+      "group": "qwen25_7b/seed3407/musique",
+      "model": "qwen25_7b",
+      "seed": 3407,
+      "dataset": "musique",
+      "purpose": "main",
+      "variant": "no_step",
+      "samples": 500,
+      "ratio": 0.5,
+      "max_steps": 7,
+      "completed_samples": 500,
+      "has_actual_eviction": true,
+      "summary": {
+        "total_samples": 500,
+        "exact_match": 2.6,
+        "f1_score": 6.603836393491567,
+        "total_diagnostic_seconds": 18915.679030418396
+      }
+    }
+  ],
+  "timing_policy": "Shared GPU accuracy only; existing load workers are never stopped. Timings are diagnostic, not latency measurements.",
+  "statistics": "New seeds233/3407 only. Historical seed42 run provenance is not verified; do not compute a three-seed mean until its actual results and IDs are validated."
+}

@@ -1,0 +1,16 @@
+{
+  "status": "complete",
+  "supervisor_pid": 2675877,
+  "updated": 1790690330.5941143,
+  "job": {
+    "name": "main/h2o_step/r50",
+    "purpose": "main",
+    "method": "h2o_step",
+    "ratio": 0.5,
+    "samples": 0,
+    "max_steps": 50
+  },
+  "completed_jobs": 10,
+  "total_jobs": 10,
+  "worker_identity": null
+}

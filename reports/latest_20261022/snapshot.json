@@ -1,0 +1,15 @@
+{
+  "schema": "kvmem_public_snapshot_20261022_v1",
+  "started_utc": "2026-10-22T12:50:36.438541+00:00",
+  "finished_utc": "2026-10-22T12:51:07.327987+00:00",
+  "export_script_sha256": "f032e4a305f17a5b4311470cf3f7e5eb3b6680903514cecd482c60ae13d96212",
+  "prior_published_commit": "0ab40124f25752bbecf62cda48acc6ca9abc6279",
+  "qa_conditions": 135,
+  "qa_evaluations": 67500,
+  "webbench_committed": 2415,
+  "webbench_actor_complete": 20,
+  "webbench_scoring_terminal": 18,
+  "other_summary_collections": 23,
+  "source_files": 2491,
+  "full_checkpoint_policy": "Full resumable state is transferred separately in an encrypted migration archive."
+}

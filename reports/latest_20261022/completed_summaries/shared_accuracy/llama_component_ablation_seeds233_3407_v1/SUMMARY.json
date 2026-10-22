@@ -1,0 +1,848 @@
+{
+  "completed_main": 42,
+  "expected_main": 42,
+  "results": [
+    {
+      "name": "llama31_8b/seed233/hotpotqa/main/full",
+      "group": "llama31_8b/seed233/hotpotqa",
+      "model": "llama31_8b",
+      "seed": 233,
+      "dataset": "hotpotqa",
+      "purpose": "main",
+      "variant": "full",
+      "samples": 500,
+      "ratio": 0.5,
+      "max_steps": 7,
+      "completed_samples": 500,
+      "has_actual_eviction": true,
+      "summary": {
+        "total_samples": 500,
+        "exact_match": 25.0,
+        "f1_score": 33.69361259655377,
+        "total_diagnostic_seconds": 13020.51861732034
+      }
+    },
+    {
+      "name": "llama31_8b/seed233/hotpotqa/main/no_repeat",
+      "group": "llama31_8b/seed233/hotpotqa",
+      "model": "llama31_8b",
+      "seed": 233,
+      "dataset": "hotpotqa",
+      "purpose": "main",
+      "variant": "no_repeat",
+      "samples": 500,
+      "ratio": 0.5,
+      "max_steps": 7,
+      "completed_samples": 500,
+      "has_actual_eviction": true,
+      "summary": {
+        "total_samples": 500,
+        "exact_match": 25.2,
+        "f1_score": 33.58250148544266,
+        "total_diagnostic_seconds": 11455.277512567118
+      }
+    },
+    {
+      "name": "llama31_8b/seed233/hotpotqa/main/no_novelty",
+      "group": "llama31_8b/seed233/hotpotqa",
+      "model": "llama31_8b",
+      "seed": 233,
+      "dataset": "hotpotqa",
+      "purpose": "main",
+      "variant": "no_novelty",
+      "samples": 500,
+      "ratio": 0.5,
+      "max_steps": 7,
+      "completed_samples": 500,
+      "has_actual_eviction": true,
+      "summary": {
+        "total_samples": 500,
+        "exact_match": 23.4,
+        "f1_score": 33.57677276971394,
+        "total_diagnostic_seconds": 9156.967933657113
+      }
+    },
+    {
+      "name": "llama31_8b/seed233/hotpotqa/main/no_success",
+      "group": "llama31_8b/seed233/hotpotqa",
+      "model": "llama31_8b",
+      "seed": 233,
+      "dataset": "hotpotqa",
+      "purpose": "main",
+      "variant": "no_success",
+      "samples": 500,
+      "ratio": 0.5,
+      "max_steps": 7,
+      "completed_samples": 500,
+      "has_actual_eviction": true,
+      "summary": {
+        "total_samples": 500,
+        "exact_match": 24.8,
+        "f1_score": 33.792977675918856,
+        "total_diagnostic_seconds": 7016.769423129503
+      }
+    },
+    {
+      "name": "llama31_8b/seed233/hotpotqa/main/no_cite",
+      "group": "llama31_8b/seed233/hotpotqa",
+      "model": "llama31_8b",
+      "seed": 233,
+      "dataset": "hotpotqa",
+      "purpose": "main",
+      "variant": "no_cite",
+      "samples": 500,
+      "ratio": 0.5,
+      "max_steps": 7,
+      "completed_samples": 500,
+      "has_actual_eviction": true,
+      "summary": {
+        "total_samples": 500,
+        "exact_match": 24.8,
+        "f1_score": 33.23012053306171,
+        "total_diagnostic_seconds": 8864.328032771591
+      }
+    },
+    {
+      "name": "llama31_8b/seed233/hotpotqa/main/no_token",
+      "group": "llama31_8b/seed233/hotpotqa",
+      "model": "llama31_8b",
+      "seed": 233,
+      "dataset": "hotpotqa",
+      "purpose": "main",
+      "variant": "no_token",
+      "samples": 500,
+      "ratio": 0.5,
+      "max_steps": 7,
+      "completed_samples": 500,
+      "has_actual_eviction": true,
+      "summary": {
+        "total_samples": 500,
+        "exact_match": 24.2,
+        "f1_score": 31.93171547406841,
+        "total_diagnostic_seconds": 7073.074675329961
+      }
+    },
+    {
+      "name": "llama31_8b/seed233/hotpotqa/main/no_step",
+      "group": "llama31_8b/seed233/hotpotqa",
+      "model": "llama31_8b",
+      "seed": 233,
+      "dataset": "hotpotqa",
+      "purpose": "main",
+      "variant": "no_step",
+      "samples": 500,
+      "ratio": 0.5,
+      "max_steps": 7,
+      "completed_samples": 500,
+      "has_actual_eviction": true,
+      "summary": {
+        "total_samples": 500,
+        "exact_match": 16.6,
+        "f1_score": 25.094709277650455,
+        "total_diagnostic_seconds": 9135.253688509576
+      }
+    },
+    {
+      "name": "llama31_8b/seed233/2wiki/main/full",
+      "group": "llama31_8b/seed233/2wiki",
+      "model": "llama31_8b",
+      "seed": 233,
+      "dataset": "2wiki",
+      "purpose": "main",
+      "variant": "full",
+      "samples": 500,
+      "ratio": 0.5,
+      "max_steps": 7,
+      "completed_samples": 500,
+      "has_actual_eviction": true,
+      "summary": {
+        "total_samples": 500,
+        "exact_match": 20.0,
+        "f1_score": 22.71571428571428,
+        "total_diagnostic_seconds": 9035.915609953925
+      }
+    },
+    {
+      "name": "llama31_8b/seed233/2wiki/main/no_repeat",
+      "group": "llama31_8b/seed233/2wiki",
+      "model": "llama31_8b",
+      "seed": 233,
+      "dataset": "2wiki",
+      "purpose": "main",
+      "variant": "no_repeat",
+      "samples": 500,
+      "ratio": 0.5,
+      "max_steps": 7,
+      "completed_samples": 500,
+      "has_actual_eviction": true,
+      "summary": {
+        "total_samples": 500,
+        "exact_match": 19.8,
+        "f1_score": 22.315714285714282,
+        "total_diagnostic_seconds": 7931.174851712771
+      }
+    },
+    {
+      "name": "llama31_8b/seed233/2wiki/main/no_novelty",
+      "group": "llama31_8b/seed233/2wiki",
+      "model": "llama31_8b",
+      "seed": 233,
+      "dataset": "2wiki",
+      "purpose": "main",
+      "variant": "no_novelty",
+      "samples": 500,
+      "ratio": 0.5,
+      "max_steps": 7,
+      "completed_samples": 500,
+      "has_actual_eviction": true,
+      "summary": {
+        "total_samples": 500,
+        "exact_match": 21.4,
+        "f1_score": 24.43991341991342,
+        "total_diagnostic_seconds": 9409.944781297352
+      }
+    },
+    {
+      "name": "llama31_8b/seed233/2wiki/main/no_success",
+      "group": "llama31_8b/seed233/2wiki",
+      "model": "llama31_8b",
+      "seed": 233,
+      "dataset": "2wiki",
+      "purpose": "main",
+      "variant": "no_success",
+      "samples": 500,
+      "ratio": 0.5,
+      "max_steps": 7,
+      "completed_samples": 500,
+      "has_actual_eviction": true,
+      "summary": {
+        "total_samples": 500,
+        "exact_match": 19.2,
+        "f1_score": 22.276825396825394,
+        "total_diagnostic_seconds": 9818.766926376149
+      }
+    },
+    {
+      "name": "llama31_8b/seed233/2wiki/main/no_cite",
+      "group": "llama31_8b/seed233/2wiki",
+      "model": "llama31_8b",
+      "seed": 233,
+      "dataset": "2wiki",
+      "purpose": "main",
+      "variant": "no_cite",
+      "samples": 500,
+      "ratio": 0.5,
+      "max_steps": 7,
+      "completed_samples": 500,
+      "has_actual_eviction": true,
+      "summary": {
+        "total_samples": 500,
+        "exact_match": 19.8,
+        "f1_score": 22.54904761904762,
+        "total_diagnostic_seconds": 12778.77688902663
+      }
+    },
+    {
+      "name": "llama31_8b/seed233/2wiki/main/no_token",
+      "group": "llama31_8b/seed233/2wiki",
+      "model": "llama31_8b",
+      "seed": 233,
+      "dataset": "2wiki",
+      "purpose": "main",
+      "variant": "no_token",
+      "samples": 500,
+      "ratio": 0.5,
+      "max_steps": 7,
+      "completed_samples": 500,
+      "has_actual_eviction": true,
+      "summary": {
+        "total_samples": 500,
+        "exact_match": 20.2,
+        "f1_score": 22.774025974025975,
+        "total_diagnostic_seconds": 16575.885607297532
+      }
+    },
+    {
+      "name": "llama31_8b/seed233/2wiki/main/no_step",
+      "group": "llama31_8b/seed233/2wiki",
+      "model": "llama31_8b",
+      "seed": 233,
+      "dataset": "2wiki",
+      "purpose": "main",
+      "variant": "no_step",
+      "samples": 500,
+      "ratio": 0.5,
+      "max_steps": 7,
+      "completed_samples": 500,
+      "has_actual_eviction": true,
+      "summary": {
+        "total_samples": 500,
+        "exact_match": 12.0,
+        "f1_score": 14.612380952380951,
+        "total_diagnostic_seconds": 15217.544440812897
+      }
+    },
+    {
+      "name": "llama31_8b/seed233/musique/main/full",
+      "group": "llama31_8b/seed233/musique",
+      "model": "llama31_8b",
+      "seed": 233,
+      "dataset": "musique",
+      "purpose": "main",
+      "variant": "full",
+      "samples": 500,
+      "ratio": 0.5,
+      "max_steps": 7,
+      "completed_samples": 500,
+      "has_actual_eviction": true,
+      "summary": {
+        "total_samples": 500,
+        "exact_match": 2.6,
+        "f1_score": 5.63,
+        "total_diagnostic_seconds": 26717.00434868643
+      }
+    },
+    {
+      "name": "llama31_8b/seed233/musique/main/no_repeat",
+      "group": "llama31_8b/seed233/musique",
+      "model": "llama31_8b",
+      "seed": 233,
+      "dataset": "musique",
+      "purpose": "main",
+      "variant": "no_repeat",
+      "samples": 500,
+      "ratio": 0.5,
+      "max_steps": 7,
+      "completed_samples": 500,
+      "has_actual_eviction": true,
+      "summary": {
+        "total_samples": 500,
+        "exact_match": 2.6,
+        "f1_score": 4.943333333333333,
+        "total_diagnostic_seconds": 23401.150712384377
+      }
+    },
+    {
+      "name": "llama31_8b/seed233/musique/main/no_novelty",
+      "group": "llama31_8b/seed233/musique",
+      "model": "llama31_8b",
+      "seed": 233,
+      "dataset": "musique",
+      "purpose": "main",
+      "variant": "no_novelty",
+      "samples": 500,
+      "ratio": 0.5,
+      "max_steps": 7,
+      "completed_samples": 500,
+      "has_actual_eviction": true,
+      "summary": {
+        "total_samples": 500,
+        "exact_match": 2.0,
+        "f1_score": 5.293174603174603,
+        "total_diagnostic_seconds": 14319.747885524295
+      }
+    },
+    {
+      "name": "llama31_8b/seed233/musique/main/no_success",
+      "group": "llama31_8b/seed233/musique",
+      "model": "llama31_8b",
+      "seed": 233,
+      "dataset": "musique",
+      "purpose": "main",
+      "variant": "no_success",
+      "samples": 500,
+      "ratio": 0.5,
+      "max_steps": 7,
+      "completed_samples": 500,
+      "has_actual_eviction": true,
+      "summary": {
+        "total_samples": 500,
+        "exact_match": 2.0,
+        "f1_score": 3.7704761904761903,
+        "total_diagnostic_seconds": 13997.698194290977
+      }
+    },
+    {
+      "name": "llama31_8b/seed233/musique/main/no_cite",
+      "group": "llama31_8b/seed233/musique",
+      "model": "llama31_8b",
+      "seed": 233,
+      "dataset": "musique",
+      "purpose": "main",
+      "variant": "no_cite",
+      "samples": 500,
+      "ratio": 0.5,
+      "max_steps": 7,
+      "completed_samples": 500,
+      "has_actual_eviction": true,
+      "summary": {
+        "total_samples": 500,
+        "exact_match": 2.6,
+        "f1_score": 5.817619047619048,
+        "total_diagnostic_seconds": 12909.008331852965
+      }
+    },
+    {
+      "name": "llama31_8b/seed233/musique/main/no_token",
+      "group": "llama31_8b/seed233/musique",
+      "model": "llama31_8b",
+      "seed": 233,
+      "dataset": "musique",
+      "purpose": "main",
+      "variant": "no_token",
+      "samples": 500,
+      "ratio": 0.5,
+      "max_steps": 7,
+      "completed_samples": 500,
+      "has_actual_eviction": true,
+      "summary": {
+        "total_samples": 500,
+        "exact_match": 1.8,
+        "f1_score": 3.6914285714285713,
+        "total_diagnostic_seconds": 12821.986549165566
+      }
+    },
+    {
+      "name": "llama31_8b/seed233/musique/main/no_step",
+      "group": "llama31_8b/seed233/musique",
+      "model": "llama31_8b",
+      "seed": 233,
+      "dataset": "musique",
+      "purpose": "main",
+      "variant": "no_step",
+      "samples": 500,
+      "ratio": 0.5,
+      "max_steps": 7,
+      "completed_samples": 500,
+      "has_actual_eviction": true,
+      "summary": {
+        "total_samples": 500,
+        "exact_match": 2.8,
+        "f1_score": 6.310793650793651,
+        "total_diagnostic_seconds": 9655.868182880804
+      }
+    },
+    {
+      "name": "llama31_8b/seed3407/hotpotqa/main/full",
+      "group": "llama31_8b/seed3407/hotpotqa",
+      "model": "llama31_8b",
+      "seed": 3407,
+      "dataset": "hotpotqa",
+      "purpose": "main",
+      "variant": "full",
+      "samples": 500,
+      "ratio": 0.5,
+      "max_steps": 7,
+      "completed_samples": 500,
+      "has_actual_eviction": true,
+      "summary": {
+        "total_samples": 500,
+        "exact_match": 23.6,
+        "f1_score": 31.423706293706296,
+        "total_diagnostic_seconds": 15952.162690148223
+      }
+    },
+    {
+      "name": "llama31_8b/seed3407/hotpotqa/main/no_repeat",
+      "group": "llama31_8b/seed3407/hotpotqa",
+      "model": "llama31_8b",
+      "seed": 3407,
+      "dataset": "hotpotqa",
+      "purpose": "main",
+      "variant": "no_repeat",
+      "samples": 500,
+      "ratio": 0.5,
+      "max_steps": 7,
+      "completed_samples": 500,
+      "has_actual_eviction": true,
+      "summary": {
+        "total_samples": 500,
+        "exact_match": 24.0,
+        "f1_score": 31.654658674658673,
+        "total_diagnostic_seconds": 15732.860309403855
+      }
+    },
+    {
+      "name": "llama31_8b/seed3407/hotpotqa/main/no_novelty",
+      "group": "llama31_8b/seed3407/hotpotqa",
+      "model": "llama31_8b",
+      "seed": 3407,
+      "dataset": "hotpotqa",
+      "purpose": "main",
+      "variant": "no_novelty",
+      "samples": 500,
+      "ratio": 0.5,
+      "max_steps": 7,
+      "completed_samples": 500,
+      "has_actual_eviction": true,
+      "summary": {
+        "total_samples": 500,
+        "exact_match": 26.6,
+        "f1_score": 33.72191919191919,
+        "total_diagnostic_seconds": 14732.75767057389
+      }
+    },
+    {
+      "name": "llama31_8b/seed3407/hotpotqa/main/no_success",
+      "group": "llama31_8b/seed3407/hotpotqa",
+      "model": "llama31_8b",
+      "seed": 3407,
+      "dataset": "hotpotqa",
+      "purpose": "main",
+      "variant": "no_success",
+      "samples": 500,
+      "ratio": 0.5,
+      "max_steps": 7,
+      "completed_samples": 500,
+      "has_actual_eviction": true,
+      "summary": {
+        "total_samples": 500,
+        "exact_match": 24.4,
+        "f1_score": 32.52461538461538,
+        "total_diagnostic_seconds": 11163.1974825277
+      }
+    },
+    {
+      "name": "llama31_8b/seed3407/hotpotqa/main/no_cite",
+      "group": "llama31_8b/seed3407/hotpotqa",
+      "model": "llama31_8b",
+      "seed": 3407,
+      "dataset": "hotpotqa",
+      "purpose": "main",
+      "variant": "no_cite",
+      "samples": 500,
+      "ratio": 0.5,
+      "max_steps": 7,
+      "completed_samples": 500,
+      "has_actual_eviction": true,
+      "summary": {
+        "total_samples": 500,
+        "exact_match": 24.4,
+        "f1_score": 32.1284681984682,
+        "total_diagnostic_seconds": 9106.750236140564
+      }
+    },
+    {
+      "name": "llama31_8b/seed3407/hotpotqa/main/no_token",
+      "group": "llama31_8b/seed3407/hotpotqa",
+      "model": "llama31_8b",
+      "seed": 3407,
+      "dataset": "hotpotqa",
+      "purpose": "main",
+      "variant": "no_token",
+      "samples": 500,
+      "ratio": 0.5,
+      "max_steps": 7,
+      "completed_samples": 500,
+      "has_actual_eviction": true,
+      "summary": {
+        "total_samples": 500,
+        "exact_match": 26.6,
+        "f1_score": 32.96796314796315,
+        "total_diagnostic_seconds": 10024.041499746032
+      }
+    },
+    {
+      "name": "llama31_8b/seed3407/hotpotqa/main/no_step",
+      "group": "llama31_8b/seed3407/hotpotqa",
+      "model": "llama31_8b",
+      "seed": 3407,
+      "dataset": "hotpotqa",
+      "purpose": "main",
+      "variant": "no_step",
+      "samples": 500,
+      "ratio": 0.5,
+      "max_steps": 7,
+      "completed_samples": 500,
+      "has_actual_eviction": true,
+      "summary": {
+        "total_samples": 500,
+        "exact_match": 18.8,
+        "f1_score": 24.882981462981462,
+        "total_diagnostic_seconds": 10041.043985329568
+      }
+    },
+    {
+      "name": "llama31_8b/seed3407/2wiki/main/full",
+      "group": "llama31_8b/seed3407/2wiki",
+      "model": "llama31_8b",
+      "seed": 3407,
+      "dataset": "2wiki",
+      "purpose": "main",
+      "variant": "full",
+      "samples": 500,
+      "ratio": 0.5,
+      "max_steps": 7,
+      "completed_samples": 500,
+      "has_actual_eviction": true,
+      "summary": {
+        "total_samples": 500,
+        "exact_match": 23.0,
+        "f1_score": 26.25748917748918,
+        "total_diagnostic_seconds": 18717.282738347538
+      }
+    },
+    {
+      "name": "llama31_8b/seed3407/2wiki/main/no_repeat",
+      "group": "llama31_8b/seed3407/2wiki",
+      "model": "llama31_8b",
+      "seed": 3407,
+      "dataset": "2wiki",
+      "purpose": "main",
+      "variant": "no_repeat",
+      "samples": 500,
+      "ratio": 0.5,
+      "max_steps": 7,
+      "completed_samples": 500,
+      "has_actual_eviction": true,
+      "summary": {
+        "total_samples": 500,
+        "exact_match": 23.8,
+        "f1_score": 26.99082251082251,
+        "total_diagnostic_seconds": 15535.754081791732
+      }
+    },
+    {
+      "name": "llama31_8b/seed3407/2wiki/main/no_novelty",
+      "group": "llama31_8b/seed3407/2wiki",
+      "model": "llama31_8b",
+      "seed": 3407,
+      "dataset": "2wiki",
+      "purpose": "main",
+      "variant": "no_novelty",
+      "samples": 500,
+      "ratio": 0.5,
+      "max_steps": 7,
+      "completed_samples": 500,
+      "has_actual_eviction": true,
+      "summary": {
+        "total_samples": 500,
+        "exact_match": 21.0,
+        "f1_score": 24.39587301587302,
+        "total_diagnostic_seconds": 9816.591744468082
+      }
+    },
+    {
+      "name": "llama31_8b/seed3407/2wiki/main/no_success",
+      "group": "llama31_8b/seed3407/2wiki",
+      "model": "llama31_8b",
+      "seed": 3407,
+      "dataset": "2wiki",
+      "purpose": "main",
+      "variant": "no_success",
+      "samples": 500,
+      "ratio": 0.5,
+      "max_steps": 7,
+      "completed_samples": 500,
+      "has_actual_eviction": true,
+      "summary": {
+        "total_samples": 500,
+        "exact_match": 23.4,
+        "f1_score": 26.524458874458873,
+        "total_diagnostic_seconds": 10402.588141308632
+      }
+    },
+    {
+      "name": "llama31_8b/seed3407/2wiki/main/no_cite",
+      "group": "llama31_8b/seed3407/2wiki",
+      "model": "llama31_8b",
+      "seed": 3407,
+      "dataset": "2wiki",
+      "purpose": "main",
+      "variant": "no_cite",
+      "samples": 500,
+      "ratio": 0.5,
+      "max_steps": 7,
+      "completed_samples": 500,
+      "has_actual_eviction": true,
+      "summary": {
+        "total_samples": 500,
+        "exact_match": 22.6,
+        "f1_score": 25.8030303030303,
+        "total_diagnostic_seconds": 10236.987977769226
+      }
+    },
+    {
+      "name": "llama31_8b/seed3407/2wiki/main/no_token",
+      "group": "llama31_8b/seed3407/2wiki",
+      "model": "llama31_8b",
+      "seed": 3407,
+      "dataset": "2wiki",
+      "purpose": "main",
+      "variant": "no_token",
+      "samples": 500,
+      "ratio": 0.5,
+      "max_steps": 7,
+      "completed_samples": 500,
+      "has_actual_eviction": true,
+      "summary": {
+        "total_samples": 500,
+        "exact_match": 22.4,
+        "f1_score": 25.04296069943129,
+        "total_diagnostic_seconds": 10361.675190848764
+      }
+    },
+    {
+      "name": "llama31_8b/seed3407/2wiki/main/no_step",
+      "group": "llama31_8b/seed3407/2wiki",
+      "model": "llama31_8b",
+      "seed": 3407,
+      "dataset": "2wiki",
+      "purpose": "main",
+      "variant": "no_step",
+      "samples": 500,
+      "ratio": 0.5,
+      "max_steps": 7,
+      "completed_samples": 500,
+      "has_actual_eviction": true,
+      "summary": {
+        "total_samples": 500,
+        "exact_match": 11.0,
+        "f1_score": 13.466363636363637,
+        "total_diagnostic_seconds": 10287.382867045235
+      }
+    },
+    {
+      "name": "llama31_8b/seed3407/musique/main/full",
+      "group": "llama31_8b/seed3407/musique",
+      "model": "llama31_8b",
+      "seed": 3407,
+      "dataset": "musique",
+      "purpose": "main",
+      "variant": "full",
+      "samples": 500,
+      "ratio": 0.5,
+      "max_steps": 7,
+      "completed_samples": 500,
+      "has_actual_eviction": true,
+      "summary": {
+        "total_samples": 500,
+        "exact_match": 3.8,
+        "f1_score": 7.841624649859943,
+        "total_diagnostic_seconds": 28925.333339188248
+      }
+    },
+    {
+      "name": "llama31_8b/seed3407/musique/main/no_repeat",
+      "group": "llama31_8b/seed3407/musique",
+      "model": "llama31_8b",
+      "seed": 3407,
+      "dataset": "musique",
+      "purpose": "main",
+      "variant": "no_repeat",
+      "samples": 500,
+      "ratio": 0.5,
+      "max_steps": 7,
+      "completed_samples": 500,
+      "has_actual_eviction": true,
+      "summary": {
+        "total_samples": 500,
+        "exact_match": 3.8,
+        "f1_score": 7.282577030812326,
+        "total_diagnostic_seconds": 14869.002474804875
+      }
+    },
+    {
+      "name": "llama31_8b/seed3407/musique/main/no_novelty",
+      "group": "llama31_8b/seed3407/musique",
+      "model": "llama31_8b",
+      "seed": 3407,
+      "dataset": "musique",
+      "purpose": "main",
+      "variant": "no_novelty",
+      "samples": 500,
+      "ratio": 0.5,
+      "max_steps": 7,
+      "completed_samples": 500,
+      "has_actual_eviction": true,
+      "summary": {
+        "total_samples": 500,
+        "exact_match": 4.0,
+        "f1_score": 7.85031746031746,
+        "total_diagnostic_seconds": 11743.645672434941
+      }
+    },
+    {
+      "name": "llama31_8b/seed3407/musique/main/no_success",
+      "group": "llama31_8b/seed3407/musique",
+      "model": "llama31_8b",
+      "seed": 3407,
+      "dataset": "musique",
+      "purpose": "main",
+      "variant": "no_success",
+      "samples": 500,
+      "ratio": 0.5,
+      "max_steps": 7,
+      "completed_samples": 500,
+      "has_actual_eviction": true,
+      "summary": {
+        "total_samples": 500,
+        "exact_match": 4.2,
+        "f1_score": 7.2780349062702,
+        "total_diagnostic_seconds": 12095.506119017024
+      }
+    },
+    {
+      "name": "llama31_8b/seed3407/musique/main/no_cite",
+      "group": "llama31_8b/seed3407/musique",
+      "model": "llama31_8b",
+      "seed": 3407,
+      "dataset": "musique",
+      "purpose": "main",
+      "variant": "no_cite",
+      "samples": 500,
+      "ratio": 0.5,
+      "max_steps": 7,
+      "completed_samples": 500,
+      "has_actual_eviction": true,
+      "summary": {
+        "total_samples": 500,
+        "exact_match": 4.2,
+        "f1_score": 8.452380952380953,
+        "total_diagnostic_seconds": 12151.119216128718
+      }
+    },
+    {
+      "name": "llama31_8b/seed3407/musique/main/no_token",
+      "group": "llama31_8b/seed3407/musique",
+      "model": "llama31_8b",
+      "seed": 3407,
+      "dataset": "musique",
+      "purpose": "main",
+      "variant": "no_token",
+      "samples": 500,
+      "ratio": 0.5,
+      "max_steps": 7,
+      "completed_samples": 500,
+      "has_actual_eviction": true,
+      "summary": {
+        "total_samples": 500,
+        "exact_match": 3.2,
+        "f1_score": 6.302539682539683,
+        "total_diagnostic_seconds": 11813.634273327421
+      }
+    },
+    {
+      "name": "llama31_8b/seed3407/musique/main/no_step",
+      "group": "llama31_8b/seed3407/musique",
+      "model": "llama31_8b",
+      "seed": 3407,
+      "dataset": "musique",
+      "purpose": "main",
+      "variant": "no_step",
+      "samples": 500,
+      "ratio": 0.5,
+      "max_steps": 7,
+      "completed_samples": 500,
+      "has_actual_eviction": true,
+      "summary": {
+        "total_samples": 500,
+        "exact_match": 3.4,
+        "f1_score": 6.293823953823953,
+        "total_diagnostic_seconds": 11582.606945317239
+      }
+    }
+  ],
+  "timing_policy": "Shared GPU accuracy only; existing load workers are never stopped. Timings are diagnostic, not latency measurements.",
+  "statistics": "New seeds233/3407 only. Historical seed42 run provenance is not verified; do not compute a three-seed mean until its actual results and IDs are validated."
+}

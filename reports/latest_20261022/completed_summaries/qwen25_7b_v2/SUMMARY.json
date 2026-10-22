@@ -1,0 +1,153 @@
+{
+  "protocol": "alfworld_shared_h200_accuracy_v1",
+  "model": [
+    "Qwen/Qwen2.5-7B-Instruct",
+    "a09a35458c702b33eeacc393d103063234e8bc28"
+  ],
+  "completed_main": 5,
+  "expected_main": 5,
+  "results": [
+    {
+      "method": "fullkv",
+      "keep_ratio": 1.0,
+      "n": 134,
+      "successes": 11,
+      "success_rate_percent": 8.208955223880597,
+      "mean_environment_steps": 46.52985074626866,
+      "kv_cache_statistics": {
+        "episodes_with_cache_audit": 134,
+        "episodes_missing_cache_audit": 0,
+        "mean": {
+          "episode_mean_boundary_total_kv_mib": 297.4234276357323,
+          "episode_mean_boundary_total_kv_tokens": 5438.59981962482,
+          "episode_mean_boundary_trajectory_kv_mib": 273.71680450140394,
+          "final_prompt_kv_mib": 23.706623134328357,
+          "final_total_kv_mib": 556.2314598880597,
+          "final_total_kv_tokens": 10171.089552238805,
+          "final_trajectory_kv_mib": 532.5248367537314,
+          "final_trajectory_kv_tokens": 9737.597014925374,
+          "final_trajectory_retention": 1.0,
+          "peak_active_total_kv_mib": 556.2314598880597
+        },
+        "max_peak_active_total_kv_mib": 803.3046875,
+        "mean_peak_kv_mib_by_device": {
+          "cuda:0": 556.2314598880597
+        }
+      }
+    },
+    {
+      "method": "stepkv",
+      "keep_ratio": 0.2,
+      "n": 134,
+      "successes": 2,
+      "success_rate_percent": 1.492537313432836,
+      "mean_environment_steps": 49.32089552238806,
+      "kv_cache_statistics": {
+        "episodes_with_cache_audit": 134,
+        "episodes_missing_cache_audit": 0,
+        "mean": {
+          "episode_mean_boundary_total_kv_mib": 81.4575136316187,
+          "episode_mean_boundary_total_kv_tokens": 1489.508820692456,
+          "episode_mean_boundary_trajectory_kv_mib": 57.750890497290335,
+          "final_prompt_kv_mib": 23.706623134328357,
+          "final_total_kv_mib": 136.73752332089552,
+          "final_total_kv_tokens": 2500.3432835820895,
+          "final_trajectory_kv_mib": 113.03090018656717,
+          "final_trajectory_kv_tokens": 2066.8507462686566,
+          "final_trajectory_retention": 0.20105557860957773,
+          "peak_active_total_kv_mib": 145.19694496268656
+        },
+        "max_peak_active_total_kv_mib": 208.5234375,
+        "mean_peak_kv_mib_by_device": {
+          "cuda:0": 145.19694496268656
+        }
+      }
+    },
+    {
+      "method": "stepkv",
+      "keep_ratio": 0.5,
+      "n": 134,
+      "successes": 7,
+      "success_rate_percent": 5.223880597014926,
+      "mean_environment_steps": 47.97014925373134,
+      "kv_cache_statistics": {
+        "episodes_with_cache_audit": 134,
+        "episodes_missing_cache_audit": 0,
+        "mean": {
+          "episode_mean_boundary_total_kv_mib": 161.80994294616212,
+          "episode_mean_boundary_total_kv_tokens": 2958.8103853012503,
+          "episode_mean_boundary_trajectory_kv_mib": 138.10331981183379,
+          "final_prompt_kv_mib": 23.706623134328357,
+          "final_total_kv_mib": 293.22988572761193,
+          "final_total_kv_tokens": 5361.917910447762,
+          "final_trajectory_kv_mib": 269.52326259328356,
+          "final_trajectory_kv_tokens": 4928.425373134329,
+          "final_trajectory_retention": 0.5007452220858353,
+          "peak_active_total_kv_mib": 298.25827891791045
+        },
+        "max_peak_active_total_kv_mib": 442.09375,
+        "mean_peak_kv_mib_by_device": {
+          "cuda:0": 298.25827891791045
+        }
+      }
+    },
+    {
+      "method": "h2o_step",
+      "keep_ratio": 0.2,
+      "n": 134,
+      "successes": 7,
+      "success_rate_percent": 5.223880597014926,
+      "mean_environment_steps": 48.201492537313435,
+      "kv_cache_statistics": {
+        "episodes_with_cache_audit": 134,
+        "episodes_missing_cache_audit": 0,
+        "mean": {
+          "episode_mean_boundary_total_kv_mib": 79.10284942233707,
+          "episode_mean_boundary_total_kv_tokens": 1446.452103722735,
+          "episode_mean_boundary_trajectory_kv_mib": 55.39622628800871,
+          "final_prompt_kv_mib": 23.706623134328357,
+          "final_total_kv_mib": 132.447411380597,
+          "final_total_kv_tokens": 2421.89552238806,
+          "final_trajectory_kv_mib": 108.74078824626865,
+          "final_trajectory_kv_tokens": 1988.402985074627,
+          "final_trajectory_retention": 0.20105233564144576,
+          "peak_active_total_kv_mib": 140.93703358208955
+        },
+        "max_peak_active_total_kv_mib": 174.453125,
+        "mean_peak_kv_mib_by_device": {
+          "cuda:0": 140.93703358208955
+        }
+      }
+    },
+    {
+      "method": "h2o_step",
+      "keep_ratio": 0.5,
+      "n": 134,
+      "successes": 10,
+      "success_rate_percent": 7.462686567164179,
+      "mean_environment_steps": 47.02238805970149,
+      "kv_cache_statistics": {
+        "episodes_with_cache_audit": 134,
+        "episodes_missing_cache_audit": 0,
+        "mean": {
+          "episode_mean_boundary_total_kv_mib": 161.8025055226956,
+          "episode_mean_boundary_total_kv_tokens": 2958.6743867007194,
+          "episode_mean_boundary_trajectory_kv_mib": 138.09588238836724,
+          "final_prompt_kv_mib": 23.706623134328357,
+          "final_total_kv_mib": 292.9788945895522,
+          "final_total_kv_tokens": 5357.328358208955,
+          "final_trajectory_kv_mib": 269.27227145522386,
+          "final_trajectory_kv_tokens": 4923.835820895522,
+          "final_trajectory_retention": 0.5009566007125923,
+          "peak_active_total_kv_mib": 298.0485074626866
+        },
+        "max_peak_active_total_kv_mib": 405.1796875,
+        "mean_peak_kv_mib_by_device": {
+          "cuda:0": 298.0485074626866
+        }
+      }
+    }
+  ],
+  "timing_policy": "Shared-GPU diagnostic times only; no latency claims",
+  "statistics": "Single seed, matched task set. No across-seed standard deviation or significance claim."
+}

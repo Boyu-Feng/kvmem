@@ -1,0 +1,1278 @@
+{
+  "dataset": "musique",
+  "legacy_conditions": [
+    {
+      "method": "fullkv",
+      "ratio": 1.0,
+      "questions": 20,
+      "byte_matched": false,
+      "completed_questions": 20,
+      "mean_episode_seconds": 19.92556432801066,
+      "median_episode_seconds": 22.337629641406238,
+      "mean_em": 0,
+      "mean_f1": 0.0,
+      "mean_episode_excluding_tool_seconds": 19.689004257810303,
+      "mean_tool_seconds": 0.23656007020035758,
+      "mean_generation_blocks": 6.55,
+      "mean_final_kv_bytes": 58313113.6,
+      "mean_final_trajectory_kv_bytes": 37273600,
+      "mean_final_slots_per_head": 1016.9,
+      "mean_final_allocated_above_model_bytes": 102915788.8,
+      "mean_final_driver_above_model_bytes": 1039205683.2,
+      "mean_clean_peak_allocated_above_model_bytes": 163234764.8,
+      "max_clean_peak_allocated_above_model_bytes": 183307264,
+      "mean_sampled_peak_active_kv_bytes": 65802240,
+      "max_sampled_peak_active_kv_bytes": 81715200,
+      "mean_question_mean_generation_boundaries_kv_bytes": 41434705.92,
+      "mean_question_mean_generation_boundaries_allocated_above_model_bytes": 111564099.77904762,
+      "mean_question_mean_interaction_boundaries_kv_bytes": 41434705.92,
+      "mean_question_mean_interaction_boundaries_allocated_above_model_bytes": 111564099.77904762,
+      "diagnostic_mean_exclusive_seconds": {
+        "agent_parse": 0.0005544441286474466,
+        "cache_gather": 0.0,
+        "decode_forward": 23.97286003350746,
+        "generation_other": 27.155729149607943,
+        "initial_prefill": 0.01834950775373727,
+        "observation_prefill": 0.11395714276004583,
+        "scoring_forward": 0.0,
+        "selection_and_cache_management": 0.0,
+        "step_utility": 0.0002383311977609992,
+        "stop_crop": 0.002106101019307971,
+        "token_saliency": 0.0,
+        "tool": 0.24073945183772594
+      },
+      "diagnostic_mean_unattributed_seconds": 1.8298003831179812,
+      "diagnostic_mean_workload": {
+        "decode_forward": {
+          "forward_calls": 1381.1,
+          "input_positions": 1381.1
+        },
+        "initial_prefill": {
+          "forward_calls": 1,
+          "input_positions": 366.9
+        },
+        "observation_prefill": {
+          "forward_calls": 5.55,
+          "input_positions": 331.5
+        }
+      },
+      "head_expansion_factors": [
+        1.0
+      ],
+      "uses_native_kv_head_count": true,
+      "paired_latency_difference_seconds_vs_fullkv": {
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ],
+        "questions": 20,
+        "resamples": 2000,
+        "bootstrap_seed": 233,
+        "unit": "paired question means, not greedy timing repeats"
+      },
+      "mean_episode_seconds_over_fullkv": 1.0,
+      "mean_episode_excluding_tool_seconds_over_fullkv": 1.0,
+      "mean_final_kv_bytes_over_fullkv": 1.0,
+      "mean_question_mean_generation_boundaries_kv_bytes_over_fullkv": 1.0,
+      "mean_clean_peak_allocated_above_model_bytes_over_fullkv": 1.0,
+      "episode_speedup_over_fullkv": 1.0
+    },
+    {
+      "method": "stepkv",
+      "ratio": 0.2,
+      "questions": 20,
+      "byte_matched": false,
+      "completed_questions": 20,
+      "mean_episode_seconds": 21.383211282256525,
+      "median_episode_seconds": 22.41792626469396,
+      "mean_em": 0,
+      "mean_f1": 0.0,
+      "mean_episode_excluding_tool_seconds": 21.197812486824112,
+      "mean_tool_seconds": 0.18539879543241114,
+      "mean_generation_blocks": 6.9,
+      "mean_final_kv_bytes": 29242572.8,
+      "mean_final_trajectory_kv_bytes": 8203059.2,
+      "mean_final_slots_per_head": 509.95,
+      "mean_final_allocated_above_model_bytes": 64894668.8,
+      "mean_final_driver_above_model_bytes": 1234345676.8,
+      "mean_clean_peak_allocated_above_model_bytes": 272005952,
+      "max_clean_peak_allocated_above_model_bytes": 322019328,
+      "mean_sampled_peak_active_kv_bytes": 44742656,
+      "max_sampled_peak_active_kv_bytes": 50978816,
+      "mean_question_mean_generation_boundaries_kv_bytes": 25833608.533333335,
+      "mean_question_mean_generation_boundaries_allocated_above_model_bytes": 131309025.52380952,
+      "mean_question_mean_interaction_boundaries_kv_bytes": 25833608.533333335,
+      "mean_question_mean_interaction_boundaries_allocated_above_model_bytes": 104804519.61904761,
+      "diagnostic_mean_exclusive_seconds": {
+        "agent_parse": 0.000710623967461288,
+        "cache_gather": 0.0,
+        "debug_snapshot_export": 0.001234970148652792,
+        "decode_forward": 26.15269916979596,
+        "generation_other": 29.691076352680103,
+        "initial_prefill": 0.01843484800774604,
+        "observation_prefill": 0.13758610209915786,
+        "scoring_forward": 0.2695817363448441,
+        "selection_and_cache_management": 0.0222043999703601,
+        "step_utility": 0.011452289787121117,
+        "stop_crop": 0.002101599285379052,
+        "token_saliency": 0.0018935372354462743,
+        "tool": 0.19100640723481774
+      },
+      "diagnostic_mean_unattributed_seconds": 1.9660467204637826,
+      "diagnostic_mean_workload": {
+        "decode_forward": {
+          "forward_calls": 1498.45,
+          "input_positions": 1498.45
+        },
+        "initial_prefill": {
+          "forward_calls": 1,
+          "input_positions": 366.9
+        },
+        "observation_prefill": {
+          "forward_calls": 5.9,
+          "input_positions": 343
+        },
+        "scoring_forward": {
+          "forward_calls": 5.9,
+          "input_positions": 5.9
+        }
+      },
+      "head_expansion_factors": [
+        1.0
+      ],
+      "uses_native_kv_head_count": true,
+      "paired_latency_difference_seconds_vs_fullkv": {
+        "mean": 1.4576469542458654,
+        "ci95": [
+          -0.6007273350376636,
+          3.7391248718136922
+        ],
+        "questions": 20,
+        "resamples": 2000,
+        "bootstrap_seed": 233,
+        "unit": "paired question means, not greedy timing repeats"
+      },
+      "mean_episode_seconds_over_fullkv": 1.073154613352494,
+      "mean_episode_excluding_tool_seconds_over_fullkv": 1.0766320230955961,
+      "mean_final_kv_bytes_over_fullkv": 0.5014750712951126,
+      "mean_question_mean_generation_boundaries_kv_bytes_over_fullkv": 0.6234775403791096,
+      "mean_clean_peak_allocated_above_model_bytes_over_fullkv": 1.6663481724206826,
+      "episode_speedup_over_fullkv": 0.9318321773561018
+    },
+    {
+      "method": "stepkv",
+      "ratio": 0.5,
+      "questions": 20,
+      "byte_matched": false,
+      "completed_questions": 20,
+      "mean_episode_seconds": 20.128531335969456,
+      "median_episode_seconds": 21.719583865371533,
+      "mean_em": 0,
+      "mean_f1": 0.014285714285714287,
+      "mean_episode_excluding_tool_seconds": 19.92841305427719,
+      "mean_tool_seconds": 0.20011828169226648,
+      "mean_generation_blocks": 6.9,
+      "mean_final_kv_bytes": 39693516.8,
+      "mean_final_trajectory_kv_bytes": 18654003.2,
+      "mean_final_slots_per_head": 692.2,
+      "mean_final_allocated_above_model_bytes": 75345612.8,
+      "mean_final_driver_above_model_bytes": 1232353382.4,
+      "mean_clean_peak_allocated_above_model_bytes": 287836748.8,
+      "max_clean_peak_allocated_above_model_bytes": 350329344,
+      "mean_sampled_peak_active_kv_bytes": 49975296,
+      "max_sampled_peak_active_kv_bytes": 59465728,
+      "mean_question_mean_generation_boundaries_kv_bytes": 31809044.48,
+      "mean_question_mean_generation_boundaries_allocated_above_model_bytes": 140826633.50857142,
+      "mean_question_mean_interaction_boundaries_kv_bytes": 31809044.48,
+      "mean_question_mean_interaction_boundaries_allocated_above_model_bytes": 113332158.90285714,
+      "diagnostic_mean_exclusive_seconds": {
+        "agent_parse": 0.0006574641214683652,
+        "cache_gather": 0.0,
+        "debug_snapshot_export": 0.0012735029216855765,
+        "decode_forward": 24.369166018627585,
+        "generation_other": 27.427494266373106,
+        "initial_prefill": 0.018229462578892706,
+        "observation_prefill": 0.13489669125992804,
+        "scoring_forward": 0.2647854917682707,
+        "selection_and_cache_management": 0.02450314743909985,
+        "step_utility": 0.011048122285865247,
+        "stop_crop": 0.0019917840836569667,
+        "token_saliency": 0.0018514661118388177,
+        "tool": 0.20494011829141529
+      },
+      "diagnostic_mean_unattributed_seconds": 2.006382554513402,
+      "diagnostic_mean_workload": {
+        "decode_forward": {
+          "forward_calls": 1414.25,
+          "input_positions": 1414.25
+        },
+        "initial_prefill": {
+          "forward_calls": 1,
+          "input_positions": 366.9
+        },
+        "observation_prefill": {
+          "forward_calls": 5.9,
+          "input_positions": 320.3
+        },
+        "scoring_forward": {
+          "forward_calls": 5.9,
+          "input_positions": 5.9
+        }
+      },
+      "head_expansion_factors": [
+        1.0
+      ],
+      "uses_native_kv_head_count": true,
+      "paired_latency_difference_seconds_vs_fullkv": {
+        "mean": 0.20296700795879588,
+        "ci95": [
+          -1.8026089178747497,
+          2.39040133934468
+        ],
+        "questions": 20,
+        "resamples": 2000,
+        "bootstrap_seed": 233,
+        "unit": "paired question means, not greedy timing repeats"
+      },
+      "mean_episode_seconds_over_fullkv": 1.010186261458777,
+      "mean_episode_excluding_tool_seconds_over_fullkv": 1.0121595177354852,
+      "mean_final_kv_bytes_over_fullkv": 0.6806962336512931,
+      "mean_question_mean_generation_boundaries_kv_bytes_over_fullkv": 0.7676908469295104,
+      "mean_clean_peak_allocated_above_model_bytes_over_fullkv": 1.763329944774117,
+      "episode_speedup_over_fullkv": 0.9899164521955908
+    },
+    {
+      "method": "h2o",
+      "ratio": 0.2,
+      "questions": 20,
+      "byte_matched": false,
+      "completed_questions": 20,
+      "mean_episode_seconds": 44.19788277588086,
+      "median_episode_seconds": 48.06951996462885,
+      "mean_em": 0,
+      "mean_f1": 0.0,
+      "mean_episode_excluding_tool_seconds": 44.134422760945746,
+      "mean_tool_seconds": 0.06346001493511721,
+      "mean_generation_blocks": 6.55,
+      "mean_final_kv_bytes": 38452019.2,
+      "mean_final_trajectory_kv_bytes": 17412505.6,
+      "mean_final_slots_per_head": 670.55,
+      "mean_final_allocated_above_model_bytes": 74448179.2,
+      "mean_final_driver_above_model_bytes": 1002610380.8,
+      "mean_clean_peak_allocated_above_model_bytes": 253600000,
+      "max_clean_peak_allocated_above_model_bytes": 286958080,
+      "mean_sampled_peak_active_kv_bytes": 39157350.4,
+      "max_sampled_peak_active_kv_bytes": 43180032,
+      "mean_question_mean_generation_boundaries_kv_bytes": 30492938.24,
+      "mean_question_mean_generation_boundaries_allocated_above_model_bytes": 111383613.44,
+      "mean_question_mean_interaction_boundaries_kv_bytes": 30492938.24,
+      "mean_question_mean_interaction_boundaries_allocated_above_model_bytes": 89374146.56,
+      "diagnostic_mean_exclusive_seconds": {
+        "agent_parse": 0.0008937628706917166,
+        "cache_gather": 0.0,
+        "debug_snapshot_export": 0.1473901984281838,
+        "decode_forward": 26.809106984524988,
+        "generation_other": 47.73949026921764,
+        "initial_prefill": 0.02215407802723348,
+        "observation_prefill": 0.1148367078974843,
+        "scoring_forward": 49.5208684557816,
+        "selection_and_cache_management": 3.059096527984366,
+        "step_utility": 0.00022490203846246005,
+        "stop_crop": 0.0009216219885274767,
+        "token_saliency": 0.3096875417744741,
+        "tool": 0.06578470354434103
+      },
+      "diagnostic_mean_unattributed_seconds": 9.147353667207062,
+      "diagnostic_mean_workload": {
+        "decode_forward": {
+          "forward_calls": 1579.25,
+          "input_positions": 1579.25
+        },
+        "initial_prefill": {
+          "forward_calls": 1,
+          "input_positions": 366.9
+        },
+        "observation_prefill": {
+          "forward_calls": 5.55,
+          "input_positions": 169.75
+        },
+        "scoring_forward": {
+          "forward_calls": 1110,
+          "input_positions": 1110
+        }
+      },
+      "head_expansion_factors": [
+        1.0
+      ],
+      "uses_native_kv_head_count": true,
+      "paired_latency_difference_seconds_vs_fullkv": {
+        "mean": 24.2723184478702,
+        "ci95": [
+          18.86036493612919,
+          29.37970601791749
+        ],
+        "questions": 20,
+        "resamples": 2000,
+        "bootstrap_seed": 233,
+        "unit": "paired question means, not greedy timing repeats"
+      },
+      "mean_episode_seconds_over_fullkv": 2.2181496116398085,
+      "mean_episode_excluding_tool_seconds_over_fullkv": 2.241577186080314,
+      "mean_final_kv_bytes_over_fullkv": 0.6594060379585014,
+      "mean_question_mean_generation_boundaries_kv_bytes_over_fullkv": 0.7359274686026297,
+      "mean_clean_peak_allocated_above_model_bytes_over_fullkv": 1.5535906233621135,
+      "episode_speedup_over_fullkv": 0.45082621783150656
+    },
+    {
+      "method": "h2o",
+      "ratio": 0.5,
+      "questions": 20,
+      "byte_matched": false,
+      "completed_questions": 20,
+      "mean_episode_seconds": 23.78655630730791,
+      "median_episode_seconds": 21.041146072675474,
+      "mean_em": 0.05,
+      "mean_f1": 0.05434782608695652,
+      "mean_episode_excluding_tool_seconds": 23.65133880157955,
+      "mean_tool_seconds": 0.13521750572836028,
+      "mean_generation_blocks": 5.55,
+      "mean_final_kv_bytes": 47426355.2,
+      "mean_final_trajectory_kv_bytes": 26386841.6,
+      "mean_final_slots_per_head": 827.05,
+      "mean_final_allocated_above_model_bytes": 84280012.8,
+      "mean_final_driver_above_model_bytes": 1091215052.8,
+      "mean_clean_peak_allocated_above_model_bytes": 304572364.8,
+      "max_clean_peak_allocated_above_model_bytes": 422803968,
+      "mean_sampled_peak_active_kv_bytes": 48613376,
+      "max_sampled_peak_active_kv_bytes": 70533120,
+      "mean_question_mean_generation_boundaries_kv_bytes": 35697582.08,
+      "mean_question_mean_generation_boundaries_allocated_above_model_bytes": 119338003.99238095,
+      "mean_question_mean_interaction_boundaries_kv_bytes": 35697582.08,
+      "mean_question_mean_interaction_boundaries_allocated_above_model_bytes": 95888702.90285714,
+      "diagnostic_mean_exclusive_seconds": {
+        "agent_parse": 0.000644641718827188,
+        "cache_gather": 0.0,
+        "debug_snapshot_export": 0.06084856786765158,
+        "decode_forward": 18.366522931680084,
+        "generation_other": 27.575034955143927,
+        "initial_prefill": 0.01945140880998224,
+        "observation_prefill": 0.09468820923939347,
+        "scoring_forward": 18.797900859056973,
+        "selection_and_cache_management": 1.2725466846022755,
+        "step_utility": 0.00018801356200128793,
+        "stop_crop": 0.0012966151116415858,
+        "token_saliency": 0.11998881385661661,
+        "tool": 0.13980375507380813
+      },
+      "diagnostic_mean_unattributed_seconds": 4.4100642370292915,
+      "diagnostic_mean_workload": {
+        "decode_forward": {
+          "forward_calls": 1058.45,
+          "input_positions": 1058.45
+        },
+        "initial_prefill": {
+          "forward_calls": 1,
+          "input_positions": 366.9
+        },
+        "observation_prefill": {
+          "forward_calls": 4.55,
+          "input_positions": 213.95
+        },
+        "scoring_forward": {
+          "forward_calls": 417.8,
+          "input_positions": 417.8
+        }
+      },
+      "head_expansion_factors": [
+        1.0
+      ],
+      "uses_native_kv_head_count": true,
+      "paired_latency_difference_seconds_vs_fullkv": {
+        "mean": 3.8609919792972507,
+        "ci95": [
+          -0.8817968080984429,
+          8.773985951184295
+        ],
+        "questions": 20,
+        "resamples": 2000,
+        "bootstrap_seed": 233,
+        "unit": "paired question means, not greedy timing repeats"
+      },
+      "mean_episode_seconds_over_fullkv": 1.1937707718455737,
+      "mean_episode_excluding_tool_seconds_over_fullkv": 1.201246060587216,
+      "mean_final_kv_bytes_over_fullkv": 0.8133051430819157,
+      "mean_question_mean_generation_boundaries_kv_bytes_over_fullkv": 0.8615382029963734,
+      "mean_clean_peak_allocated_above_model_bytes_over_fullkv": 1.8658547716423701,
+      "episode_speedup_over_fullkv": 0.8376817589979998
+    },
+    {
+      "method": "tova",
+      "ratio": 0.2,
+      "questions": 20,
+      "byte_matched": false,
+      "completed_questions": 20,
+      "mean_episode_seconds": 48.99129935472738,
+      "median_episode_seconds": 52.08350831014104,
+      "mean_em": 0,
+      "mean_f1": 0.003125,
+      "mean_episode_excluding_tool_seconds": 48.93186695107725,
+      "mean_tool_seconds": 0.0594324036501348,
+      "mean_generation_blocks": 6.8,
+      "mean_final_kv_bytes": 39616102.4,
+      "mean_final_trajectory_kv_bytes": 18576588.8,
+      "mean_final_slots_per_head": 690.85,
+      "mean_final_allocated_above_model_bytes": 75276800,
+      "mean_final_driver_above_model_bytes": 1006385254.4,
+      "mean_clean_peak_allocated_above_model_bytes": 254845107.2,
+      "max_clean_peak_allocated_above_model_bytes": 288014336,
+      "mean_sampled_peak_active_kv_bytes": 39865548.8,
+      "max_sampled_peak_active_kv_bytes": 42893312,
+      "mean_question_mean_generation_boundaries_kv_bytes": 30897356.8,
+      "mean_question_mean_generation_boundaries_allocated_above_model_bytes": 111138181.12,
+      "mean_question_mean_interaction_boundaries_kv_bytes": 30897356.8,
+      "mean_question_mean_interaction_boundaries_allocated_above_model_bytes": 88367616,
+      "diagnostic_mean_exclusive_seconds": {
+        "agent_parse": 0.0009738088119775057,
+        "cache_gather": 0.0,
+        "debug_snapshot_export": 0.1642861221684143,
+        "decode_forward": 29.335216091712937,
+        "generation_other": 51.09292702227831,
+        "initial_prefill": 0.020606279489584267,
+        "observation_prefill": 0.1232149271061644,
+        "scoring_forward": 54.18127433543559,
+        "selection_and_cache_management": 3.386647957772948,
+        "step_utility": 0.00023817960172891616,
+        "stop_crop": 0.0007025216007605195,
+        "token_saliency": 0.13855813900008798,
+        "tool": 0.0615340479882434
+      },
+      "diagnostic_mean_unattributed_seconds": 9.495703442883677,
+      "diagnostic_mean_workload": {
+        "decode_forward": {
+          "forward_calls": 1651.4,
+          "input_positions": 1651.4
+        },
+        "initial_prefill": {
+          "forward_calls": 1,
+          "input_positions": 366.9
+        },
+        "observation_prefill": {
+          "forward_calls": 5.8,
+          "input_positions": 171.1
+        },
+        "scoring_forward": {
+          "forward_calls": 1183.9,
+          "input_positions": 1183.9
+        }
+      },
+      "head_expansion_factors": [
+        1.0
+      ],
+      "uses_native_kv_head_count": true,
+      "paired_latency_difference_seconds_vs_fullkv": {
+        "mean": 29.06573502671672,
+        "ci95": [
+          25.493331994162872,
+          32.634451109566726
+        ],
+        "questions": 20,
+        "resamples": 2000,
+        "bootstrap_seed": 233,
+        "unit": "paired question means, not greedy timing repeats"
+      },
+      "mean_episode_seconds_over_fullkv": 2.458715775786442,
+      "mean_episode_excluding_tool_seconds_over_fullkv": 2.4852382736250758,
+      "mean_final_kv_bytes_over_fullkv": 0.6793686694856917,
+      "mean_question_mean_generation_boundaries_kv_bytes_over_fullkv": 0.7456878506548358,
+      "mean_clean_peak_allocated_above_model_bytes_over_fullkv": 1.5612183318439772,
+      "episode_speedup_over_fullkv": 0.40671638822512585
+    },
+    {
+      "method": "tova",
+      "ratio": 0.5,
+      "questions": 20,
+      "byte_matched": false,
+      "completed_questions": 20,
+      "mean_episode_seconds": 23.367437295638958,
+      "median_episode_seconds": 20.135227359016426,
+      "mean_em": 0,
+      "mean_f1": 0.09083333333333332,
+      "mean_episode_excluding_tool_seconds": 23.298473895329515,
+      "mean_tool_seconds": 0.06896340030943975,
+      "mean_generation_blocks": 5.3,
+      "mean_final_kv_bytes": 44926156.8,
+      "mean_final_trajectory_kv_bytes": 23886643.2,
+      "mean_final_slots_per_head": 783.45,
+      "mean_final_allocated_above_model_bytes": 81683353.6,
+      "mean_final_driver_above_model_bytes": 1070033817.6,
+      "mean_clean_peak_allocated_above_model_bytes": 289907174.4,
+      "max_clean_peak_allocated_above_model_bytes": 413278720,
+      "mean_sampled_peak_active_kv_bytes": 46523187.2,
+      "max_sampled_peak_active_kv_bytes": 70762496,
+      "mean_question_mean_generation_boundaries_kv_bytes": 34481793.70666666,
+      "mean_question_mean_generation_boundaries_allocated_above_model_bytes": 116444310.67428571,
+      "mean_question_mean_interaction_boundaries_kv_bytes": 34481793.70666666,
+      "mean_question_mean_interaction_boundaries_allocated_above_model_bytes": 94378237.56190476,
+      "diagnostic_mean_exclusive_seconds": {
+        "agent_parse": 0.0006231160601601005,
+        "cache_gather": 0.0,
+        "debug_snapshot_export": 0.0598821290070191,
+        "decode_forward": 18.097994738654233,
+        "generation_other": 26.322354441927747,
+        "initial_prefill": 0.019264173600822686,
+        "observation_prefill": 0.09334043157286942,
+        "scoring_forward": 18.616949544358068,
+        "selection_and_cache_management": 1.2316470082150772,
+        "step_utility": 0.00017550322227180004,
+        "stop_crop": 0.0012359256157651543,
+        "token_saliency": 0.04794450809713453,
+        "tool": 0.07113687279634177
+      },
+      "diagnostic_mean_unattributed_seconds": 4.149147145403549,
+      "diagnostic_mean_workload": {
+        "decode_forward": {
+          "forward_calls": 1020.8,
+          "input_positions": 1020.8
+        },
+        "initial_prefill": {
+          "forward_calls": 1,
+          "input_positions": 366.9
+        },
+        "observation_prefill": {
+          "forward_calls": 4.3,
+          "input_positions": 187.2
+        },
+        "scoring_forward": {
+          "forward_calls": 405.85,
+          "input_positions": 405.85
+        }
+      },
+      "head_expansion_factors": [
+        1.0
+      ],
+      "uses_native_kv_head_count": true,
+      "paired_latency_difference_seconds_vs_fullkv": {
+        "mean": 3.4418729676282966,
+        "ci95": [
+          -1.3409183873562143,
+          8.652690152730793
+        ],
+        "questions": 20,
+        "resamples": 2000,
+        "bootstrap_seed": 233,
+        "unit": "paired question means, not greedy timing repeats"
+      },
+      "mean_episode_seconds_over_fullkv": 1.1727365363895785,
+      "mean_episode_excluding_tool_seconds_over_fullkv": 1.183324133117976,
+      "mean_final_kv_bytes_over_fullkv": 0.7704297374373094,
+      "mean_question_mean_generation_boundaries_kv_bytes_over_fullkv": 0.8321959319137521,
+      "mean_clean_peak_allocated_above_model_bytes_over_fullkv": 1.7760136742635841,
+      "episode_speedup_over_fullkv": 0.8527064425558274
+    },
+    {
+      "method": "h2o_step",
+      "ratio": 0.2,
+      "questions": 20,
+      "byte_matched": false,
+      "completed_questions": 20,
+      "mean_episode_seconds": 22.3230257613468,
+      "median_episode_seconds": 23.553176985587925,
+      "mean_em": 0,
+      "mean_f1": 0.0,
+      "mean_episode_excluding_tool_seconds": 22.20286593476776,
+      "mean_tool_seconds": 0.12015982657903805,
+      "mean_generation_blocks": 6.9,
+      "mean_final_kv_bytes": 27728691.2,
+      "mean_final_trajectory_kv_bytes": 6689177.6,
+      "mean_final_slots_per_head": 483.55,
+      "mean_final_allocated_above_model_bytes": 63380787.2,
+      "mean_final_driver_above_model_bytes": 871748096,
+      "mean_clean_peak_allocated_above_model_bytes": 210603366.4,
+      "max_clean_peak_allocated_above_model_bytes": 260343296,
+      "mean_sampled_peak_active_kv_bytes": 41981542.4,
+      "max_sampled_peak_active_kv_bytes": 52240384,
+      "mean_question_mean_generation_boundaries_kv_bytes": 25202114.56,
+      "mean_question_mean_generation_boundaries_allocated_above_model_bytes": 115374018.56,
+      "mean_question_mean_interaction_boundaries_kv_bytes": 25202114.56,
+      "mean_question_mean_interaction_boundaries_allocated_above_model_bytes": 83786076.16,
+      "diagnostic_mean_exclusive_seconds": {
+        "agent_parse": 0.0008276934968307614,
+        "cache_gather": 0.0,
+        "debug_snapshot_export": 0.003920680657029152,
+        "decode_forward": 26.633714761794543,
+        "generation_other": 48.583845720719545,
+        "initial_prefill": 0.021934437588788568,
+        "observation_prefill": 0.14344683832023292,
+        "scoring_forward": 1.4401587061583996,
+        "selection_and_cache_management": 0.1346624006750062,
+        "step_utility": 0.00023914941120892764,
+        "stop_crop": 0.0024817649275064467,
+        "token_saliency": 0.00890900488011539,
+        "tool": 0.12038440839387476
+      },
+      "diagnostic_mean_unattributed_seconds": 9.682915917597711,
+      "diagnostic_mean_workload": {
+        "decode_forward": {
+          "forward_calls": 1459.55,
+          "input_positions": 1459.55
+        },
+        "initial_prefill": {
+          "forward_calls": 1,
+          "input_positions": 366.9
+        },
+        "observation_prefill": {
+          "forward_calls": 5.9,
+          "input_positions": 255.9
+        },
+        "scoring_forward": {
+          "forward_calls": 30.3,
+          "input_positions": 30.3
+        }
+      },
+      "head_expansion_factors": [
+        1.0
+      ],
+      "uses_native_kv_head_count": true,
+      "paired_latency_difference_seconds_vs_fullkv": {
+        "mean": 2.397461433336139,
+        "ci95": [
+          -0.08364112286362797,
+          5.042067227396183
+        ],
+        "questions": 20,
+        "resamples": 2000,
+        "bootstrap_seed": 233,
+        "unit": "paired question means, not greedy timing repeats"
+      },
+      "mean_episode_seconds_over_fullkv": 1.1203208799444577,
+      "mean_episode_excluding_tool_seconds_over_fullkv": 1.1276784566675204,
+      "mean_final_kv_bytes_over_fullkv": 0.47551381650113084,
+      "mean_question_mean_generation_boundaries_kv_bytes_over_fullkv": 0.6082368391526404,
+      "mean_clean_peak_allocated_above_model_bytes_over_fullkv": 1.2901869687994305,
+      "episode_speedup_over_fullkv": 0.8926014125966991
+    },
+    {
+      "method": "h2o_step",
+      "ratio": 0.5,
+      "questions": 20,
+      "byte_matched": false,
+      "completed_questions": 20,
+      "mean_episode_seconds": 19.291784640739206,
+      "median_episode_seconds": 20.55257291079033,
+      "mean_em": 0,
+      "mean_f1": 0.06190476190476191,
+      "mean_episode_excluding_tool_seconds": 19.12752691670321,
+      "mean_tool_seconds": 0.16425772403599695,
+      "mean_generation_blocks": 6.8,
+      "mean_final_kv_bytes": 37305139.2,
+      "mean_final_trajectory_kv_bytes": 16265625.6,
+      "mean_final_slots_per_head": 650.55,
+      "mean_final_allocated_above_model_bytes": 72957235.2,
+      "mean_final_driver_above_model_bytes": 895550771.2,
+      "mean_clean_peak_allocated_above_model_bytes": 234006374.4,
+      "max_clean_peak_allocated_above_model_bytes": 278982144,
+      "mean_sampled_peak_active_kv_bytes": 47280128,
+      "max_sampled_peak_active_kv_bytes": 62275584,
+      "mean_question_mean_generation_boundaries_kv_bytes": 30371020.8,
+      "mean_question_mean_generation_boundaries_allocated_above_model_bytes": 124671690.36190477,
+      "mean_question_mean_interaction_boundaries_kv_bytes": 30371020.8,
+      "mean_question_mean_interaction_boundaries_allocated_above_model_bytes": 89012326.4,
+      "diagnostic_mean_exclusive_seconds": {
+        "agent_parse": 0.0007626810343936086,
+        "cache_gather": 0.0,
+        "debug_snapshot_export": 0.0038267976138740777,
+        "decode_forward": 22.98491007334087,
+        "generation_other": 43.31696178093553,
+        "initial_prefill": 0.02125912788324058,
+        "observation_prefill": 0.13308016119990498,
+        "scoring_forward": 1.3634675106033682,
+        "selection_and_cache_management": 0.13903691575396807,
+        "step_utility": 0.00023633665405213832,
+        "stop_crop": 0.0022893692133948208,
+        "token_saliency": 0.008496640156954527,
+        "tool": 0.16895968248136342
+      },
+      "diagnostic_mean_unattributed_seconds": 8.661716280248948,
+      "diagnostic_mean_workload": {
+        "decode_forward": {
+          "forward_calls": 1294.35,
+          "input_positions": 1294.35
+        },
+        "initial_prefill": {
+          "forward_calls": 1,
+          "input_positions": 366.9
+        },
+        "observation_prefill": {
+          "forward_calls": 5.8,
+          "input_positions": 282.8
+        },
+        "scoring_forward": {
+          "forward_calls": 29.05,
+          "input_positions": 29.05
+        }
+      },
+      "head_expansion_factors": [
+        1.0
+      ],
+      "uses_native_kv_head_count": true,
+      "paired_latency_difference_seconds_vs_fullkv": {
+        "mean": -0.6337796872714534,
+        "ci95": [
+          -3.304069641663227,
+          2.102185203321278
+        ],
+        "questions": 20,
+        "resamples": 2000,
+        "bootstrap_seed": 233,
+        "unit": "paired question means, not greedy timing repeats"
+      },
+      "mean_episode_seconds_over_fullkv": 0.9681926355089222,
+      "mean_episode_excluding_tool_seconds_over_fullkv": 0.9714826949217422,
+      "mean_final_kv_bytes_over_fullkv": 0.6397384206903334,
+      "mean_question_mean_generation_boundaries_kv_bytes_over_fullkv": 0.7329850695366055,
+      "mean_clean_peak_allocated_above_model_bytes_over_fullkv": 1.4335572124400793,
+      "episode_speedup_over_fullkv": 1.0328523098859954
+    },
+    {
+      "method": "tova_step",
+      "ratio": 0.2,
+      "questions": 20,
+      "byte_matched": false,
+      "completed_questions": 20,
+      "mean_episode_seconds": 20.70469823005842,
+      "median_episode_seconds": 20.8503605251899,
+      "mean_em": 0,
+      "mean_f1": 0.0034482758620689655,
+      "mean_episode_excluding_tool_seconds": 20.584633520373607,
+      "mean_tool_seconds": 0.12006470968481153,
+      "mean_generation_blocks": 6.6,
+      "mean_final_kv_bytes": 27487846.4,
+      "mean_final_trajectory_kv_bytes": 6448332.8,
+      "mean_final_slots_per_head": 479.35,
+      "mean_final_allocated_above_model_bytes": 63139942.4,
+      "mean_final_driver_above_model_bytes": 866505216,
+      "mean_clean_peak_allocated_above_model_bytes": 206596454.4,
+      "max_clean_peak_allocated_above_model_bytes": 246475264,
+      "mean_sampled_peak_active_kv_bytes": 41714892.8,
+      "max_sampled_peak_active_kv_bytes": 46505984,
+      "mean_question_mean_generation_boundaries_kv_bytes": 24850329.6,
+      "mean_question_mean_generation_boundaries_allocated_above_model_bytes": 113932987.73333333,
+      "mean_question_mean_interaction_boundaries_kv_bytes": 24850329.6,
+      "mean_question_mean_interaction_boundaries_allocated_above_model_bytes": 82164121.6,
+      "diagnostic_mean_exclusive_seconds": {
+        "agent_parse": 0.0007593312300741672,
+        "cache_gather": 0.0,
+        "debug_snapshot_export": 0.006799021479673683,
+        "decode_forward": 24.172260636626742,
+        "generation_other": 45.851329707563856,
+        "initial_prefill": 0.025934816524386405,
+        "observation_prefill": 0.1311203218298033,
+        "scoring_forward": 2.375038819643669,
+        "selection_and_cache_management": 0.1864429345121607,
+        "step_utility": 0.0002296244027093053,
+        "stop_crop": 0.0022726573748514055,
+        "token_saliency": 0.005947965197265148,
+        "tool": 0.12360465957317501
+      },
+      "diagnostic_mean_unattributed_seconds": 9.016069914028048,
+      "diagnostic_mean_workload": {
+        "decode_forward": {
+          "forward_calls": 1364.8,
+          "input_positions": 1364.8
+        },
+        "initial_prefill": {
+          "forward_calls": 1,
+          "input_positions": 366.9
+        },
+        "observation_prefill": {
+          "forward_calls": 5.6,
+          "input_positions": 256.6
+        },
+        "scoring_forward": {
+          "forward_calls": 51.15,
+          "input_positions": 51.15
+        }
+      },
+      "head_expansion_factors": [
+        1.0
+      ],
+      "uses_native_kv_head_count": true,
+      "paired_latency_difference_seconds_vs_fullkv": {
+        "mean": 0.7791339020477608,
+        "ci95": [
+          -1.7181649692938663,
+          3.573726457823068
+        ],
+        "questions": 20,
+        "resamples": 2000,
+        "bootstrap_seed": 233,
+        "unit": "paired question means, not greedy timing repeats"
+      },
+      "mean_episode_seconds_over_fullkv": 1.039102225122552,
+      "mean_episode_excluding_tool_seconds_over_fullkv": 1.0454888043516992,
+      "mean_final_kv_bytes_over_fullkv": 0.47138361687481556,
+      "mean_question_mean_generation_boundaries_kv_bytes_over_fullkv": 0.5997467352122575,
+      "mean_clean_peak_allocated_above_model_bytes_over_fullkv": 1.2656400409136375,
+      "episode_speedup_over_fullkv": 0.9623692220291992
+    },
+    {
+      "method": "tova_step",
+      "ratio": 0.5,
+      "questions": 20,
+      "byte_matched": false,
+      "completed_questions": 20,
+      "mean_episode_seconds": 17.565618066699244,
+      "median_episode_seconds": 17.756409599096514,
+      "mean_em": 0,
+      "mean_f1": 0.065,
+      "mean_episode_excluding_tool_seconds": 17.3795579604106,
+      "mean_tool_seconds": 0.1860601062886417,
+      "mean_generation_blocks": 6.45,
+      "mean_final_kv_bytes": 38279987.2,
+      "mean_final_trajectory_kv_bytes": 17240473.6,
+      "mean_final_slots_per_head": 667.55,
+      "mean_final_allocated_above_model_bytes": 73932083.2,
+      "mean_final_driver_above_model_bytes": 896494489.6,
+      "mean_clean_peak_allocated_above_model_bytes": 236560972.8,
+      "max_clean_peak_allocated_above_model_bytes": 321957376,
+      "mean_sampled_peak_active_kv_bytes": 47853568,
+      "max_sampled_peak_active_kv_bytes": 64225280,
+      "mean_question_mean_generation_boundaries_kv_bytes": 30923066.026666667,
+      "mean_question_mean_generation_boundaries_allocated_above_model_bytes": 124486395.12380952,
+      "mean_question_mean_interaction_boundaries_kv_bytes": 30923066.026666667,
+      "mean_question_mean_interaction_boundaries_allocated_above_model_bytes": 89220307.62666667,
+      "diagnostic_mean_exclusive_seconds": {
+        "agent_parse": 0.0006991063244640827,
+        "cache_gather": 0.0,
+        "debug_snapshot_export": 0.00455540856346488,
+        "decode_forward": 20.895395059208386,
+        "generation_other": 41.05476869216655,
+        "initial_prefill": 0.021553617948666216,
+        "observation_prefill": 0.11774542208295316,
+        "scoring_forward": 1.5597520945128054,
+        "selection_and_cache_management": 0.13527868636883794,
+        "step_utility": 0.0002243722090497613,
+        "stop_crop": 0.0021491022780537605,
+        "token_saliency": 0.003814558312296867,
+        "tool": 0.18980563730001448
+      },
+      "diagnostic_mean_unattributed_seconds": 8.684741599624976,
+      "diagnostic_mean_workload": {
+        "decode_forward": {
+          "forward_calls": 1220.8,
+          "input_positions": 1220.8
+        },
+        "initial_prefill": {
+          "forward_calls": 1,
+          "input_positions": 366.9
+        },
+        "observation_prefill": {
+          "forward_calls": 5.45,
+          "input_positions": 300.65
+        },
+        "scoring_forward": {
+          "forward_calls": 33.85,
+          "input_positions": 33.85
+        }
+      },
+      "head_expansion_factors": [
+        1.0
+      ],
+      "uses_native_kv_head_count": true,
+      "paired_latency_difference_seconds_vs_fullkv": {
+        "mean": -2.3599462613114155,
+        "ci95": [
+          -5.02715774429962,
+          0.5795594763127155
+        ],
+        "questions": 20,
+        "resamples": 2000,
+        "bootstrap_seed": 233,
+        "unit": "paired question means, not greedy timing repeats"
+      },
+      "mean_episode_seconds_over_fullkv": 0.8815618859038343,
+      "mean_episode_excluding_tool_seconds_over_fullkv": 0.8827037534676959,
+      "mean_final_kv_bytes_over_fullkv": 0.6564558953682762,
+      "mean_question_mean_generation_boundaries_kv_bytes_over_fullkv": 0.746308326318795,
+      "mean_clean_peak_allocated_above_model_bytes_over_fullkv": 1.4492070551873029,
+      "episode_speedup_over_fullkv": 1.134350311634373
+    },
+    {
+      "method": "flowkv_style",
+      "ratio": 0.2,
+      "questions": 20,
+      "byte_matched": false,
+      "completed_questions": 20,
+      "mean_episode_seconds": 21.474808119505177,
+      "median_episode_seconds": 22.71540719352197,
+      "mean_em": 0,
+      "mean_f1": 0.0,
+      "mean_episode_excluding_tool_seconds": 21.36819685550872,
+      "mean_tool_seconds": 0.10661126399645582,
+      "mean_generation_blocks": 7,
+      "mean_final_kv_bytes": 27851980.8,
+      "mean_final_trajectory_kv_bytes": 6812467.2,
+      "mean_final_slots_per_head": 485.7,
+      "mean_final_allocated_above_model_bytes": 63504076.8,
+      "mean_final_driver_above_model_bytes": 1065734656,
+      "mean_clean_peak_allocated_above_model_bytes": 157355955.2,
+      "max_clean_peak_allocated_above_model_bytes": 165643264,
+      "mean_sampled_peak_active_kv_bytes": 42569318.4,
+      "max_sampled_peak_active_kv_bytes": 46391296,
+      "mean_question_mean_generation_boundaries_kv_bytes": 25482035.2,
+      "mean_question_mean_generation_boundaries_allocated_above_model_bytes": 115352473.6,
+      "mean_question_mean_interaction_boundaries_kv_bytes": 25482035.2,
+      "mean_question_mean_interaction_boundaries_allocated_above_model_bytes": 86791065.6,
+      "diagnostic_mean_exclusive_seconds": {
+        "agent_parse": 0.0007171034114435316,
+        "cache_gather": 0.010375486151315273,
+        "decode_forward": 26.22625338283833,
+        "generation_other": 29.670021729241125,
+        "initial_prefill": 0.018010716955177485,
+        "observation_prefill": 0.11865141279995442,
+        "scoring_forward": 0.26464714473113415,
+        "selection_and_cache_management": 0.0469191777985543,
+        "step_utility": 0.00024740193039178847,
+        "stop_crop": 0.002136476500891149,
+        "token_saliency": 0.0,
+        "tool": 0.10939782017376273
+      },
+      "diagnostic_mean_unattributed_seconds": 1.9650318464264274,
+      "diagnostic_mean_workload": {
+        "decode_forward": {
+          "forward_calls": 1557.3,
+          "input_positions": 1557.3
+        },
+        "initial_prefill": {
+          "forward_calls": 1,
+          "input_positions": 366.9
+        },
+        "observation_prefill": {
+          "forward_calls": 6,
+          "input_positions": 245.45
+        },
+        "scoring_forward": {
+          "forward_calls": 6,
+          "input_positions": 6
+        }
+      },
+      "head_expansion_factors": [
+        1.0
+      ],
+      "uses_native_kv_head_count": true,
+      "paired_latency_difference_seconds_vs_fullkv": {
+        "mean": 1.5492437914945185,
+        "ci95": [
+          -0.414498942589853,
+          3.684480474202428
+        ],
+        "questions": 20,
+        "resamples": 2000,
+        "bootstrap_seed": 233,
+        "unit": "paired question means, not greedy timing repeats"
+      },
+      "mean_episode_seconds_over_fullkv": 1.0777515640707171,
+      "mean_episode_excluding_tool_seconds_over_fullkv": 1.0852858060118662,
+      "mean_final_kv_bytes_over_fullkv": 0.47762808535745893,
+      "mean_question_mean_generation_boundaries_kv_bytes_over_fullkv": 0.614992543912328,
+      "mean_clean_peak_allocated_above_model_bytes_over_fullkv": 0.9639855541360757,
+      "episode_speedup_over_fullkv": 0.9278576188959115
+    },
+    {
+      "method": "flowkv_style",
+      "ratio": 0.5,
+      "questions": 20,
+      "byte_matched": false,
+      "completed_questions": 20,
+      "mean_episode_seconds": 18.83917567336466,
+      "median_episode_seconds": 20.241966964211315,
+      "mean_em": 0,
+      "mean_f1": 0.042857142857142864,
+      "mean_episode_excluding_tool_seconds": 18.703319114015905,
+      "mean_tool_seconds": 0.13585655934875832,
+      "mean_generation_blocks": 6.8,
+      "mean_final_kv_bytes": 36528128,
+      "mean_final_trajectory_kv_bytes": 15488614.4,
+      "mean_final_slots_per_head": 637,
+      "mean_final_allocated_above_model_bytes": 72180224,
+      "mean_final_driver_above_model_bytes": 1137457254.4,
+      "mean_clean_peak_allocated_above_model_bytes": 179092812.8,
+      "max_clean_peak_allocated_above_model_bytes": 196495872,
+      "mean_sampled_peak_active_kv_bytes": 46038630.4,
+      "max_sampled_peak_active_kv_bytes": 57114624,
+      "mean_question_mean_generation_boundaries_kv_bytes": 30335385.6,
+      "mean_question_mean_generation_boundaries_allocated_above_model_bytes": 121955362.13333334,
+      "mean_question_mean_interaction_boundaries_kv_bytes": 30335385.6,
+      "mean_question_mean_interaction_boundaries_allocated_above_model_bytes": 91683942.4,
+      "diagnostic_mean_exclusive_seconds": {
+        "agent_parse": 0.0006520270369946956,
+        "cache_gather": 0.010040209791623057,
+        "decode_forward": 22.77891060039401,
+        "generation_other": 25.55615158630535,
+        "initial_prefill": 0.01797453607432544,
+        "observation_prefill": 0.11600565218832344,
+        "scoring_forward": 0.2572993740672246,
+        "selection_and_cache_management": 0.04698199431877583,
+        "step_utility": 0.00024002264253795147,
+        "stop_crop": 0.0020034086424857377,
+        "token_saliency": 0.0,
+        "tool": 0.13897672109305859
+      },
+      "diagnostic_mean_unattributed_seconds": 1.9612033799989148,
+      "diagnostic_mean_workload": {
+        "decode_forward": {
+          "forward_calls": 1332.55,
+          "input_positions": 1332.55
+        },
+        "initial_prefill": {
+          "forward_calls": 1,
+          "input_positions": 366.9
+        },
+        "observation_prefill": {
+          "forward_calls": 5.8,
+          "input_positions": 251.45
+        },
+        "scoring_forward": {
+          "forward_calls": 5.8,
+          "input_positions": 5.8
+        }
+      },
+      "head_expansion_factors": [
+        1.0
+      ],
+      "uses_native_kv_head_count": true,
+      "paired_latency_difference_seconds_vs_fullkv": {
+        "mean": -1.086388654645998,
+        "ci95": [
+          -2.7032100675511175,
+          0.8455456197145395
+        ],
+        "questions": 20,
+        "resamples": 2000,
+        "bootstrap_seed": 233,
+        "unit": "paired question means, not greedy timing repeats"
+      },
+      "mean_episode_seconds_over_fullkv": 0.9454776468680092,
+      "mean_episode_excluding_tool_seconds_over_fullkv": 0.9499372781432868,
+      "mean_final_kv_bytes_over_fullkv": 0.6264136099911496,
+      "mean_question_mean_generation_boundaries_kv_bytes_over_fullkv": 0.7321250368850211,
+      "mean_clean_peak_allocated_above_model_bytes_over_fullkv": 1.0971487171830692,
+      "episode_speedup_over_fullkv": 1.0576664644717955
+    },
+    {
+      "method": "lazyeviction",
+      "ratio": 0.2,
+      "questions": 20,
+      "byte_matched": false,
+      "completed_questions": 20,
+      "mean_episode_seconds": 30.21970796524547,
+      "median_episode_seconds": 31.13952068099752,
+      "mean_em": 0,
+      "mean_f1": 0.05,
+      "mean_episode_excluding_tool_seconds": 30.11114369367715,
+      "mean_tool_seconds": 0.10856427156832069,
+      "mean_generation_blocks": 5.7,
+      "mean_final_kv_bytes": 272776806.4,
+      "mean_final_trajectory_kv_bytes": 125500211.2,
+      "mean_final_slots_per_head": 679.55,
+      "mean_final_allocated_above_model_bytes": 504828672,
+      "mean_final_driver_above_model_bytes": 1554685644.8,
+      "mean_clean_peak_allocated_above_model_bytes": 564702489.6,
+      "max_clean_peak_allocated_above_model_bytes": 609174528,
+      "mean_sampled_peak_active_kv_bytes": 302347673.6,
+      "max_sampled_peak_active_kv_bytes": 357668864,
+      "mean_question_mean_generation_boundaries_kv_bytes": 233204858.88,
+      "mean_question_mean_generation_boundaries_allocated_above_model_bytes": 480835381.8819048,
+      "mean_question_mean_interaction_boundaries_kv_bytes": 233204858.88,
+      "mean_question_mean_interaction_boundaries_allocated_above_model_bytes": 480835381.8819048,
+      "diagnostic_mean_exclusive_seconds": {
+        "agent_parse": 0.0006593869300559163,
+        "cache_gather": 0.10282405894249677,
+        "decode_forward": 318.3654630046105,
+        "generation_other": 33.50137047616299,
+        "head_expansion": 2.619016864686273,
+        "initial_prefill": 0.021871104021556675,
+        "observation_prefill": 2.897653282014653,
+        "scoring_forward": 0.0,
+        "selection_and_cache_management": 9.156985504576005,
+        "step_utility": 0.0001909984741359949,
+        "stop_crop": 0.050152157666161656,
+        "token_saliency": 8.062779040494934,
+        "tool": 0.11206155735999346
+      },
+      "diagnostic_mean_unattributed_seconds": 6.856008978257887,
+      "diagnostic_mean_workload": {
+        "decode_forward": {
+          "forward_calls": 1052.5,
+          "input_positions": 1052.5
+        },
+        "initial_prefill": {
+          "forward_calls": 1,
+          "input_positions": 366.9
+        },
+        "observation_prefill": {
+          "forward_calls": 4.7,
+          "input_positions": 215.25
+        }
+      },
+      "head_expansion_factors": [
+        7.0
+      ],
+      "uses_native_kv_head_count": false,
+      "paired_latency_difference_seconds_vs_fullkv": {
+        "mean": 10.29414363723481,
+        "ci95": [
+          5.6707298082881605,
+          15.239791407436133
+        ],
+        "questions": 20,
+        "resamples": 2000,
+        "bootstrap_seed": 233,
+        "unit": "paired question means, not greedy timing repeats"
+      },
+      "mean_episode_seconds_over_fullkv": 1.516629966799167,
+      "mean_episode_excluding_tool_seconds_over_fullkv": 1.5293380660290403,
+      "mean_final_kv_bytes_over_fullkv": 4.677795260104237,
+      "mean_question_mean_generation_boundaries_kv_bytes_over_fullkv": 5.6282494035376995,
+      "mean_clean_peak_allocated_above_model_bytes_over_fullkv": 3.4594498928698796,
+      "episode_speedup_over_fullkv": 0.6593566142639858
+    },
+    {
+      "method": "lazyeviction",
+      "ratio": 0.5,
+      "questions": 20,
+      "byte_matched": false,
+      "completed_questions": 20,
+      "mean_episode_seconds": 31.544987504160964,
+      "median_episode_seconds": 30.88740047335159,
+      "mean_em": 0,
+      "mean_f1": 0.03,
+      "mean_episode_excluding_tool_seconds": 31.351505721907596,
+      "mean_tool_seconds": 0.19348178225336596,
+      "mean_generation_blocks": 5.8,
+      "mean_final_kv_bytes": 366104166.4,
+      "mean_final_trajectory_kv_bytes": 218827571.2,
+      "mean_final_slots_per_head": 912.05,
+      "mean_final_allocated_above_model_bytes": 633076582.4,
+      "mean_final_driver_above_model_bytes": 1849964646.4,
+      "mean_clean_peak_allocated_above_model_bytes": 667193676.8,
+      "max_clean_peak_allocated_above_model_bytes": 830383616,
+      "mean_sampled_peak_active_kv_bytes": 408193228.8,
+      "max_sampled_peak_active_kv_bytes": 556752896,
+      "mean_question_mean_generation_boundaries_kv_bytes": 270090192.2133333,
+      "mean_question_mean_generation_boundaries_allocated_above_model_bytes": 547113014.6133333,
+      "mean_question_mean_interaction_boundaries_kv_bytes": 270090192.2133333,
+      "mean_question_mean_interaction_boundaries_allocated_above_model_bytes": 547113014.6133333,
+      "diagnostic_mean_exclusive_seconds": {
+        "agent_parse": 0.0006130065536126495,
+        "cache_gather": 0.033923673024401066,
+        "decode_forward": 337.40054894688075,
+        "generation_other": 35.214154062909074,
+        "head_expansion": 2.753040022798814,
+        "initial_prefill": 0.021401679958216846,
+        "observation_prefill": 2.8547126720892266,
+        "scoring_forward": 0.0,
+        "selection_and_cache_management": 9.564479287643916,
+        "step_utility": 0.0001970551209524274,
+        "stop_crop": 0.05735910546500236,
+        "token_saliency": 8.579554547648877,
+        "tool": 0.19966626993846148
+      },
+      "diagnostic_mean_unattributed_seconds": 7.139071785798296,
+      "diagnostic_mean_workload": {
+        "decode_forward": {
+          "forward_calls": 1123.7,
+          "input_positions": 1123.7
+        },
+        "initial_prefill": {
+          "forward_calls": 1,
+          "input_positions": 366.9
+        },
+        "observation_prefill": {
+          "forward_calls": 4.8,
+          "input_positions": 280.15
+        }
+      },
+      "head_expansion_factors": [
+        7.0
+      ],
+      "uses_native_kv_head_count": false,
+      "paired_latency_difference_seconds_vs_fullkv": {
+        "mean": 11.619423176150303,
+        "ci95": [
+          6.517500113521237,
+          16.92274632707704
+        ],
+        "questions": 20,
+        "resamples": 2000,
+        "bootstrap_seed": 233,
+        "unit": "paired question means, not greedy timing repeats"
+      },
+      "mean_episode_seconds_over_fullkv": 1.5831414852233885,
+      "mean_episode_excluding_tool_seconds_over_fullkv": 1.5923357682992512,
+      "mean_final_kv_bytes_over_fullkv": 6.278247615301406,
+      "mean_question_mean_generation_boundaries_kv_bytes_over_fullkv": 6.51845321974312,
+      "mean_clean_peak_allocated_above_model_bytes_over_fullkv": 4.08732586846598,
+      "episode_speedup_over_fullkv": 0.631655483311964
+    }
+  ],
+  "appended_conditions": [
+    {
+      "method": "fullkv_sidequest_control",
+      "questions": 20,
+      "mean_episode_seconds": 4.652002087654546,
+      "mean_episode_excluding_tool_seconds": 4.421154370182194,
+      "mean_tool_seconds": 0.23084771747235208,
+      "mean_em": 0,
+      "mean_f1": 0.0,
+      "mean_generation_blocks": 6.7,
+      "mean_clean_peak_allocated_above_model_bytes": 196862464,
+      "max_clean_peak_allocated_above_model_bytes": 204816896,
+      "mean_final_main_kv_bytes": 62192435.2,
+      "mean_step_main_kv_bytes": 43756939.946666665,
+      "mean_sampled_peak_unique_main_aux_kv_bytes": 62252646.4,
+      "mean_final_allocated_above_model_bytes": 100218828.8,
+      "mean_final_reserved_above_model_bytes": 314115379.2,
+      "mean_final_driver_above_model_bytes": 1026308198.4,
+      "async_semantic_divergence_questions": 0,
+      "auxiliary_calls_per_question": 0,
+      "invalid_auxiliary_commands_per_question": 0,
+      "applied_deletion_events_per_question": 0
+    },
+    {
+      "method": "sidequest_untrained",
+      "questions": 20,
+      "mean_episode_seconds": 5.70996791938087,
+      "mean_episode_excluding_tool_seconds": 5.479457324347459,
+      "mean_tool_seconds": 0.23051059503341093,
+      "mean_em": 0,
+      "mean_f1": 0.0,
+      "mean_generation_blocks": 6.7,
+      "mean_clean_peak_allocated_above_model_bytes": 235900057.6,
+      "max_clean_peak_allocated_above_model_bytes": 251531264,
+      "mean_final_main_kv_bytes": 56159846.4,
+      "mean_step_main_kv_bytes": 42021055.14666667,
+      "mean_sampled_peak_unique_main_aux_kv_bytes": 106251161.6,
+      "mean_final_allocated_above_model_bytes": 127690137.6,
+      "mean_final_reserved_above_model_bytes": 728932044.8,
+      "mean_final_driver_above_model_bytes": 1508443443.2,
+      "async_semantic_divergence_questions": 0,
+      "auxiliary_calls_per_question": 0.95,
+      "invalid_auxiliary_commands_per_question": 0.3,
+      "applied_deletion_events_per_question": 0.5
+    }
+  ],
+  "paired_latency_difference_seconds_vs_same_runtime_control": {
+    "mean": 1.0579658317263239,
+    "ci95": [
+      0.6673373161116615,
+      1.456761545955669
+    ],
+    "questions": 20,
+    "resamples": 2000,
+    "bootstrap_seed": 233,
+    "unit": "paired question means, not greedy timing repeats"
+  },
+  "scope": "SideQuest-inspired untrained Qwen adaptation uses an independent decoder and adaptive budget. Its FullKV control is the only matched-runtime control. Legacy rows retained for context, not an official SideQuest efficiency reproduction. Async clean/diagnostic trajectories may differ; phase times overlap and cannot be summed."
+}

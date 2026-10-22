@@ -1,0 +1,80 @@
+{
+  "status": "complete",
+  "owner": {
+    "pid": 531911,
+    "start_ticks": 256018397
+  },
+  "updated": 1791022077.1687057,
+  "scope": "qwen25_7b_only",
+  "completed_jobs": 84,
+  "total_jobs": 84,
+  "completed_main": 42,
+  "expected_main": 42,
+  "requested_max_workers": 4,
+  "effective_max_workers": 4,
+  "effective_concurrency": 0,
+  "peak_active_workers": 4,
+  "gpu_snapshot": {
+    "0": {
+      "index": 0,
+      "free_mib": 108708,
+      "pids": [
+        957524,
+        961893
+      ]
+    },
+    "1": {
+      "index": 1,
+      "free_mib": 92720,
+      "pids": [
+        855805,
+        982079,
+        998100
+      ]
+    },
+    "2": {
+      "index": 2,
+      "free_mib": 80404,
+      "pids": [
+        1035044,
+        1035551
+      ]
+    },
+    "3": {
+      "index": 3,
+      "free_mib": 111752,
+      "pids": [
+        1035582
+      ]
+    },
+    "4": {
+      "index": 4,
+      "free_mib": 109890,
+      "pids": [
+        1035582
+      ]
+    },
+    "5": {
+      "index": 5,
+      "free_mib": 111626,
+      "pids": [
+        1035030
+      ]
+    },
+    "6": {
+      "index": 6,
+      "free_mib": 109794,
+      "pids": [
+        1035030
+      ]
+    },
+    "7": {
+      "index": 7,
+      "free_mib": 76666,
+      "pids": [
+        1035044,
+        1035551
+      ]
+    }
+  }
+}

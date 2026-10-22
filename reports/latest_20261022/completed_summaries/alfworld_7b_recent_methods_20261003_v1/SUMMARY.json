@@ -1,0 +1,203 @@
+{
+  "protocol": "alfworld_recent_methods_native_accuracy_v1",
+  "model": [
+    "Qwen/Qwen2.5-7B-Instruct",
+    "a09a35458c702b33eeacc393d103063234e8bc28"
+  ],
+  "completed_main": 7,
+  "expected_main": 7,
+  "results": [
+    {
+      "method": "lazyeviction",
+      "keep_ratio": 0.2,
+      "games": 134,
+      "successes": 6,
+      "success_rate_percent": 4.477611940298507,
+      "kv_cache_statistics": {
+        "episodes_with_cache_audit": 134,
+        "episodes_missing_cache_audit": 0,
+        "mean": {
+          "episode_mean_boundary_total_kv_mib": 590.7043108945579,
+          "episode_mean_boundary_total_kv_tokens": 1543.0643223368045,
+          "episode_mean_boundary_trajectory_kv_mib": 424.75794895425946,
+          "final_prompt_kv_mib": 165.94636194029852,
+          "final_total_kv_mib": 965.3474230410447,
+          "final_total_kv_tokens": 2521.723880597015,
+          "final_trajectory_kv_mib": 799.4010611007462,
+          "final_trajectory_kv_tokens": 2088.231343283582,
+          "final_trajectory_retention": 0.20962048683843534,
+          "peak_active_total_kv_mib": 983.8795475746268
+        },
+        "max_peak_active_total_kv_mib": 1280.125,
+        "mean_peak_kv_mib_by_device": {
+          "cuda:0": 983.8795475746268
+        }
+      }
+    },
+    {
+      "method": "lazyeviction",
+      "keep_ratio": 0.5,
+      "games": 134,
+      "successes": 9,
+      "success_rate_percent": 6.7164179104477615,
+      "kv_cache_statistics": {
+        "episodes_with_cache_audit": 134,
+        "episodes_missing_cache_audit": 0,
+        "mean": {
+          "episode_mean_boundary_total_kv_mib": 1148.7678291779737,
+          "episode_mean_boundary_total_kv_tokens": 3000.862900709809,
+          "episode_mean_boundary_trajectory_kv_mib": 982.8214672376752,
+          "final_prompt_kv_mib": 165.94636194029852,
+          "final_total_kv_mib": 2059.7426539179105,
+          "final_total_kv_tokens": 5380.55223880597,
+          "final_trajectory_kv_mib": 1893.7962919776119,
+          "final_trajectory_kv_tokens": 4947.059701492537,
+          "final_trajectory_retention": 0.5063658526567387,
+          "peak_active_total_kv_mib": 2068.678754664179
+        },
+        "max_peak_active_total_kv_mib": 2693.46875,
+        "mean_peak_kv_mib_by_device": {
+          "cuda:0": 2068.678754664179
+        }
+      }
+    },
+    {
+      "method": "flowkv_style",
+      "keep_ratio": 0.2,
+      "games": 134,
+      "successes": 5,
+      "success_rate_percent": 3.7313432835820897,
+      "kv_cache_statistics": {
+        "episodes_with_cache_audit": 134,
+        "episodes_missing_cache_audit": 0,
+        "mean": {
+          "episode_mean_boundary_total_kv_mib": 80.45474309534914,
+          "episode_mean_boundary_total_kv_tokens": 1471.1724451720986,
+          "episode_mean_boundary_trajectory_kv_mib": 56.74811996102079,
+          "final_prompt_kv_mib": 23.706623134328357,
+          "final_total_kv_mib": 135.09689832089552,
+          "final_total_kv_tokens": 2470.3432835820895,
+          "final_trajectory_kv_mib": 111.39027518656717,
+          "final_trajectory_kv_tokens": 2036.8507462686566,
+          "final_trajectory_retention": 0.2010585869904427,
+          "peak_active_total_kv_mib": 143.83098180970148
+        },
+        "max_peak_active_total_kv_mib": 195.9453125,
+        "mean_peak_kv_mib_by_device": {
+          "cuda:0": 143.83098180970148
+        }
+      }
+    },
+    {
+      "method": "flowkv_style",
+      "keep_ratio": 0.5,
+      "games": 134,
+      "successes": 9,
+      "success_rate_percent": 6.7164179104477615,
+      "kv_cache_statistics": {
+        "episodes_with_cache_audit": 134,
+        "episodes_missing_cache_audit": 0,
+        "mean": {
+          "episode_mean_boundary_total_kv_mib": 161.39160122582686,
+          "episode_mean_boundary_total_kv_tokens": 2951.1607081294055,
+          "episode_mean_boundary_trajectory_kv_mib": 137.6849780914985,
+          "final_prompt_kv_mib": 23.706623134328357,
+          "final_total_kv_mib": 292.6756646455224,
+          "final_total_kv_tokens": 5351.7835820895525,
+          "final_trajectory_kv_mib": 268.969041511194,
+          "final_trajectory_kv_tokens": 4918.29104477612,
+          "final_trajectory_retention": 0.5008513820122283,
+          "peak_active_total_kv_mib": 297.8211870335821
+        },
+        "max_peak_active_total_kv_mib": 428.0390625,
+        "mean_peak_kv_mib_by_device": {
+          "cuda:0": 297.8211870335821
+        }
+      }
+    },
+    {
+      "method": "sidequest",
+      "keep_ratio": null,
+      "games": 134,
+      "successes": 15,
+      "success_rate_percent": 11.194029850746269,
+      "kv_cache_statistics": {
+        "episodes_with_cache_audit": 134,
+        "episodes_missing_cache_audit": 0,
+        "mean": {
+          "episode_mean_boundary_total_kv_mib": 215.61977091019293,
+          "episode_mean_boundary_total_kv_tokens": 3942.7615252149562,
+          "episode_mean_boundary_trajectory_kv_mib": 191.9131477758646,
+          "final_prompt_kv_mib": 23.706623134328357,
+          "final_total_kv_mib": 355.097364738806,
+          "final_total_kv_tokens": 6493.20895522388,
+          "final_trajectory_kv_mib": 331.3907416044776,
+          "final_trajectory_kv_tokens": 6059.7164179104475,
+          "final_trajectory_retention": 0.6530416911592992,
+          "peak_active_total_kv_mib": 403.72189832089555
+        },
+        "max_peak_active_total_kv_mib": 695.6796875,
+        "mean_peak_kv_mib_by_device": {
+          "cuda:0": 403.72189832089555
+        }
+      }
+    },
+    {
+      "method": "thinkkv_selection_only",
+      "keep_ratio": 0.2,
+      "games": 134,
+      "successes": 9,
+      "success_rate_percent": 6.7164179104477615,
+      "kv_cache_statistics": {
+        "episodes_with_cache_audit": 134,
+        "episodes_missing_cache_audit": 0,
+        "mean": {
+          "episode_mean_boundary_total_kv_mib": 78.3774607168353,
+          "episode_mean_boundary_total_kv_tokens": 1433.1878531078455,
+          "episode_mean_boundary_trajectory_kv_mib": 54.67083758250695,
+          "final_prompt_kv_mib": 23.706623134328357,
+          "final_total_kv_mib": 130.93534281716418,
+          "final_total_kv_tokens": 2394.2462686567164,
+          "final_trajectory_kv_mib": 107.22871968283582,
+          "final_trajectory_kv_tokens": 1960.7537313432836,
+          "final_trajectory_retention": 0.19732428660622456,
+          "peak_active_total_kv_mib": 132.89429804104478
+        },
+        "max_peak_active_total_kv_mib": 161.4375,
+        "mean_peak_kv_mib_by_device": {
+          "cuda:0": 132.89429804104478
+        }
+      }
+    },
+    {
+      "method": "thinkkv_selection_only",
+      "keep_ratio": 0.5,
+      "games": 134,
+      "successes": 11,
+      "success_rate_percent": 8.208955223880597,
+      "kv_cache_statistics": {
+        "episodes_with_cache_audit": 134,
+        "episodes_missing_cache_audit": 0,
+        "mean": {
+          "episode_mean_boundary_total_kv_mib": 158.68261194419506,
+          "episode_mean_boundary_total_kv_tokens": 2901.6249041224237,
+          "episode_mean_boundary_trajectory_kv_mib": 134.9759888098667,
+          "final_prompt_kv_mib": 23.706623134328357,
+          "final_total_kv_mib": 287.28404850746267,
+          "final_total_kv_tokens": 5253.194029850746,
+          "final_trajectory_kv_mib": 263.5774253731343,
+          "final_trajectory_kv_tokens": 4819.701492537313,
+          "final_trajectory_retention": 0.4962097979590075,
+          "peak_active_total_kv_mib": 288.27985074626866
+        },
+        "max_peak_active_total_kv_mib": 385.4375,
+        "mean_peak_kv_mib_by_device": {
+          "cuda:0": 288.27985074626866
+        }
+      }
+    }
+  ],
+  "timing_policy": "Accuracy only; no latency claims. GPU7 profiling is untouched.",
+  "statistics": "One fixed seed; exact matched native games. No significance claim.",
+  "scope": "Explicit policy adaptations; SideQuest untrained/adaptive, ThinkKV selection-only."
+}

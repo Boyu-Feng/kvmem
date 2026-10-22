@@ -1,0 +1,31 @@
+{
+  "status": "complete",
+  "completed_questions": 20,
+  "summary": {
+    "citation_history_scan": {
+      "region_invocations": 82,
+      "questions_with_region": 20,
+      "mean_additional_peak_allocated_bytes_per_region": 0,
+      "max_additional_peak_allocated_bytes": 0,
+      "mean_allocated_delta_bytes_per_region": -6036779.707317073,
+      "max_additional_peak_reserved_bytes": 0
+    },
+    "reward_novelty_repeat": {
+      "region_invocations": 82,
+      "questions_with_region": 20,
+      "mean_additional_peak_allocated_bytes_per_region": 0,
+      "max_additional_peak_allocated_bytes": 0,
+      "mean_allocated_delta_bytes_per_region": -8330464.780487805,
+      "max_additional_peak_reserved_bytes": 0
+    },
+    "step_score_expansion_and_fusion": {
+      "region_invocations": 82,
+      "questions_with_region": 20,
+      "mean_additional_peak_allocated_bytes_per_region": 2990.829268292683,
+      "max_additional_peak_allocated_bytes": 5120,
+      "mean_allocated_delta_bytes_per_region": 2260.2926829268295,
+      "max_additional_peak_reserved_bytes": 0
+    }
+  },
+  "protocol_sha256": "d9280545e39c21f0f9b6ea4f8c50cddd07ee9fc94b153d5a250ba6fc4ab39986"
+}

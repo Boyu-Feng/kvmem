@@ -1,0 +1,28 @@
+{
+  "status": "complete",
+  "supervisor_pid": 1092677,
+  "updated": 1791227445.3063197,
+  "job": null,
+  "completed_jobs": 22,
+  "total_jobs": 22,
+  "worker_identity": null,
+  "log_path": null,
+  "devices_before_loading": [
+    {
+      "index": 3,
+      "total_mib": 143771,
+      "free_mib": 62687,
+      "utilization_percent": 0
+    },
+    {
+      "index": 4,
+      "total_mib": 143771,
+      "free_mib": 62687,
+      "utilization_percent": 0
+    }
+  ],
+  "owner": {
+    "pid": 1092677,
+    "start_ticks": 262365074
+  }
+}

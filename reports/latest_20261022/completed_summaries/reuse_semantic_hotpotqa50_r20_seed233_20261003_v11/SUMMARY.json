@@ -1,0 +1,2673 @@
+{
+  "plan_sha256": "fd37fef0af388e19403531b5cb9f04c7d3e167f0db155ac408434ada0227d5ae",
+  "completed_main_conditions": 5,
+  "expected_main_conditions": 5,
+  "results": [
+    {
+      "condition": "lexical_original",
+      "completed_samples": 50,
+      "has_actual_eviction": true,
+      "summary": {
+        "total_samples": 50,
+        "exact_match": 24.0,
+        "f1_score": 28.611764705882354,
+        "total_diagnostic_seconds": 770.2517459271476
+      },
+      "paired_comparison_status": "available",
+      "paired_vs_lexical_original": {
+        "em": {
+          "difference_percentage_points": 0.0,
+          "paired_question_bootstrap_95ci": [
+            0.0,
+            0.0
+          ],
+          "resamples": 2000,
+          "seed": 233
+        },
+        "f1": {
+          "difference_percentage_points": 0.0,
+          "paired_question_bootstrap_95ci": [
+            0.0,
+            0.0
+          ],
+          "resamples": 2000,
+          "seed": 233
+        }
+      }
+    },
+    {
+      "condition": "no_citation",
+      "completed_samples": 50,
+      "has_actual_eviction": true,
+      "summary": {
+        "total_samples": 50,
+        "exact_match": 20.0,
+        "f1_score": 23.54976004387769,
+        "total_diagnostic_seconds": 773.5161897325888
+      },
+      "paired_comparison_status": "available",
+      "paired_vs_lexical_original": {
+        "em": {
+          "difference_percentage_points": -4.0,
+          "paired_question_bootstrap_95ci": [
+            -12.0,
+            2.049999999999727
+          ],
+          "resamples": 2000,
+          "seed": 233
+        },
+        "f1": {
+          "difference_percentage_points": -5.062004662004662,
+          "paired_question_bootstrap_95ci": [
+            -11.724242424242423,
+            0.8456876456876458
+          ],
+          "resamples": 2000,
+          "seed": 233
+        }
+      }
+    },
+    {
+      "condition": "semantic_original",
+      "completed_samples": 50,
+      "has_actual_eviction": true,
+      "summary": {
+        "total_samples": 50,
+        "exact_match": 24.0,
+        "f1_score": 27.81176470588235,
+        "total_diagnostic_seconds": 760.6472407467663
+      },
+      "paired_comparison_status": "available",
+      "paired_vs_lexical_original": {
+        "em": {
+          "difference_percentage_points": 0.0,
+          "paired_question_bootstrap_95ci": [
+            0.0,
+            0.0
+          ],
+          "resamples": 2000,
+          "seed": 233
+        },
+        "f1": {
+          "difference_percentage_points": -0.8,
+          "paired_question_bootstrap_95ci": [
+            -2.4,
+            0.0
+          ],
+          "resamples": 2000,
+          "seed": 233
+        }
+      }
+    },
+    {
+      "condition": "lexical_paraphrase",
+      "completed_samples": 50,
+      "has_actual_eviction": true,
+      "summary": {
+        "total_samples": 50,
+        "exact_match": 22.0,
+        "f1_score": 26.611764705882354,
+        "total_diagnostic_seconds": 1248.2693327092566
+      },
+      "paired_comparison_status": "available",
+      "paired_vs_lexical_original": {
+        "em": {
+          "difference_percentage_points": -2.0,
+          "paired_question_bootstrap_95ci": [
+            -6.0,
+            0.0
+          ],
+          "resamples": 2000,
+          "seed": 233
+        },
+        "f1": {
+          "difference_percentage_points": -2.0,
+          "paired_question_bootstrap_95ci": [
+            -6.0,
+            0.0
+          ],
+          "resamples": 2000,
+          "seed": 233
+        }
+      }
+    },
+    {
+      "condition": "semantic_paraphrase",
+      "completed_samples": 50,
+      "has_actual_eviction": true,
+      "summary": {
+        "total_samples": 50,
+        "exact_match": 24.0,
+        "f1_score": 27.81176470588235,
+        "total_diagnostic_seconds": 792.9292215923779
+      },
+      "paired_comparison_status": "available",
+      "paired_vs_lexical_original": {
+        "em": {
+          "difference_percentage_points": 0.0,
+          "paired_question_bootstrap_95ci": [
+            0.0,
+            0.0
+          ],
+          "resamples": 2000,
+          "seed": 233
+        },
+        "f1": {
+          "difference_percentage_points": -0.8,
+          "paired_question_bootstrap_95ci": [
+            -2.4,
+            0.0
+          ],
+          "resamples": 2000,
+          "seed": 233
+        }
+      }
+    }
+  ],
+  "timing_policy": "All timing is diagnostic shared-GPU accuracy overhead, NOT latency.",
+  "execution_order_version": "auxiliary_first_smoke_and_main_v2",
+  "paired_comparison_status": "available",
+  "paired_baseline_completed_samples": 50,
+  "accuracy_scope": "Original exact_match/F1 on successful raw main-agent answers; no test-F1 tuning, no auxiliary equivalence guarantee",
+  "resource_observations": {
+    "smoke/lexical_paraphrase": {
+      "plan_sha256": "fd37fef0af388e19403531b5cb9f04c7d3e167f0db155ac408434ada0227d5ae",
+      "startup": {
+        "gpu": 1,
+        "name": "NVIDIA H200",
+        "free_mib": 143158,
+        "foreign_contexts": 0,
+        "allocator_limit_gib": 44,
+        "scope": "shared accuracy, never latency"
+      },
+      "observations": [
+        {
+          "at": 1791062370.6789875,
+          "pid": 1484684,
+          "VmHWM_bytes": 9007104,
+          "VmRSS_bytes": 9007104
+        },
+        {
+          "at": 1791062390.8872674,
+          "pid": 1484684,
+          "VmHWM_bytes": 555274240,
+          "VmRSS_bytes": 555274240
+        },
+        {
+          "at": 1791062411.1072867,
+          "pid": 1484684,
+          "VmHWM_bytes": 3168382976,
+          "VmRSS_bytes": 3168382976
+        },
+        {
+          "at": 1791062431.3287618,
+          "pid": 1484684,
+          "VmHWM_bytes": 21381787648,
+          "VmRSS_bytes": 6861324288,
+          "driver_cuda_used_mib": [
+            15366
+          ]
+        },
+        {
+          "at": 1791062451.5450206,
+          "pid": 1484684,
+          "VmHWM_bytes": 22163107840,
+          "VmRSS_bytes": 7064186880,
+          "driver_cuda_used_mib": [
+            30004
+          ]
+        },
+        {
+          "at": 1791062471.7587833,
+          "pid": 1484684,
+          "VmHWM_bytes": 22163107840,
+          "VmRSS_bytes": 7086182400,
+          "driver_cuda_used_mib": [
+            30066
+          ]
+        },
+        {
+          "at": 1791062491.973442,
+          "pid": 1484684,
+          "VmHWM_bytes": 22163107840,
+          "VmRSS_bytes": 7087190016,
+          "driver_cuda_used_mib": [
+            30102
+          ]
+        },
+        {
+          "at": 1791062512.1889381,
+          "pid": 1484684,
+          "VmHWM_bytes": 22163107840,
+          "VmRSS_bytes": 7087198208,
+          "driver_cuda_used_mib": [
+            30140
+          ]
+        }
+      ],
+      "scope": "Own process VmRSS/VmHWM from /proc and sampled driver CUDA used memory only, not allocator peak or whole-host attribution. 44GiB torch allocator cap is enforced by the frozen worker.",
+      "timing_policy": "All timing is diagnostic shared-GPU accuracy overhead, NOT latency."
+    },
+    "smoke/semantic_paraphrase": {
+      "plan_sha256": "fd37fef0af388e19403531b5cb9f04c7d3e167f0db155ac408434ada0227d5ae",
+      "startup": {
+        "gpu": 1,
+        "name": "NVIDIA H200",
+        "free_mib": 143158,
+        "foreign_contexts": 0,
+        "allocator_limit_gib": 44,
+        "scope": "shared accuracy, never latency"
+      },
+      "observations": [
+        {
+          "at": 1791062524.5389674,
+          "pid": 1486361,
+          "VmHWM_bytes": 8994816,
+          "VmRSS_bytes": 8994816
+        },
+        {
+          "at": 1791062544.7960901,
+          "pid": 1486361,
+          "VmHWM_bytes": 804700160,
+          "VmRSS_bytes": 804700160
+        },
+        {
+          "at": 1791062565.0054524,
+          "pid": 1486361,
+          "VmHWM_bytes": 852078592,
+          "VmRSS_bytes": 832688128
+        },
+        {
+          "at": 1791062585.2412145,
+          "pid": 1486361,
+          "VmHWM_bytes": 20919840768,
+          "VmRSS_bytes": 20919840768,
+          "driver_cuda_used_mib": [
+            15046
+          ]
+        },
+        {
+          "at": 1791062605.465109,
+          "pid": 1486361,
+          "VmHWM_bytes": 22016458752,
+          "VmRSS_bytes": 6949826560,
+          "driver_cuda_used_mib": [
+            29936
+          ]
+        },
+        {
+          "at": 1791062625.6886322,
+          "pid": 1486361,
+          "VmHWM_bytes": 22016458752,
+          "VmRSS_bytes": 7087603712,
+          "driver_cuda_used_mib": [
+            30102
+          ]
+        }
+      ],
+      "scope": "Own process VmRSS/VmHWM from /proc and sampled driver CUDA used memory only, not allocator peak or whole-host attribution. 44GiB torch allocator cap is enforced by the frozen worker.",
+      "timing_policy": "All timing is diagnostic shared-GPU accuracy overhead, NOT latency."
+    },
+    "smoke/lexical_original": {
+      "plan_sha256": "fd37fef0af388e19403531b5cb9f04c7d3e167f0db155ac408434ada0227d5ae",
+      "startup": {
+        "gpu": 1,
+        "name": "NVIDIA H200",
+        "free_mib": 143158,
+        "foreign_contexts": 0,
+        "allocator_limit_gib": 44,
+        "scope": "shared accuracy, never latency"
+      },
+      "observations": [
+        {
+          "at": 1791062648.0565498,
+          "pid": 1487720,
+          "VmHWM_bytes": 8564736,
+          "VmRSS_bytes": 8564736
+        },
+        {
+          "at": 1791062668.2620573,
+          "pid": 1487720,
+          "VmHWM_bytes": 554881024,
+          "VmRSS_bytes": 554881024
+        },
+        {
+          "at": 1791062688.53344,
+          "pid": 1487720,
+          "VmHWM_bytes": 3255742464,
+          "VmRSS_bytes": 3255742464
+        },
+        {
+          "at": 1791062708.832638,
+          "pid": 1487720,
+          "VmHWM_bytes": 21234130944,
+          "VmRSS_bytes": 6777434112,
+          "driver_cuda_used_mib": [
+            15532
+          ]
+        },
+        {
+          "at": 1791062729.0863516,
+          "pid": 1487720,
+          "VmHWM_bytes": 21234130944,
+          "VmRSS_bytes": 6799134720,
+          "driver_cuda_used_mib": [
+            15604
+          ]
+        }
+      ],
+      "scope": "Own process VmRSS/VmHWM from /proc and sampled driver CUDA used memory only, not allocator peak or whole-host attribution. 44GiB torch allocator cap is enforced by the frozen worker.",
+      "timing_policy": "All timing is diagnostic shared-GPU accuracy overhead, NOT latency."
+    },
+    "smoke/no_citation": {
+      "plan_sha256": "fd37fef0af388e19403531b5cb9f04c7d3e167f0db155ac408434ada0227d5ae",
+      "startup": {
+        "gpu": 1,
+        "name": "NVIDIA H200",
+        "free_mib": 143158,
+        "foreign_contexts": 0,
+        "allocator_limit_gib": 44,
+        "scope": "shared accuracy, never latency"
+      },
+      "observations": [
+        {
+          "at": 1791062744.562676,
+          "pid": 1488605,
+          "VmHWM_bytes": 9236480,
+          "VmRSS_bytes": 9236480
+        },
+        {
+          "at": 1791062764.8274992,
+          "pid": 1488605,
+          "VmHWM_bytes": 802177024,
+          "VmRSS_bytes": 802177024
+        },
+        {
+          "at": 1791062785.0351288,
+          "pid": 1488605,
+          "VmHWM_bytes": 851169280,
+          "VmRSS_bytes": 832380928
+        },
+        {
+          "at": 1791062805.2565591,
+          "pid": 1488605,
+          "VmHWM_bytes": 21237936128,
+          "VmRSS_bytes": 6023720960,
+          "driver_cuda_used_mib": [
+            15258
+          ]
+        },
+        {
+          "at": 1791062825.5393918,
+          "pid": 1488605,
+          "VmHWM_bytes": 21237936128,
+          "VmRSS_bytes": 6800908288,
+          "driver_cuda_used_mib": [
+            15600
+          ]
+        }
+      ],
+      "scope": "Own process VmRSS/VmHWM from /proc and sampled driver CUDA used memory only, not allocator peak or whole-host attribution. 44GiB torch allocator cap is enforced by the frozen worker.",
+      "timing_policy": "All timing is diagnostic shared-GPU accuracy overhead, NOT latency."
+    },
+    "smoke/semantic_original": {
+      "plan_sha256": "fd37fef0af388e19403531b5cb9f04c7d3e167f0db155ac408434ada0227d5ae",
+      "startup": {
+        "gpu": 1,
+        "name": "NVIDIA H200",
+        "free_mib": 143158,
+        "foreign_contexts": 0,
+        "allocator_limit_gib": 44,
+        "scope": "shared accuracy, never latency"
+      },
+      "observations": [
+        {
+          "at": 1791062849.523434,
+          "pid": 1489603,
+          "VmHWM_bytes": 8978432,
+          "VmRSS_bytes": 8978432
+        },
+        {
+          "at": 1791062869.735474,
+          "pid": 1489603,
+          "VmHWM_bytes": 802172928,
+          "VmRSS_bytes": 802172928
+        },
+        {
+          "at": 1791062889.9893374,
+          "pid": 1489603,
+          "VmHWM_bytes": 852856832,
+          "VmRSS_bytes": 834379776
+        },
+        {
+          "at": 1791062910.2060165,
+          "pid": 1489603,
+          "VmHWM_bytes": 20270501888,
+          "VmRSS_bytes": 20270501888,
+          "driver_cuda_used_mib": [
+            15046
+          ]
+        },
+        {
+          "at": 1791062930.4251654,
+          "pid": 1489603,
+          "VmHWM_bytes": 21237223424,
+          "VmRSS_bytes": 6977200128,
+          "driver_cuda_used_mib": [
+            15596
+          ]
+        },
+        {
+          "at": 1791062950.6457293,
+          "pid": 1489603,
+          "VmHWM_bytes": 21237223424,
+          "VmRSS_bytes": 6979563520,
+          "driver_cuda_used_mib": [
+            15642
+          ]
+        }
+      ],
+      "scope": "Own process VmRSS/VmHWM from /proc and sampled driver CUDA used memory only, not allocator peak or whole-host attribution. 44GiB torch allocator cap is enforced by the frozen worker.",
+      "timing_policy": "All timing is diagnostic shared-GPU accuracy overhead, NOT latency."
+    },
+    "main/lexical_paraphrase": {
+      "plan_sha256": "fd37fef0af388e19403531b5cb9f04c7d3e167f0db155ac408434ada0227d5ae",
+      "startup": {
+        "gpu": 1,
+        "name": "NVIDIA H200",
+        "free_mib": 143158,
+        "foreign_contexts": 0,
+        "allocator_limit_gib": 44,
+        "scope": "shared accuracy, never latency"
+      },
+      "observations": [
+        {
+          "at": 1791062962.171176,
+          "pid": 1490785,
+          "VmHWM_bytes": 9052160,
+          "VmRSS_bytes": 9052160
+        },
+        {
+          "at": 1791062982.394259,
+          "pid": 1490785,
+          "VmHWM_bytes": 805564416,
+          "VmRSS_bytes": 805564416
+        },
+        {
+          "at": 1791063002.601594,
+          "pid": 1490785,
+          "VmHWM_bytes": 850903040,
+          "VmRSS_bytes": 830124032
+        },
+        {
+          "at": 1791063023.0585716,
+          "pid": 1490785,
+          "VmHWM_bytes": 10920833024,
+          "VmRSS_bytes": 10920833024,
+          "driver_cuda_used_mib": [
+            15046
+          ]
+        },
+        {
+          "at": 1791063043.2842398,
+          "pid": 1490785,
+          "VmHWM_bytes": 22015725568,
+          "VmRSS_bytes": 6833786880,
+          "driver_cuda_used_mib": [
+            29898
+          ]
+        },
+        {
+          "at": 1791063063.5511012,
+          "pid": 1490785,
+          "VmHWM_bytes": 22015725568,
+          "VmRSS_bytes": 6939398144,
+          "driver_cuda_used_mib": [
+            30054
+          ]
+        },
+        {
+          "at": 1791063083.7680993,
+          "pid": 1490785,
+          "VmHWM_bytes": 22015725568,
+          "VmRSS_bytes": 6942711808,
+          "driver_cuda_used_mib": [
+            30104
+          ]
+        },
+        {
+          "at": 1791063103.9870353,
+          "pid": 1490785,
+          "VmHWM_bytes": 22015725568,
+          "VmRSS_bytes": 6946402304,
+          "driver_cuda_used_mib": [
+            30104
+          ]
+        },
+        {
+          "at": 1791063124.228038,
+          "pid": 1490785,
+          "VmHWM_bytes": 22015725568,
+          "VmRSS_bytes": 6946549760,
+          "driver_cuda_used_mib": [
+            30104
+          ]
+        },
+        {
+          "at": 1791063144.447967,
+          "pid": 1490785,
+          "VmHWM_bytes": 22015725568,
+          "VmRSS_bytes": 6948442112,
+          "driver_cuda_used_mib": [
+            30104
+          ]
+        },
+        {
+          "at": 1791063164.6686902,
+          "pid": 1490785,
+          "VmHWM_bytes": 22015725568,
+          "VmRSS_bytes": 6972813312,
+          "driver_cuda_used_mib": [
+            30104
+          ]
+        },
+        {
+          "at": 1791063184.8917034,
+          "pid": 1490785,
+          "VmHWM_bytes": 22015725568,
+          "VmRSS_bytes": 6972813312,
+          "driver_cuda_used_mib": [
+            30104
+          ]
+        },
+        {
+          "at": 1791063205.1117473,
+          "pid": 1490785,
+          "VmHWM_bytes": 22015725568,
+          "VmRSS_bytes": 6974918656,
+          "driver_cuda_used_mib": [
+            30142
+          ]
+        },
+        {
+          "at": 1791063225.3650217,
+          "pid": 1490785,
+          "VmHWM_bytes": 22015725568,
+          "VmRSS_bytes": 6988746752,
+          "driver_cuda_used_mib": [
+            30146
+          ]
+        },
+        {
+          "at": 1791063245.5953124,
+          "pid": 1490785,
+          "VmHWM_bytes": 22015725568,
+          "VmRSS_bytes": 6989012992,
+          "driver_cuda_used_mib": [
+            30200
+          ]
+        },
+        {
+          "at": 1791063265.813937,
+          "pid": 1490785,
+          "VmHWM_bytes": 22015725568,
+          "VmRSS_bytes": 7007395840,
+          "driver_cuda_used_mib": [
+            30200
+          ]
+        },
+        {
+          "at": 1791063286.0866761,
+          "pid": 1490785,
+          "VmHWM_bytes": 22015725568,
+          "VmRSS_bytes": 7007408128,
+          "driver_cuda_used_mib": [
+            30200
+          ]
+        },
+        {
+          "at": 1791063306.3362722,
+          "pid": 1490785,
+          "VmHWM_bytes": 22015725568,
+          "VmRSS_bytes": 7007879168,
+          "driver_cuda_used_mib": [
+            30200
+          ]
+        },
+        {
+          "at": 1791063326.6205895,
+          "pid": 1490785,
+          "VmHWM_bytes": 22015725568,
+          "VmRSS_bytes": 7011459072,
+          "driver_cuda_used_mib": [
+            30200
+          ]
+        },
+        {
+          "at": 1791063346.9365537,
+          "pid": 1490785,
+          "VmHWM_bytes": 22015725568,
+          "VmRSS_bytes": 7018172416,
+          "driver_cuda_used_mib": [
+            30200
+          ]
+        },
+        {
+          "at": 1791063367.2253165,
+          "pid": 1490785,
+          "VmHWM_bytes": 22015725568,
+          "VmRSS_bytes": 7018205184,
+          "driver_cuda_used_mib": [
+            30200
+          ]
+        },
+        {
+          "at": 1791063387.466035,
+          "pid": 1490785,
+          "VmHWM_bytes": 22015725568,
+          "VmRSS_bytes": 7019298816,
+          "driver_cuda_used_mib": [
+            30200
+          ]
+        },
+        {
+          "at": 1791063407.6849763,
+          "pid": 1490785,
+          "VmHWM_bytes": 22015725568,
+          "VmRSS_bytes": 7029788672,
+          "driver_cuda_used_mib": [
+            30200
+          ]
+        },
+        {
+          "at": 1791063427.908661,
+          "pid": 1490785,
+          "VmHWM_bytes": 22015725568,
+          "VmRSS_bytes": 7034404864,
+          "driver_cuda_used_mib": [
+            30200
+          ]
+        },
+        {
+          "at": 1791063448.1752584,
+          "pid": 1490785,
+          "VmHWM_bytes": 22015725568,
+          "VmRSS_bytes": 7034454016,
+          "driver_cuda_used_mib": [
+            30200
+          ]
+        },
+        {
+          "at": 1791063468.39891,
+          "pid": 1490785,
+          "VmHWM_bytes": 22015725568,
+          "VmRSS_bytes": 7040172032,
+          "driver_cuda_used_mib": [
+            30210
+          ]
+        },
+        {
+          "at": 1791063488.618291,
+          "pid": 1490785,
+          "VmHWM_bytes": 22015725568,
+          "VmRSS_bytes": 7040319488,
+          "driver_cuda_used_mib": [
+            30210
+          ]
+        },
+        {
+          "at": 1791063508.8343134,
+          "pid": 1490785,
+          "VmHWM_bytes": 22015725568,
+          "VmRSS_bytes": 7044272128,
+          "driver_cuda_used_mib": [
+            30210
+          ]
+        },
+        {
+          "at": 1791063529.050563,
+          "pid": 1490785,
+          "VmHWM_bytes": 22015725568,
+          "VmRSS_bytes": 7044366336,
+          "driver_cuda_used_mib": [
+            30210
+          ]
+        },
+        {
+          "at": 1791063549.3280811,
+          "pid": 1490785,
+          "VmHWM_bytes": 22015725568,
+          "VmRSS_bytes": 7049744384,
+          "driver_cuda_used_mib": [
+            30216
+          ]
+        },
+        {
+          "at": 1791063569.544245,
+          "pid": 1490785,
+          "VmHWM_bytes": 22015725568,
+          "VmRSS_bytes": 7053484032,
+          "driver_cuda_used_mib": [
+            30272
+          ]
+        },
+        {
+          "at": 1791063589.830535,
+          "pid": 1490785,
+          "VmHWM_bytes": 22015725568,
+          "VmRSS_bytes": 7054802944,
+          "driver_cuda_used_mib": [
+            30272
+          ]
+        },
+        {
+          "at": 1791063610.0546262,
+          "pid": 1490785,
+          "VmHWM_bytes": 22015725568,
+          "VmRSS_bytes": 7055036416,
+          "driver_cuda_used_mib": [
+            30272
+          ]
+        },
+        {
+          "at": 1791063630.378428,
+          "pid": 1490785,
+          "VmHWM_bytes": 22015725568,
+          "VmRSS_bytes": 7062310912,
+          "driver_cuda_used_mib": [
+            30272
+          ]
+        },
+        {
+          "at": 1791063650.6339548,
+          "pid": 1490785,
+          "VmHWM_bytes": 22015725568,
+          "VmRSS_bytes": 7063801856,
+          "driver_cuda_used_mib": [
+            30272
+          ]
+        },
+        {
+          "at": 1791063670.852663,
+          "pid": 1490785,
+          "VmHWM_bytes": 22015725568,
+          "VmRSS_bytes": 7063863296,
+          "driver_cuda_used_mib": [
+            30272
+          ]
+        },
+        {
+          "at": 1791063691.0773442,
+          "pid": 1490785,
+          "VmHWM_bytes": 22015725568,
+          "VmRSS_bytes": 7066607616,
+          "driver_cuda_used_mib": [
+            30272
+          ]
+        },
+        {
+          "at": 1791063711.3009977,
+          "pid": 1490785,
+          "VmHWM_bytes": 22015725568,
+          "VmRSS_bytes": 7066808320,
+          "driver_cuda_used_mib": [
+            30272
+          ]
+        },
+        {
+          "at": 1791063731.5203373,
+          "pid": 1490785,
+          "VmHWM_bytes": 22015725568,
+          "VmRSS_bytes": 7071612928,
+          "driver_cuda_used_mib": [
+            30272
+          ]
+        },
+        {
+          "at": 1791063751.8384802,
+          "pid": 1490785,
+          "VmHWM_bytes": 22015725568,
+          "VmRSS_bytes": 7074930688,
+          "driver_cuda_used_mib": [
+            30272
+          ]
+        },
+        {
+          "at": 1791063772.094131,
+          "pid": 1490785,
+          "VmHWM_bytes": 22015725568,
+          "VmRSS_bytes": 7076605952,
+          "driver_cuda_used_mib": [
+            30272
+          ]
+        },
+        {
+          "at": 1791063792.3559563,
+          "pid": 1490785,
+          "VmHWM_bytes": 22015725568,
+          "VmRSS_bytes": 7077478400,
+          "driver_cuda_used_mib": [
+            30272
+          ]
+        },
+        {
+          "at": 1791063812.577611,
+          "pid": 1490785,
+          "VmHWM_bytes": 22015725568,
+          "VmRSS_bytes": 7079092224,
+          "driver_cuda_used_mib": [
+            30272
+          ]
+        },
+        {
+          "at": 1791063832.8486395,
+          "pid": 1490785,
+          "VmHWM_bytes": 22015725568,
+          "VmRSS_bytes": 7079223296,
+          "driver_cuda_used_mib": [
+            30272
+          ]
+        },
+        {
+          "at": 1791063853.0667415,
+          "pid": 1490785,
+          "VmHWM_bytes": 22015725568,
+          "VmRSS_bytes": 7086067712,
+          "driver_cuda_used_mib": [
+            30272
+          ]
+        },
+        {
+          "at": 1791063873.3362174,
+          "pid": 1490785,
+          "VmHWM_bytes": 22015725568,
+          "VmRSS_bytes": 7086096384,
+          "driver_cuda_used_mib": [
+            30272
+          ]
+        },
+        {
+          "at": 1791063893.555916,
+          "pid": 1490785,
+          "VmHWM_bytes": 22015725568,
+          "VmRSS_bytes": 7090208768,
+          "driver_cuda_used_mib": [
+            30272
+          ]
+        },
+        {
+          "at": 1791063913.773062,
+          "pid": 1490785,
+          "VmHWM_bytes": 22015725568,
+          "VmRSS_bytes": 7094214656,
+          "driver_cuda_used_mib": [
+            30272
+          ]
+        },
+        {
+          "at": 1791063933.9257154,
+          "pid": 1490785,
+          "VmHWM_bytes": 22015725568,
+          "VmRSS_bytes": 7094288384,
+          "driver_cuda_used_mib": [
+            30272
+          ]
+        },
+        {
+          "at": 1791063954.1473725,
+          "pid": 1490785,
+          "VmHWM_bytes": 22015725568,
+          "VmRSS_bytes": 7100669952,
+          "driver_cuda_used_mib": [
+            30272
+          ]
+        },
+        {
+          "at": 1791063974.3693175,
+          "pid": 1490785,
+          "VmHWM_bytes": 22015725568,
+          "VmRSS_bytes": 7102033920,
+          "driver_cuda_used_mib": [
+            30272
+          ]
+        },
+        {
+          "at": 1791063994.659388,
+          "pid": 1490785,
+          "VmHWM_bytes": 22015725568,
+          "VmRSS_bytes": 7102128128,
+          "driver_cuda_used_mib": [
+            30272
+          ]
+        },
+        {
+          "at": 1791064014.9417233,
+          "pid": 1490785,
+          "VmHWM_bytes": 22015725568,
+          "VmRSS_bytes": 7104663552,
+          "driver_cuda_used_mib": [
+            30272
+          ]
+        },
+        {
+          "at": 1791064035.1622243,
+          "pid": 1490785,
+          "VmHWM_bytes": 22015725568,
+          "VmRSS_bytes": 7104946176,
+          "driver_cuda_used_mib": [
+            30272
+          ]
+        },
+        {
+          "at": 1791064055.3880105,
+          "pid": 1490785,
+          "VmHWM_bytes": 22015725568,
+          "VmRSS_bytes": 7106588672,
+          "driver_cuda_used_mib": [
+            30272
+          ]
+        },
+        {
+          "at": 1791064075.6121013,
+          "pid": 1490785,
+          "VmHWM_bytes": 22015725568,
+          "VmRSS_bytes": 7106768896,
+          "driver_cuda_used_mib": [
+            30272
+          ]
+        },
+        {
+          "at": 1791064095.8695767,
+          "pid": 1490785,
+          "VmHWM_bytes": 22015725568,
+          "VmRSS_bytes": 7110352896,
+          "driver_cuda_used_mib": [
+            30272
+          ]
+        },
+        {
+          "at": 1791064116.1929507,
+          "pid": 1490785,
+          "VmHWM_bytes": 22015725568,
+          "VmRSS_bytes": 7110475776,
+          "driver_cuda_used_mib": [
+            30334
+          ]
+        },
+        {
+          "at": 1791064136.4672115,
+          "pid": 1490785,
+          "VmHWM_bytes": 22015725568,
+          "VmRSS_bytes": 7114305536,
+          "driver_cuda_used_mib": [
+            30334
+          ]
+        },
+        {
+          "at": 1791064156.7004974,
+          "pid": 1490785,
+          "VmHWM_bytes": 22015725568,
+          "VmRSS_bytes": 7117901824,
+          "driver_cuda_used_mib": [
+            30334
+          ]
+        },
+        {
+          "at": 1791064176.9230363,
+          "pid": 1490785,
+          "VmHWM_bytes": 22015725568,
+          "VmRSS_bytes": 7117914112,
+          "driver_cuda_used_mib": [
+            30334
+          ]
+        },
+        {
+          "at": 1791064197.140372,
+          "pid": 1490785,
+          "VmHWM_bytes": 22015725568,
+          "VmRSS_bytes": 7119511552,
+          "driver_cuda_used_mib": [
+            30334
+          ]
+        },
+        {
+          "at": 1791064217.3607867,
+          "pid": 1490785,
+          "VmHWM_bytes": 22015725568,
+          "VmRSS_bytes": 7125356544,
+          "driver_cuda_used_mib": [
+            30334
+          ]
+        },
+        {
+          "at": 1791064237.5795283,
+          "pid": 1490785,
+          "VmHWM_bytes": 22015725568,
+          "VmRSS_bytes": 7125368832,
+          "driver_cuda_used_mib": [
+            30334
+          ]
+        },
+        {
+          "at": 1791064257.8514402,
+          "pid": 1490785,
+          "VmHWM_bytes": 22015725568,
+          "VmRSS_bytes": 7127646208,
+          "driver_cuda_used_mib": [
+            30334
+          ]
+        },
+        {
+          "at": 1791064278.0723124,
+          "pid": 1490785,
+          "VmHWM_bytes": 22015725568,
+          "VmRSS_bytes": 7131373568,
+          "driver_cuda_used_mib": [
+            30334
+          ]
+        },
+        {
+          "at": 1791064298.2955997,
+          "pid": 1490785,
+          "VmHWM_bytes": 22015725568,
+          "VmRSS_bytes": 7131381760,
+          "driver_cuda_used_mib": [
+            30334
+          ]
+        },
+        {
+          "at": 1791064318.5524948,
+          "pid": 1490785,
+          "VmHWM_bytes": 22015725568,
+          "VmRSS_bytes": 7132413952,
+          "driver_cuda_used_mib": [
+            30334
+          ]
+        },
+        {
+          "at": 1791064339.033295,
+          "pid": 1490785,
+          "VmHWM_bytes": 22015725568,
+          "VmRSS_bytes": 7133982720,
+          "driver_cuda_used_mib": [
+            30334
+          ]
+        }
+      ],
+      "scope": "Own process VmRSS/VmHWM from /proc and sampled driver CUDA used memory only, not allocator peak or whole-host attribution. 44GiB torch allocator cap is enforced by the frozen worker.",
+      "timing_policy": "All timing is diagnostic shared-GPU accuracy overhead, NOT latency."
+    },
+    "main/semantic_paraphrase": {
+      "plan_sha256": "fd37fef0af388e19403531b5cb9f04c7d3e167f0db155ac408434ada0227d5ae",
+      "startup": {
+        "gpu": 1,
+        "name": "NVIDIA H200",
+        "free_mib": 143158,
+        "foreign_contexts": 0,
+        "allocator_limit_gib": 44,
+        "scope": "shared accuracy, never latency"
+      },
+      "observations": [
+        {
+          "at": 1791064357.3443544,
+          "pid": 1517843,
+          "VmHWM_bytes": 9109504,
+          "VmRSS_bytes": 9109504
+        },
+        {
+          "at": 1791064377.6659338,
+          "pid": 1517843,
+          "VmHWM_bytes": 803966976,
+          "VmRSS_bytes": 803966976
+        },
+        {
+          "at": 1791064397.9605792,
+          "pid": 1517843,
+          "VmHWM_bytes": 850030592,
+          "VmRSS_bytes": 830214144
+        },
+        {
+          "at": 1791064418.2416427,
+          "pid": 1517843,
+          "VmHWM_bytes": 17828380672,
+          "VmRSS_bytes": 17828380672,
+          "driver_cuda_used_mib": [
+            15046
+          ]
+        },
+        {
+          "at": 1791064438.5150287,
+          "pid": 1517843,
+          "VmHWM_bytes": 22015397888,
+          "VmRSS_bytes": 6810320896,
+          "driver_cuda_used_mib": [
+            29846
+          ]
+        },
+        {
+          "at": 1791064458.7326798,
+          "pid": 1517843,
+          "VmHWM_bytes": 22015397888,
+          "VmRSS_bytes": 7073697792,
+          "driver_cuda_used_mib": [
+            30020
+          ]
+        },
+        {
+          "at": 1791064478.9995692,
+          "pid": 1517843,
+          "VmHWM_bytes": 22015397888,
+          "VmRSS_bytes": 7143604224,
+          "driver_cuda_used_mib": [
+            30082
+          ]
+        },
+        {
+          "at": 1791064499.2244494,
+          "pid": 1517843,
+          "VmHWM_bytes": 22015397888,
+          "VmRSS_bytes": 7148437504,
+          "driver_cuda_used_mib": [
+            30082
+          ]
+        },
+        {
+          "at": 1791064519.4462852,
+          "pid": 1517843,
+          "VmHWM_bytes": 22015397888,
+          "VmRSS_bytes": 7150710784,
+          "driver_cuda_used_mib": [
+            30082
+          ]
+        },
+        {
+          "at": 1791064539.7405834,
+          "pid": 1517843,
+          "VmHWM_bytes": 22015397888,
+          "VmRSS_bytes": 7168110592,
+          "driver_cuda_used_mib": [
+            30082
+          ]
+        },
+        {
+          "at": 1791064559.9995587,
+          "pid": 1517843,
+          "VmHWM_bytes": 22015397888,
+          "VmRSS_bytes": 7183073280,
+          "driver_cuda_used_mib": [
+            30162
+          ]
+        },
+        {
+          "at": 1791064580.294743,
+          "pid": 1517843,
+          "VmHWM_bytes": 22015397888,
+          "VmRSS_bytes": 7192096768,
+          "driver_cuda_used_mib": [
+            30216
+          ]
+        },
+        {
+          "at": 1791064600.5827358,
+          "pid": 1517843,
+          "VmHWM_bytes": 22015397888,
+          "VmRSS_bytes": 7200714752,
+          "driver_cuda_used_mib": [
+            30216
+          ]
+        },
+        {
+          "at": 1791064620.7974474,
+          "pid": 1517843,
+          "VmHWM_bytes": 22015397888,
+          "VmRSS_bytes": 7202492416,
+          "driver_cuda_used_mib": [
+            30216
+          ]
+        },
+        {
+          "at": 1791064641.0150068,
+          "pid": 1517843,
+          "VmHWM_bytes": 22015397888,
+          "VmRSS_bytes": 7208349696,
+          "driver_cuda_used_mib": [
+            30216
+          ]
+        },
+        {
+          "at": 1791064661.2482448,
+          "pid": 1517843,
+          "VmHWM_bytes": 22015397888,
+          "VmRSS_bytes": 7213027328,
+          "driver_cuda_used_mib": [
+            30216
+          ]
+        },
+        {
+          "at": 1791064681.4617505,
+          "pid": 1517843,
+          "VmHWM_bytes": 22015397888,
+          "VmRSS_bytes": 7216943104,
+          "driver_cuda_used_mib": [
+            30216
+          ]
+        },
+        {
+          "at": 1791064701.741811,
+          "pid": 1517843,
+          "VmHWM_bytes": 22015397888,
+          "VmRSS_bytes": 7220924416,
+          "driver_cuda_used_mib": [
+            30218
+          ]
+        },
+        {
+          "at": 1791064721.965656,
+          "pid": 1517843,
+          "VmHWM_bytes": 22015397888,
+          "VmRSS_bytes": 7222489088,
+          "driver_cuda_used_mib": [
+            30250
+          ]
+        },
+        {
+          "at": 1791064742.2847912,
+          "pid": 1517843,
+          "VmHWM_bytes": 22015397888,
+          "VmRSS_bytes": 7226855424,
+          "driver_cuda_used_mib": [
+            30250
+          ]
+        },
+        {
+          "at": 1791064762.548828,
+          "pid": 1517843,
+          "VmHWM_bytes": 22015397888,
+          "VmRSS_bytes": 7229353984,
+          "driver_cuda_used_mib": [
+            30250
+          ]
+        },
+        {
+          "at": 1791064782.8374887,
+          "pid": 1517843,
+          "VmHWM_bytes": 22015397888,
+          "VmRSS_bytes": 7240798208,
+          "driver_cuda_used_mib": [
+            30308
+          ]
+        },
+        {
+          "at": 1791064803.180389,
+          "pid": 1517843,
+          "VmHWM_bytes": 22015397888,
+          "VmRSS_bytes": 7243186176,
+          "driver_cuda_used_mib": [
+            30308
+          ]
+        },
+        {
+          "at": 1791064823.401657,
+          "pid": 1517843,
+          "VmHWM_bytes": 22015397888,
+          "VmRSS_bytes": 7249788928,
+          "driver_cuda_used_mib": [
+            30308
+          ]
+        },
+        {
+          "at": 1791064843.619762,
+          "pid": 1517843,
+          "VmHWM_bytes": 22015397888,
+          "VmRSS_bytes": 7251537920,
+          "driver_cuda_used_mib": [
+            30308
+          ]
+        },
+        {
+          "at": 1791064863.8371665,
+          "pid": 1517843,
+          "VmHWM_bytes": 22015397888,
+          "VmRSS_bytes": 7253692416,
+          "driver_cuda_used_mib": [
+            30308
+          ]
+        },
+        {
+          "at": 1791064884.0591624,
+          "pid": 1517843,
+          "VmHWM_bytes": 22015397888,
+          "VmRSS_bytes": 7254519808,
+          "driver_cuda_used_mib": [
+            30308
+          ]
+        },
+        {
+          "at": 1791064904.3228881,
+          "pid": 1517843,
+          "VmHWM_bytes": 22015397888,
+          "VmRSS_bytes": 7259488256,
+          "driver_cuda_used_mib": [
+            30308
+          ]
+        },
+        {
+          "at": 1791064924.5416064,
+          "pid": 1517843,
+          "VmHWM_bytes": 22015397888,
+          "VmRSS_bytes": 7261691904,
+          "driver_cuda_used_mib": [
+            30308
+          ]
+        },
+        {
+          "at": 1791064944.7604082,
+          "pid": 1517843,
+          "VmHWM_bytes": 22015397888,
+          "VmRSS_bytes": 7263248384,
+          "driver_cuda_used_mib": [
+            30308
+          ]
+        },
+        {
+          "at": 1791064964.9972134,
+          "pid": 1517843,
+          "VmHWM_bytes": 22015397888,
+          "VmRSS_bytes": 7267713024,
+          "driver_cuda_used_mib": [
+            30308
+          ]
+        },
+        {
+          "at": 1791064985.2129078,
+          "pid": 1517843,
+          "VmHWM_bytes": 22015397888,
+          "VmRSS_bytes": 7270207488,
+          "driver_cuda_used_mib": [
+            30308
+          ]
+        },
+        {
+          "at": 1791065005.4987247,
+          "pid": 1517843,
+          "VmHWM_bytes": 22015397888,
+          "VmRSS_bytes": 7272755200,
+          "driver_cuda_used_mib": [
+            30308
+          ]
+        },
+        {
+          "at": 1791065025.7762773,
+          "pid": 1517843,
+          "VmHWM_bytes": 22015397888,
+          "VmRSS_bytes": 7277178880,
+          "driver_cuda_used_mib": [
+            30308
+          ]
+        },
+        {
+          "at": 1791065045.99731,
+          "pid": 1517843,
+          "VmHWM_bytes": 22015397888,
+          "VmRSS_bytes": 7277666304,
+          "driver_cuda_used_mib": [
+            30308
+          ]
+        },
+        {
+          "at": 1791065066.2605648,
+          "pid": 1517843,
+          "VmHWM_bytes": 22015397888,
+          "VmRSS_bytes": 7279427584,
+          "driver_cuda_used_mib": [
+            30308
+          ]
+        },
+        {
+          "at": 1791065086.4765322,
+          "pid": 1517843,
+          "VmHWM_bytes": 22015397888,
+          "VmRSS_bytes": 7279796224,
+          "driver_cuda_used_mib": [
+            30308
+          ]
+        },
+        {
+          "at": 1791065106.6989594,
+          "pid": 1517843,
+          "VmHWM_bytes": 22015397888,
+          "VmRSS_bytes": 7281295360,
+          "driver_cuda_used_mib": [
+            30308
+          ]
+        },
+        {
+          "at": 1791065126.9597566,
+          "pid": 1517843,
+          "VmHWM_bytes": 22015397888,
+          "VmRSS_bytes": 7283613696,
+          "driver_cuda_used_mib": [
+            30370
+          ]
+        },
+        {
+          "at": 1791065147.177488,
+          "pid": 1517843,
+          "VmHWM_bytes": 22015397888,
+          "VmRSS_bytes": 7307243520,
+          "driver_cuda_used_mib": [
+            30370
+          ]
+        },
+        {
+          "at": 1791065167.435601,
+          "pid": 1517843,
+          "VmHWM_bytes": 22015397888,
+          "VmRSS_bytes": 7309803520,
+          "driver_cuda_used_mib": [
+            30370
+          ]
+        },
+        {
+          "at": 1791065187.7221954,
+          "pid": 1517843,
+          "VmHWM_bytes": 22015397888,
+          "VmRSS_bytes": 7314604032,
+          "driver_cuda_used_mib": [
+            30370
+          ]
+        },
+        {
+          "at": 1791065207.9357283,
+          "pid": 1517843,
+          "VmHWM_bytes": 22015397888,
+          "VmRSS_bytes": 7316709376,
+          "driver_cuda_used_mib": [
+            30370
+          ]
+        },
+        {
+          "at": 1791065228.2217717,
+          "pid": 1517843,
+          "VmHWM_bytes": 22015397888,
+          "VmRSS_bytes": 7319543808,
+          "driver_cuda_used_mib": [
+            30370
+          ]
+        },
+        {
+          "at": 1791065248.4377403,
+          "pid": 1517843,
+          "VmHWM_bytes": 22015397888,
+          "VmRSS_bytes": 7324717056,
+          "driver_cuda_used_mib": [
+            30370
+          ]
+        },
+        {
+          "at": 1791065268.6543264,
+          "pid": 1517843,
+          "VmHWM_bytes": 22015397888,
+          "VmRSS_bytes": 6684164096,
+          "driver_cuda_used_mib": [
+            30370
+          ]
+        }
+      ],
+      "scope": "Own process VmRSS/VmHWM from /proc and sampled driver CUDA used memory only, not allocator peak or whole-host attribution. 44GiB torch allocator cap is enforced by the frozen worker.",
+      "timing_policy": "All timing is diagnostic shared-GPU accuracy overhead, NOT latency."
+    },
+    "main/lexical_original": {
+      "plan_sha256": "fd37fef0af388e19403531b5cb9f04c7d3e167f0db155ac408434ada0227d5ae",
+      "startup": {
+        "gpu": 1,
+        "name": "NVIDIA H200",
+        "free_mib": 143158,
+        "foreign_contexts": 0,
+        "allocator_limit_gib": 44,
+        "scope": "shared accuracy, never latency"
+      },
+      "observations": [
+        {
+          "at": 1791065287.1039703,
+          "pid": 1526965,
+          "VmHWM_bytes": 9052160,
+          "VmRSS_bytes": 9052160
+        },
+        {
+          "at": 1791065307.3527648,
+          "pid": 1526965,
+          "VmHWM_bytes": 804720640,
+          "VmRSS_bytes": 804720640
+        },
+        {
+          "at": 1791065327.6107736,
+          "pid": 1526965,
+          "VmHWM_bytes": 848941056,
+          "VmRSS_bytes": 830656512
+        },
+        {
+          "at": 1791065347.9436727,
+          "pid": 1526965,
+          "VmHWM_bytes": 21234974720,
+          "VmRSS_bytes": 6649114624,
+          "driver_cuda_used_mib": [
+            15330
+          ]
+        },
+        {
+          "at": 1791065368.2601113,
+          "pid": 1526965,
+          "VmHWM_bytes": 21234974720,
+          "VmRSS_bytes": 6804860928,
+          "driver_cuda_used_mib": [
+            15534
+          ]
+        },
+        {
+          "at": 1791065388.48964,
+          "pid": 1526965,
+          "VmHWM_bytes": 21234974720,
+          "VmRSS_bytes": 6806769664,
+          "driver_cuda_used_mib": [
+            15568
+          ]
+        },
+        {
+          "at": 1791065408.705474,
+          "pid": 1526965,
+          "VmHWM_bytes": 21234974720,
+          "VmRSS_bytes": 6810447872,
+          "driver_cuda_used_mib": [
+            15568
+          ]
+        },
+        {
+          "at": 1791065428.923454,
+          "pid": 1526965,
+          "VmHWM_bytes": 21234974720,
+          "VmRSS_bytes": 6812282880,
+          "driver_cuda_used_mib": [
+            15590
+          ]
+        },
+        {
+          "at": 1791065449.1476154,
+          "pid": 1526965,
+          "VmHWM_bytes": 21234974720,
+          "VmRSS_bytes": 6814666752,
+          "driver_cuda_used_mib": [
+            15590
+          ]
+        },
+        {
+          "at": 1791065469.4141064,
+          "pid": 1526965,
+          "VmHWM_bytes": 21234974720,
+          "VmRSS_bytes": 6817595392,
+          "driver_cuda_used_mib": [
+            15736
+          ]
+        },
+        {
+          "at": 1791065489.6323066,
+          "pid": 1526965,
+          "VmHWM_bytes": 21234974720,
+          "VmRSS_bytes": 6836703232,
+          "driver_cuda_used_mib": [
+            15736
+          ]
+        },
+        {
+          "at": 1791065509.9339058,
+          "pid": 1526965,
+          "VmHWM_bytes": 21234974720,
+          "VmRSS_bytes": 6836932608,
+          "driver_cuda_used_mib": [
+            15740
+          ]
+        },
+        {
+          "at": 1791065530.1733189,
+          "pid": 1526965,
+          "VmHWM_bytes": 21234974720,
+          "VmRSS_bytes": 6837981184,
+          "driver_cuda_used_mib": [
+            15740
+          ]
+        },
+        {
+          "at": 1791065550.4479764,
+          "pid": 1526965,
+          "VmHWM_bytes": 21234974720,
+          "VmRSS_bytes": 6838562816,
+          "driver_cuda_used_mib": [
+            15740
+          ]
+        },
+        {
+          "at": 1791065570.7842073,
+          "pid": 1526965,
+          "VmHWM_bytes": 21234974720,
+          "VmRSS_bytes": 6838915072,
+          "driver_cuda_used_mib": [
+            15740
+          ]
+        },
+        {
+          "at": 1791065591.0042672,
+          "pid": 1526965,
+          "VmHWM_bytes": 21234974720,
+          "VmRSS_bytes": 6840029184,
+          "driver_cuda_used_mib": [
+            15740
+          ]
+        },
+        {
+          "at": 1791065611.2256534,
+          "pid": 1526965,
+          "VmHWM_bytes": 21234974720,
+          "VmRSS_bytes": 6840463360,
+          "driver_cuda_used_mib": [
+            15740
+          ]
+        },
+        {
+          "at": 1791065631.4397092,
+          "pid": 1526965,
+          "VmHWM_bytes": 21234974720,
+          "VmRSS_bytes": 6840946688,
+          "driver_cuda_used_mib": [
+            15760
+          ]
+        },
+        {
+          "at": 1791065651.6517398,
+          "pid": 1526965,
+          "VmHWM_bytes": 21234974720,
+          "VmRSS_bytes": 6843834368,
+          "driver_cuda_used_mib": [
+            15760
+          ]
+        },
+        {
+          "at": 1791065671.9118278,
+          "pid": 1526965,
+          "VmHWM_bytes": 21234974720,
+          "VmRSS_bytes": 6844645376,
+          "driver_cuda_used_mib": [
+            15830
+          ]
+        },
+        {
+          "at": 1791065692.1262786,
+          "pid": 1526965,
+          "VmHWM_bytes": 21234974720,
+          "VmRSS_bytes": 6845067264,
+          "driver_cuda_used_mib": [
+            15830
+          ]
+        },
+        {
+          "at": 1791065712.3403974,
+          "pid": 1526965,
+          "VmHWM_bytes": 21234974720,
+          "VmRSS_bytes": 6845796352,
+          "driver_cuda_used_mib": [
+            15830
+          ]
+        },
+        {
+          "at": 1791065732.6175554,
+          "pid": 1526965,
+          "VmHWM_bytes": 21234974720,
+          "VmRSS_bytes": 6846140416,
+          "driver_cuda_used_mib": [
+            15830
+          ]
+        },
+        {
+          "at": 1791065752.8363361,
+          "pid": 1526965,
+          "VmHWM_bytes": 21234974720,
+          "VmRSS_bytes": 6846574592,
+          "driver_cuda_used_mib": [
+            15830
+          ]
+        },
+        {
+          "at": 1791065773.098303,
+          "pid": 1526965,
+          "VmHWM_bytes": 21234974720,
+          "VmRSS_bytes": 6847725568,
+          "driver_cuda_used_mib": [
+            15830
+          ]
+        },
+        {
+          "at": 1791065793.3218513,
+          "pid": 1526965,
+          "VmHWM_bytes": 21234974720,
+          "VmRSS_bytes": 6848733184,
+          "driver_cuda_used_mib": [
+            15830
+          ]
+        },
+        {
+          "at": 1791065813.5439324,
+          "pid": 1526965,
+          "VmHWM_bytes": 21234974720,
+          "VmRSS_bytes": 6849228800,
+          "driver_cuda_used_mib": [
+            15830
+          ]
+        },
+        {
+          "at": 1791065833.7652044,
+          "pid": 1526965,
+          "VmHWM_bytes": 21234974720,
+          "VmRSS_bytes": 6849634304,
+          "driver_cuda_used_mib": [
+            15830
+          ]
+        },
+        {
+          "at": 1791065853.9823668,
+          "pid": 1526965,
+          "VmHWM_bytes": 21234974720,
+          "VmRSS_bytes": 6849970176,
+          "driver_cuda_used_mib": [
+            15830
+          ]
+        },
+        {
+          "at": 1791065874.251062,
+          "pid": 1526965,
+          "VmHWM_bytes": 21234974720,
+          "VmRSS_bytes": 6850850816,
+          "driver_cuda_used_mib": [
+            15830
+          ]
+        },
+        {
+          "at": 1791065894.631509,
+          "pid": 1526965,
+          "VmHWM_bytes": 21234974720,
+          "VmRSS_bytes": 6851366912,
+          "driver_cuda_used_mib": [
+            15830
+          ]
+        },
+        {
+          "at": 1791065914.8798504,
+          "pid": 1526965,
+          "VmHWM_bytes": 21234974720,
+          "VmRSS_bytes": 6851813376,
+          "driver_cuda_used_mib": [
+            15830
+          ]
+        },
+        {
+          "at": 1791065935.1722627,
+          "pid": 1526965,
+          "VmHWM_bytes": 21234974720,
+          "VmRSS_bytes": 6852222976,
+          "driver_cuda_used_mib": [
+            15830
+          ]
+        },
+        {
+          "at": 1791065955.420521,
+          "pid": 1526965,
+          "VmHWM_bytes": 21234974720,
+          "VmRSS_bytes": 6852575232,
+          "driver_cuda_used_mib": [
+            15830
+          ]
+        },
+        {
+          "at": 1791065975.6746142,
+          "pid": 1526965,
+          "VmHWM_bytes": 21234974720,
+          "VmRSS_bytes": 6853951488,
+          "driver_cuda_used_mib": [
+            15830
+          ]
+        },
+        {
+          "at": 1791065996.0425189,
+          "pid": 1526965,
+          "VmHWM_bytes": 21234974720,
+          "VmRSS_bytes": 6854127616,
+          "driver_cuda_used_mib": [
+            15892
+          ]
+        },
+        {
+          "at": 1791066016.3031018,
+          "pid": 1526965,
+          "VmHWM_bytes": 21234974720,
+          "VmRSS_bytes": 6855401472,
+          "driver_cuda_used_mib": [
+            15892
+          ]
+        },
+        {
+          "at": 1791066036.5225296,
+          "pid": 1526965,
+          "VmHWM_bytes": 21234974720,
+          "VmRSS_bytes": 6855892992,
+          "driver_cuda_used_mib": [
+            15892
+          ]
+        },
+        {
+          "at": 1791066056.741067,
+          "pid": 1526965,
+          "VmHWM_bytes": 21234974720,
+          "VmRSS_bytes": 6856327168,
+          "driver_cuda_used_mib": [
+            15892
+          ]
+        },
+        {
+          "at": 1791066076.9496374,
+          "pid": 1526965,
+          "VmHWM_bytes": 21234974720,
+          "VmRSS_bytes": 6856724480,
+          "driver_cuda_used_mib": [
+            15892
+          ]
+        },
+        {
+          "at": 1791066097.2039416,
+          "pid": 1526965,
+          "VmHWM_bytes": 21234974720,
+          "VmRSS_bytes": 6857347072,
+          "driver_cuda_used_mib": [
+            15892
+          ]
+        },
+        {
+          "at": 1791066117.475041,
+          "pid": 1526965,
+          "VmHWM_bytes": 21234974720,
+          "VmRSS_bytes": 6857711616,
+          "driver_cuda_used_mib": [
+            15892
+          ]
+        }
+      ],
+      "scope": "Own process VmRSS/VmHWM from /proc and sampled driver CUDA used memory only, not allocator peak or whole-host attribution. 44GiB torch allocator cap is enforced by the frozen worker.",
+      "timing_policy": "All timing is diagnostic shared-GPU accuracy overhead, NOT latency."
+    },
+    "main/no_citation": {
+      "plan_sha256": "fd37fef0af388e19403531b5cb9f04c7d3e167f0db155ac408434ada0227d5ae",
+      "startup": {
+        "gpu": 1,
+        "name": "NVIDIA H200",
+        "free_mib": 143158,
+        "foreign_contexts": 0,
+        "allocator_limit_gib": 44,
+        "scope": "shared accuracy, never latency"
+      },
+      "observations": [
+        {
+          "at": 1791066145.0392015,
+          "pid": 1535514,
+          "VmHWM_bytes": 8982528,
+          "VmRSS_bytes": 8982528
+        },
+        {
+          "at": 1791066165.2462158,
+          "pid": 1535514,
+          "VmHWM_bytes": 806113280,
+          "VmRSS_bytes": 806113280
+        },
+        {
+          "at": 1791066185.4550219,
+          "pid": 1535514,
+          "VmHWM_bytes": 854687744,
+          "VmRSS_bytes": 834633728
+        },
+        {
+          "at": 1791066205.8060246,
+          "pid": 1535514,
+          "VmHWM_bytes": 21242277888,
+          "VmRSS_bytes": 6492319744,
+          "driver_cuda_used_mib": [
+            15330
+          ]
+        },
+        {
+          "at": 1791066226.04201,
+          "pid": 1535514,
+          "VmHWM_bytes": 21242277888,
+          "VmRSS_bytes": 6825492480,
+          "driver_cuda_used_mib": [
+            15532
+          ]
+        },
+        {
+          "at": 1791066246.2694402,
+          "pid": 1535514,
+          "VmHWM_bytes": 21242277888,
+          "VmRSS_bytes": 6826995712,
+          "driver_cuda_used_mib": [
+            15566
+          ]
+        },
+        {
+          "at": 1791066266.488649,
+          "pid": 1535514,
+          "VmHWM_bytes": 21242277888,
+          "VmRSS_bytes": 6830297088,
+          "driver_cuda_used_mib": [
+            15566
+          ]
+        },
+        {
+          "at": 1791066286.705446,
+          "pid": 1535514,
+          "VmHWM_bytes": 21242277888,
+          "VmRSS_bytes": 6831976448,
+          "driver_cuda_used_mib": [
+            15588
+          ]
+        },
+        {
+          "at": 1791066306.9806366,
+          "pid": 1535514,
+          "VmHWM_bytes": 21242277888,
+          "VmRSS_bytes": 6834335744,
+          "driver_cuda_used_mib": [
+            15588
+          ]
+        },
+        {
+          "at": 1791066327.2002912,
+          "pid": 1535514,
+          "VmHWM_bytes": 21242277888,
+          "VmRSS_bytes": 6855499776,
+          "driver_cuda_used_mib": [
+            15702
+          ]
+        },
+        {
+          "at": 1791066347.4266217,
+          "pid": 1535514,
+          "VmHWM_bytes": 21242277888,
+          "VmRSS_bytes": 6856310784,
+          "driver_cuda_used_mib": [
+            15702
+          ]
+        },
+        {
+          "at": 1791066367.6459515,
+          "pid": 1535514,
+          "VmHWM_bytes": 21242277888,
+          "VmRSS_bytes": 6857101312,
+          "driver_cuda_used_mib": [
+            15702
+          ]
+        },
+        {
+          "at": 1791066387.8620243,
+          "pid": 1535514,
+          "VmHWM_bytes": 21242277888,
+          "VmRSS_bytes": 6857535488,
+          "driver_cuda_used_mib": [
+            15702
+          ]
+        },
+        {
+          "at": 1791066408.0930784,
+          "pid": 1535514,
+          "VmHWM_bytes": 21242277888,
+          "VmRSS_bytes": 6858162176,
+          "driver_cuda_used_mib": [
+            15702
+          ]
+        },
+        {
+          "at": 1791066428.4057157,
+          "pid": 1535514,
+          "VmHWM_bytes": 21242277888,
+          "VmRSS_bytes": 6858477568,
+          "driver_cuda_used_mib": [
+            15702
+          ]
+        },
+        {
+          "at": 1791066448.7097309,
+          "pid": 1535514,
+          "VmHWM_bytes": 21242277888,
+          "VmRSS_bytes": 6859485184,
+          "driver_cuda_used_mib": [
+            15702
+          ]
+        },
+        {
+          "at": 1791066468.9970963,
+          "pid": 1535514,
+          "VmHWM_bytes": 21242277888,
+          "VmRSS_bytes": 6859886592,
+          "driver_cuda_used_mib": [
+            15702
+          ]
+        },
+        {
+          "at": 1791066489.2295458,
+          "pid": 1535514,
+          "VmHWM_bytes": 21242277888,
+          "VmRSS_bytes": 6860443648,
+          "driver_cuda_used_mib": [
+            15704
+          ]
+        },
+        {
+          "at": 1791066509.4483986,
+          "pid": 1535514,
+          "VmHWM_bytes": 21242277888,
+          "VmRSS_bytes": 6863249408,
+          "driver_cuda_used_mib": [
+            15704
+          ]
+        },
+        {
+          "at": 1791066529.7289457,
+          "pid": 1535514,
+          "VmHWM_bytes": 21242277888,
+          "VmRSS_bytes": 6863867904,
+          "driver_cuda_used_mib": [
+            15782
+          ]
+        },
+        {
+          "at": 1791066549.9483366,
+          "pid": 1535514,
+          "VmHWM_bytes": 21242277888,
+          "VmRSS_bytes": 6864424960,
+          "driver_cuda_used_mib": [
+            15782
+          ]
+        },
+        {
+          "at": 1791066570.1923244,
+          "pid": 1535514,
+          "VmHWM_bytes": 21242277888,
+          "VmRSS_bytes": 6865088512,
+          "driver_cuda_used_mib": [
+            15782
+          ]
+        },
+        {
+          "at": 1791066590.410963,
+          "pid": 1535514,
+          "VmHWM_bytes": 21242277888,
+          "VmRSS_bytes": 6865514496,
+          "driver_cuda_used_mib": [
+            15782
+          ]
+        },
+        {
+          "at": 1791066610.6299624,
+          "pid": 1535514,
+          "VmHWM_bytes": 21242277888,
+          "VmRSS_bytes": 6865973248,
+          "driver_cuda_used_mib": [
+            15782
+          ]
+        },
+        {
+          "at": 1791066630.8947282,
+          "pid": 1535514,
+          "VmHWM_bytes": 21242277888,
+          "VmRSS_bytes": 6867226624,
+          "driver_cuda_used_mib": [
+            15786
+          ]
+        },
+        {
+          "at": 1791066651.1673849,
+          "pid": 1535514,
+          "VmHWM_bytes": 21242277888,
+          "VmRSS_bytes": 6868131840,
+          "driver_cuda_used_mib": [
+            15786
+          ]
+        },
+        {
+          "at": 1791066671.3905902,
+          "pid": 1535514,
+          "VmHWM_bytes": 21242277888,
+          "VmRSS_bytes": 6868602880,
+          "driver_cuda_used_mib": [
+            15786
+          ]
+        },
+        {
+          "at": 1791066691.6063433,
+          "pid": 1535514,
+          "VmHWM_bytes": 21242277888,
+          "VmRSS_bytes": 6868992000,
+          "driver_cuda_used_mib": [
+            15786
+          ]
+        },
+        {
+          "at": 1791066711.8418038,
+          "pid": 1535514,
+          "VmHWM_bytes": 21242277888,
+          "VmRSS_bytes": 6869401600,
+          "driver_cuda_used_mib": [
+            15786
+          ]
+        },
+        {
+          "at": 1791066732.1108174,
+          "pid": 1535514,
+          "VmHWM_bytes": 21242277888,
+          "VmRSS_bytes": 6869815296,
+          "driver_cuda_used_mib": [
+            15786
+          ]
+        },
+        {
+          "at": 1791066752.3306398,
+          "pid": 1535514,
+          "VmHWM_bytes": 21242277888,
+          "VmRSS_bytes": 6870659072,
+          "driver_cuda_used_mib": [
+            15786
+          ]
+        },
+        {
+          "at": 1791066772.547437,
+          "pid": 1535514,
+          "VmHWM_bytes": 21242277888,
+          "VmRSS_bytes": 6871056384,
+          "driver_cuda_used_mib": [
+            15786
+          ]
+        },
+        {
+          "at": 1791066792.769312,
+          "pid": 1535514,
+          "VmHWM_bytes": 21242277888,
+          "VmRSS_bytes": 6871449600,
+          "driver_cuda_used_mib": [
+            15786
+          ]
+        },
+        {
+          "at": 1791066812.989073,
+          "pid": 1535514,
+          "VmHWM_bytes": 21242277888,
+          "VmRSS_bytes": 6872039424,
+          "driver_cuda_used_mib": [
+            15786
+          ]
+        },
+        {
+          "at": 1791066833.2086174,
+          "pid": 1535514,
+          "VmHWM_bytes": 21242277888,
+          "VmRSS_bytes": 6872260608,
+          "driver_cuda_used_mib": [
+            15786
+          ]
+        },
+        {
+          "at": 1791066853.5091636,
+          "pid": 1535514,
+          "VmHWM_bytes": 21242277888,
+          "VmRSS_bytes": 6872932352,
+          "driver_cuda_used_mib": [
+            15848
+          ]
+        },
+        {
+          "at": 1791066873.7318268,
+          "pid": 1535514,
+          "VmHWM_bytes": 21242277888,
+          "VmRSS_bytes": 6874243072,
+          "driver_cuda_used_mib": [
+            15848
+          ]
+        },
+        {
+          "at": 1791066893.9568958,
+          "pid": 1535514,
+          "VmHWM_bytes": 21242277888,
+          "VmRSS_bytes": 6874710016,
+          "driver_cuda_used_mib": [
+            15848
+          ]
+        },
+        {
+          "at": 1791066914.179601,
+          "pid": 1535514,
+          "VmHWM_bytes": 21242277888,
+          "VmRSS_bytes": 6875287552,
+          "driver_cuda_used_mib": [
+            15848
+          ]
+        },
+        {
+          "at": 1791066934.3992038,
+          "pid": 1535514,
+          "VmHWM_bytes": 21242277888,
+          "VmRSS_bytes": 6875561984,
+          "driver_cuda_used_mib": [
+            15848
+          ]
+        },
+        {
+          "at": 1791066954.7221084,
+          "pid": 1535514,
+          "VmHWM_bytes": 21242277888,
+          "VmRSS_bytes": 6876323840,
+          "driver_cuda_used_mib": [
+            15848
+          ]
+        },
+        {
+          "at": 1791066974.9935513,
+          "pid": 1535514,
+          "VmHWM_bytes": 21242277888,
+          "VmRSS_bytes": 6876655616,
+          "driver_cuda_used_mib": [
+            15848
+          ]
+        }
+      ],
+      "scope": "Own process VmRSS/VmHWM from /proc and sampled driver CUDA used memory only, not allocator peak or whole-host attribution. 44GiB torch allocator cap is enforced by the frozen worker.",
+      "timing_policy": "All timing is diagnostic shared-GPU accuracy overhead, NOT latency."
+    },
+    "main/semantic_original": {
+      "plan_sha256": "fd37fef0af388e19403531b5cb9f04c7d3e167f0db155ac408434ada0227d5ae",
+      "startup": {
+        "gpu": 1,
+        "name": "NVIDIA H200",
+        "free_mib": 143158,
+        "foreign_contexts": 0,
+        "allocator_limit_gib": 44,
+        "scope": "shared accuracy, never latency"
+      },
+      "observations": [
+        {
+          "at": 1791067006.823891,
+          "pid": 1543980,
+          "VmHWM_bytes": 9072640,
+          "VmRSS_bytes": 9072640
+        },
+        {
+          "at": 1791067027.0355244,
+          "pid": 1543980,
+          "VmHWM_bytes": 806252544,
+          "VmRSS_bytes": 806252544
+        },
+        {
+          "at": 1791067047.2940812,
+          "pid": 1543980,
+          "VmHWM_bytes": 852406272,
+          "VmRSS_bytes": 832602112
+        },
+        {
+          "at": 1791067067.5533543,
+          "pid": 1543980,
+          "VmHWM_bytes": 21235978240,
+          "VmRSS_bytes": 6013755392,
+          "driver_cuda_used_mib": [
+            15046
+          ]
+        },
+        {
+          "at": 1791067087.978567,
+          "pid": 1543980,
+          "VmHWM_bytes": 21235978240,
+          "VmRSS_bytes": 6970265600,
+          "driver_cuda_used_mib": [
+            15532
+          ]
+        },
+        {
+          "at": 1791067108.2830303,
+          "pid": 1543980,
+          "VmHWM_bytes": 21235978240,
+          "VmRSS_bytes": 6979227648,
+          "driver_cuda_used_mib": [
+            15566
+          ]
+        },
+        {
+          "at": 1791067128.5021164,
+          "pid": 1543980,
+          "VmHWM_bytes": 21235978240,
+          "VmRSS_bytes": 7004618752,
+          "driver_cuda_used_mib": [
+            15566
+          ]
+        },
+        {
+          "at": 1791067148.733278,
+          "pid": 1543980,
+          "VmHWM_bytes": 21235978240,
+          "VmRSS_bytes": 7007576064,
+          "driver_cuda_used_mib": [
+            15566
+          ]
+        },
+        {
+          "at": 1791067168.9491751,
+          "pid": 1543980,
+          "VmHWM_bytes": 21235978240,
+          "VmRSS_bytes": 7018795008,
+          "driver_cuda_used_mib": [
+            15566
+          ]
+        },
+        {
+          "at": 1791067189.1662166,
+          "pid": 1543980,
+          "VmHWM_bytes": 21235978240,
+          "VmRSS_bytes": 7022710784,
+          "driver_cuda_used_mib": [
+            15658
+          ]
+        },
+        {
+          "at": 1791067209.4271822,
+          "pid": 1543980,
+          "VmHWM_bytes": 21235978240,
+          "VmRSS_bytes": 7043526656,
+          "driver_cuda_used_mib": [
+            15712
+          ]
+        },
+        {
+          "at": 1791067229.7087817,
+          "pid": 1543980,
+          "VmHWM_bytes": 21235978240,
+          "VmRSS_bytes": 7044923392,
+          "driver_cuda_used_mib": [
+            15712
+          ]
+        },
+        {
+          "at": 1791067249.942678,
+          "pid": 1543980,
+          "VmHWM_bytes": 21235978240,
+          "VmRSS_bytes": 7045799936,
+          "driver_cuda_used_mib": [
+            15712
+          ]
+        },
+        {
+          "at": 1791067270.166954,
+          "pid": 1543980,
+          "VmHWM_bytes": 21235978240,
+          "VmRSS_bytes": 7046373376,
+          "driver_cuda_used_mib": [
+            15712
+          ]
+        },
+        {
+          "at": 1791067290.3877985,
+          "pid": 1543980,
+          "VmHWM_bytes": 21235978240,
+          "VmRSS_bytes": 7046725632,
+          "driver_cuda_used_mib": [
+            15712
+          ]
+        },
+        {
+          "at": 1791067310.697866,
+          "pid": 1543980,
+          "VmHWM_bytes": 21235978240,
+          "VmRSS_bytes": 7047139328,
+          "driver_cuda_used_mib": [
+            15712
+          ]
+        },
+        {
+          "at": 1791067331.049602,
+          "pid": 1543980,
+          "VmHWM_bytes": 21235978240,
+          "VmRSS_bytes": 7048597504,
+          "driver_cuda_used_mib": [
+            15712
+          ]
+        },
+        {
+          "at": 1791067351.2846005,
+          "pid": 1543980,
+          "VmHWM_bytes": 21235978240,
+          "VmRSS_bytes": 7051022336,
+          "driver_cuda_used_mib": [
+            15734
+          ]
+        },
+        {
+          "at": 1791067371.5023446,
+          "pid": 1543980,
+          "VmHWM_bytes": 21235978240,
+          "VmRSS_bytes": 7052718080,
+          "driver_cuda_used_mib": [
+            15734
+          ]
+        },
+        {
+          "at": 1791067391.7208557,
+          "pid": 1543980,
+          "VmHWM_bytes": 21235978240,
+          "VmRSS_bytes": 7054598144,
+          "driver_cuda_used_mib": [
+            15804
+          ]
+        },
+        {
+          "at": 1791067411.9482136,
+          "pid": 1543980,
+          "VmHWM_bytes": 21235978240,
+          "VmRSS_bytes": 7055167488,
+          "driver_cuda_used_mib": [
+            15804
+          ]
+        },
+        {
+          "at": 1791067432.2372506,
+          "pid": 1543980,
+          "VmHWM_bytes": 21235978240,
+          "VmRSS_bytes": 7056027648,
+          "driver_cuda_used_mib": [
+            15804
+          ]
+        },
+        {
+          "at": 1791067452.4945474,
+          "pid": 1543980,
+          "VmHWM_bytes": 21235978240,
+          "VmRSS_bytes": 7056486400,
+          "driver_cuda_used_mib": [
+            15804
+          ]
+        },
+        {
+          "at": 1791067472.7174442,
+          "pid": 1543980,
+          "VmHWM_bytes": 21235978240,
+          "VmRSS_bytes": 7057301504,
+          "driver_cuda_used_mib": [
+            15804
+          ]
+        },
+        {
+          "at": 1791067492.9381747,
+          "pid": 1543980,
+          "VmHWM_bytes": 21235978240,
+          "VmRSS_bytes": 7058518016,
+          "driver_cuda_used_mib": [
+            15804
+          ]
+        },
+        {
+          "at": 1791067513.2113118,
+          "pid": 1543980,
+          "VmHWM_bytes": 21235978240,
+          "VmRSS_bytes": 7060197376,
+          "driver_cuda_used_mib": [
+            15804
+          ]
+        },
+        {
+          "at": 1791067533.5385811,
+          "pid": 1543980,
+          "VmHWM_bytes": 21235978240,
+          "VmRSS_bytes": 7060865024,
+          "driver_cuda_used_mib": [
+            15804
+          ]
+        },
+        {
+          "at": 1791067553.796211,
+          "pid": 1543980,
+          "VmHWM_bytes": 21235978240,
+          "VmRSS_bytes": 7061204992,
+          "driver_cuda_used_mib": [
+            15804
+          ]
+        },
+        {
+          "at": 1791067574.0247986,
+          "pid": 1543980,
+          "VmHWM_bytes": 21235978240,
+          "VmRSS_bytes": 7061479424,
+          "driver_cuda_used_mib": [
+            15804
+          ]
+        },
+        {
+          "at": 1791067594.3016386,
+          "pid": 1543980,
+          "VmHWM_bytes": 21235978240,
+          "VmRSS_bytes": 7062384640,
+          "driver_cuda_used_mib": [
+            15804
+          ]
+        },
+        {
+          "at": 1791067614.54102,
+          "pid": 1543980,
+          "VmHWM_bytes": 21235978240,
+          "VmRSS_bytes": 7062601728,
+          "driver_cuda_used_mib": [
+            15804
+          ]
+        },
+        {
+          "at": 1791067634.759928,
+          "pid": 1543980,
+          "VmHWM_bytes": 21235978240,
+          "VmRSS_bytes": 7062609920,
+          "driver_cuda_used_mib": [
+            15804
+          ]
+        },
+        {
+          "at": 1791067655.0325398,
+          "pid": 1543980,
+          "VmHWM_bytes": 21235978240,
+          "VmRSS_bytes": 7063425024,
+          "driver_cuda_used_mib": [
+            15804
+          ]
+        },
+        {
+          "at": 1791067675.2469516,
+          "pid": 1543980,
+          "VmHWM_bytes": 21235978240,
+          "VmRSS_bytes": 7063846912,
+          "driver_cuda_used_mib": [
+            15804
+          ]
+        },
+        {
+          "at": 1791067695.4683037,
+          "pid": 1543980,
+          "VmHWM_bytes": 21235978240,
+          "VmRSS_bytes": 7065600000,
+          "driver_cuda_used_mib": [
+            15804
+          ]
+        },
+        {
+          "at": 1791067715.687487,
+          "pid": 1543980,
+          "VmHWM_bytes": 21235978240,
+          "VmRSS_bytes": 7066906624,
+          "driver_cuda_used_mib": [
+            15866
+          ]
+        },
+        {
+          "at": 1791067735.9046154,
+          "pid": 1543980,
+          "VmHWM_bytes": 21235978240,
+          "VmRSS_bytes": 7068307456,
+          "driver_cuda_used_mib": [
+            15866
+          ]
+        },
+        {
+          "at": 1791067756.1664898,
+          "pid": 1543980,
+          "VmHWM_bytes": 21235978240,
+          "VmRSS_bytes": 7070613504,
+          "driver_cuda_used_mib": [
+            15866
+          ]
+        },
+        {
+          "at": 1791067776.385049,
+          "pid": 1543980,
+          "VmHWM_bytes": 21235978240,
+          "VmRSS_bytes": 7071973376,
+          "driver_cuda_used_mib": [
+            15866
+          ]
+        },
+        {
+          "at": 1791067796.6067514,
+          "pid": 1543980,
+          "VmHWM_bytes": 21235978240,
+          "VmRSS_bytes": 7073210368,
+          "driver_cuda_used_mib": [
+            15866
+          ]
+        },
+        {
+          "at": 1791067816.829573,
+          "pid": 1543980,
+          "VmHWM_bytes": 21235978240,
+          "VmRSS_bytes": 7075295232,
+          "driver_cuda_used_mib": [
+            15866
+          ]
+        },
+        {
+          "at": 1791067837.1070037,
+          "pid": 1543980,
+          "VmHWM_bytes": 21235978240,
+          "VmRSS_bytes": 7075459072,
+          "driver_cuda_used_mib": [
+            15866
+          ]
+        }
+      ],
+      "scope": "Own process VmRSS/VmHWM from /proc and sampled driver CUDA used memory only, not allocator peak or whole-host attribution. 44GiB torch allocator cap is enforced by the frozen worker.",
+      "timing_policy": "All timing is diagnostic shared-GPU accuracy overhead, NOT latency."
+    }
+  }
+}

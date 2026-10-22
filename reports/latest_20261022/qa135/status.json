@@ -1,0 +1,28 @@
+{
+  "status": "complete",
+  "updated": 1792038153.9937696,
+  "controller": {
+    "pid": 3546514,
+    "start_ticks": 357144050
+  },
+  "plan_sha256": "7a65e7ee2ef144ddedd91fecc4c9ba3acd8dab18db23da16d2d2e0e22585b487",
+  "capacity_policy_sha256": "c9c916082f5f933279051a633e5b18ded4eb8fbf4f416d421f8e79714539db6b",
+  "cooperative_policy_sha256": "683a6fe0fab6835f38d9a239d4f147e0c29317bfc11dbb63293cb8f663b9dab8",
+  "devices": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+  ],
+  "slots_per_gpu": 2,
+  "requested_main": 135,
+  "complete_main_including_existing": 135,
+  "reused_main": 6,
+  "new_main_complete": 129,
+  "new_main_planned": 129,
+  "complete_new_conditions": 258
+}

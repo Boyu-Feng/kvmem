@@ -1,0 +1,187 @@
+{
+  "status": "complete",
+  "identity": {
+    "pid": 2194050,
+    "start_ticks": 273853886,
+    "uid": 1011
+  },
+  "gpu": 0,
+  "dataset": "musique",
+  "ratio": 0.2,
+  "updated": 1791141415.0227637,
+  "completed_questions": 20,
+  "summary": {
+    "questions": 20,
+    "all_parity": true,
+    "observed_history_steps": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6
+    ],
+    "observed_generation_max": 7,
+    "observed_growth_not_extrapolation": {
+      "0": {
+        "snapshots": 40,
+        "mean_step_cpu_object_bytes": 2654,
+        "max_step_cpu_object_bytes": 2790,
+        "max_anchor_cues": 0
+      },
+      "1": {
+        "snapshots": 40,
+        "mean_step_cpu_object_bytes": 9012.85,
+        "max_step_cpu_object_bytes": 10462,
+        "max_anchor_cues": 42
+      },
+      "2": {
+        "snapshots": 40,
+        "mean_step_cpu_object_bytes": 13381.65,
+        "max_step_cpu_object_bytes": 16790,
+        "max_anchor_cues": 71
+      },
+      "3": {
+        "snapshots": 40,
+        "mean_step_cpu_object_bytes": 16816.6,
+        "max_step_cpu_object_bytes": 20685,
+        "max_anchor_cues": 92
+      },
+      "4": {
+        "snapshots": 40,
+        "mean_step_cpu_object_bytes": 21093.55,
+        "max_step_cpu_object_bytes": 24753,
+        "max_anchor_cues": 134
+      },
+      "5": {
+        "snapshots": 44,
+        "mean_step_cpu_object_bytes": 25545,
+        "max_step_cpu_object_bytes": 29370,
+        "max_anchor_cues": 167
+      },
+      "6": {
+        "snapshots": 81,
+        "mean_step_cpu_object_bytes": 29487.30864197531,
+        "max_step_cpu_object_bytes": 33721,
+        "max_anchor_cues": 190
+      }
+    },
+    "maxima": {
+      "union": {
+        "cpu_object_bytes": 560066,
+        "cpu_tensor_storage_bytes": 0,
+        "gpu_tensor_payload_bytes": 0,
+        "gpu_tensor_storage_bytes": 0,
+        "objects": 13594,
+        "tensors": 0,
+        "storages": 0
+      },
+      "algorithm_union": {
+        "cpu_object_bytes": 143620,
+        "cpu_tensor_storage_bytes": 0,
+        "gpu_tensor_payload_bytes": 0,
+        "gpu_tensor_storage_bytes": 0,
+        "objects": 2944,
+        "tensors": 0,
+        "storages": 0
+      }
+    },
+    "category_maxima": {
+      "inclusive": {
+        "step_specific": {
+          "cpu_object_bytes": 33721,
+          "cpu_tensor_storage_bytes": 0,
+          "gpu_tensor_payload_bytes": 0,
+          "gpu_tensor_storage_bytes": 0,
+          "objects": 307,
+          "tensors": 0,
+          "storages": 0
+        },
+        "common_tracker": {
+          "cpu_object_bytes": 113066,
+          "cpu_tensor_storage_bytes": 0,
+          "gpu_tensor_payload_bytes": 0,
+          "gpu_tensor_storage_bytes": 0,
+          "objects": 2682,
+          "tensors": 0,
+          "storages": 0
+        },
+        "tool_state": {
+          "cpu_object_bytes": 2091,
+          "cpu_tensor_storage_bytes": 0,
+          "gpu_tensor_payload_bytes": 0,
+          "gpu_tensor_storage_bytes": 0,
+          "objects": 14,
+          "tensors": 0,
+          "storages": 0
+        },
+        "diagnostic": {
+          "cpu_object_bytes": 476504,
+          "cpu_tensor_storage_bytes": 0,
+          "gpu_tensor_payload_bytes": 0,
+          "gpu_tensor_storage_bytes": 0,
+          "objects": 12984,
+          "tensors": 0,
+          "storages": 0
+        },
+        "retained_cpu_scratch": {
+          "cpu_object_bytes": 84844,
+          "cpu_tensor_storage_bytes": 0,
+          "gpu_tensor_payload_bytes": 0,
+          "gpu_tensor_storage_bytes": 0,
+          "objects": 2220,
+          "tensors": 0,
+          "storages": 0
+        }
+      },
+      "attributed": {
+        "step_specific": {
+          "cpu_object_bytes": 33721,
+          "cpu_tensor_storage_bytes": 0,
+          "gpu_tensor_payload_bytes": 0,
+          "gpu_tensor_storage_bytes": 0,
+          "objects": 307,
+          "tensors": 0,
+          "storages": 0
+        },
+        "common_tracker": {
+          "cpu_object_bytes": 111996,
+          "cpu_tensor_storage_bytes": 0,
+          "gpu_tensor_payload_bytes": 0,
+          "gpu_tensor_storage_bytes": 0,
+          "objects": 2651,
+          "tensors": 0,
+          "storages": 0
+        },
+        "tool_state": {
+          "cpu_object_bytes": 2063,
+          "cpu_tensor_storage_bytes": 0,
+          "gpu_tensor_payload_bytes": 0,
+          "gpu_tensor_storage_bytes": 0,
+          "objects": 13,
+          "tensors": 0,
+          "storages": 0
+        },
+        "diagnostic": {
+          "cpu_object_bytes": 412534,
+          "cpu_tensor_storage_bytes": 0,
+          "gpu_tensor_payload_bytes": 0,
+          "gpu_tensor_storage_bytes": 0,
+          "objects": 10744,
+          "tensors": 0,
+          "storages": 0
+        },
+        "retained_cpu_scratch": {
+          "cpu_object_bytes": 13385,
+          "cpu_tensor_storage_bytes": 0,
+          "gpu_tensor_payload_bytes": 0,
+          "gpu_tensor_storage_bytes": 0,
+          "objects": 63,
+          "tensors": 0,
+          "storages": 0
+        }
+      }
+    }
+  }
+}

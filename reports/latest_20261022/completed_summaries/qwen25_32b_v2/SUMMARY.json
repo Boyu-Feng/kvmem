@@ -1,0 +1,158 @@
+{
+  "protocol": "alfworld_shared_h200_accuracy_v1",
+  "model": [
+    "Qwen/Qwen2.5-32B-Instruct",
+    "5ede1c97bbab6ce5cda5812749b4c0bdf79b18dd"
+  ],
+  "completed_main": 5,
+  "expected_main": 5,
+  "results": [
+    {
+      "method": "fullkv",
+      "keep_ratio": 1.0,
+      "n": 134,
+      "successes": 73,
+      "success_rate_percent": 54.47761194029851,
+      "mean_environment_steps": 29.26865671641791,
+      "kv_cache_statistics": {
+        "episodes_with_cache_audit": 134,
+        "episodes_missing_cache_audit": 0,
+        "mean": {
+          "episode_mean_boundary_total_kv_mib": 910.1042833254511,
+          "episode_mean_boundary_total_kv_tokens": 3640.4171333018044,
+          "episode_mean_boundary_trajectory_kv_mib": 801.7311489970929,
+          "final_prompt_kv_mib": 108.3731343283582,
+          "final_total_kv_mib": 1653.0111940298507,
+          "final_total_kv_tokens": 6612.044776119403,
+          "final_trajectory_kv_mib": 1544.6380597014925,
+          "final_trajectory_kv_tokens": 6178.55223880597,
+          "final_trajectory_retention": 1.0,
+          "peak_active_total_kv_mib": 1653.0111940298507
+        },
+        "max_peak_active_total_kv_mib": 3213.0,
+        "mean_peak_kv_mib_by_device": {
+          "cuda:0": 800.6772971082089,
+          "cuda:1": 852.3338969216418
+        }
+      }
+    },
+    {
+      "method": "stepkv",
+      "keep_ratio": 0.2,
+      "n": 134,
+      "successes": 5,
+      "success_rate_percent": 3.7313432835820897,
+      "mean_environment_steps": 48.53731343283582,
+      "kv_cache_statistics": {
+        "episodes_with_cache_audit": 134,
+        "episodes_missing_cache_audit": 0,
+        "mean": {
+          "episode_mean_boundary_total_kv_mib": 367.41788295542096,
+          "episode_mean_boundary_total_kv_tokens": 1469.6715318216839,
+          "episode_mean_boundary_trajectory_kv_mib": 259.04474862706275,
+          "final_prompt_kv_mib": 108.3731343283582,
+          "final_total_kv_mib": 614.4365671641791,
+          "final_total_kv_tokens": 2457.7462686567164,
+          "final_trajectory_kv_mib": 506.0634328358209,
+          "final_trajectory_kv_tokens": 2024.2537313432836,
+          "final_trajectory_retention": 0.20096839155470766,
+          "peak_active_total_kv_mib": 653.5354477611941
+        },
+        "max_peak_active_total_kv_mib": 916.25,
+        "mean_peak_kv_mib_by_device": {
+          "cuda:0": 316.55623250932837,
+          "cuda:1": 336.9792152518657
+        }
+      }
+    },
+    {
+      "method": "stepkv",
+      "keep_ratio": 0.5,
+      "n": 134,
+      "successes": 19,
+      "success_rate_percent": 14.17910447761194,
+      "mean_environment_steps": 45.149253731343286,
+      "kv_cache_statistics": {
+        "episodes_with_cache_audit": 134,
+        "episodes_missing_cache_audit": 0,
+        "mean": {
+          "episode_mean_boundary_total_kv_mib": 712.9525796685807,
+          "episode_mean_boundary_total_kv_tokens": 2851.810318674323,
+          "episode_mean_boundary_trajectory_kv_mib": 604.5794453402225,
+          "final_prompt_kv_mib": 108.3731343283582,
+          "final_total_kv_mib": 1288.2462686567164,
+          "final_total_kv_tokens": 5152.985074626866,
+          "final_trajectory_kv_mib": 1179.8731343283582,
+          "final_trajectory_kv_tokens": 4719.492537313433,
+          "final_trajectory_retention": 0.5007752473477418,
+          "peak_active_total_kv_mib": 1312.589552238806
+        },
+        "max_peak_active_total_kv_mib": 1706.5,
+        "mean_peak_kv_mib_by_device": {
+          "cuda:0": 635.7855643656717,
+          "cuda:1": 676.8039878731344
+        }
+      }
+    },
+    {
+      "method": "h2o_step",
+      "keep_ratio": 0.2,
+      "n": 134,
+      "successes": 43,
+      "success_rate_percent": 32.08955223880597,
+      "mean_environment_steps": 37.64179104477612,
+      "kv_cache_statistics": {
+        "episodes_with_cache_audit": 134,
+        "episodes_missing_cache_audit": 0,
+        "mean": {
+          "episode_mean_boundary_total_kv_mib": 312.4404857191004,
+          "episode_mean_boundary_total_kv_tokens": 1249.7619428764017,
+          "episode_mean_boundary_trajectory_kv_mib": 204.0673513907422,
+          "final_prompt_kv_mib": 108.3731343283582,
+          "final_total_kv_mib": 505.8544776119403,
+          "final_total_kv_tokens": 2023.4179104477612,
+          "final_trajectory_kv_mib": 397.4813432835821,
+          "final_trajectory_kv_tokens": 1589.9253731343283,
+          "final_trajectory_retention": 0.20269203438941613,
+          "peak_active_total_kv_mib": 546.3432835820895
+        },
+        "max_peak_active_total_kv_mib": 808.25,
+        "mean_peak_kv_mib_by_device": {
+          "cuda:0": 264.6350279850746,
+          "cuda:1": 281.7082555970149
+        }
+      }
+    },
+    {
+      "method": "h2o_step",
+      "keep_ratio": 0.5,
+      "n": 134,
+      "successes": 67,
+      "success_rate_percent": 50.0,
+      "mean_environment_steps": 30.888059701492537,
+      "kv_cache_statistics": {
+        "episodes_with_cache_audit": 134,
+        "episodes_missing_cache_audit": 0,
+        "mean": {
+          "episode_mean_boundary_total_kv_mib": 532.663933907058,
+          "episode_mean_boundary_total_kv_tokens": 2130.655735628232,
+          "episode_mean_boundary_trajectory_kv_mib": 424.29079957869976,
+          "final_prompt_kv_mib": 108.3731343283582,
+          "final_total_kv_mib": 927.5317164179105,
+          "final_total_kv_tokens": 3710.126865671642,
+          "final_trajectory_kv_mib": 819.1585820895523,
+          "final_trajectory_kv_tokens": 3276.634328358209,
+          "final_trajectory_retention": 0.5021957987214195,
+          "peak_active_total_kv_mib": 952.2257462686567
+        },
+        "max_peak_active_total_kv_mib": 1819.75,
+        "mean_peak_kv_mib_by_device": {
+          "cuda:0": 461.2343458488806,
+          "cuda:1": 490.99140041977614
+        }
+      }
+    }
+  ],
+  "timing_policy": "Shared-GPU diagnostic times only; no latency claims",
+  "statistics": "Single seed, matched task set. No across-seed standard deviation or significance claim."
+}

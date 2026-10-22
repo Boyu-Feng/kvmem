@@ -4,6 +4,8 @@
 
 ## 当前实验入口
 
+- **[2026-10-22 最新结果](reports/latest_20261022/README.md)**：新增 QA 135/135 组、67,500 条评测；WebBench 已保存 2,415 条正式题目结果，20 个推理条件完成。
+- **[换服务器续跑](docs/rebuttal/WEBBENCH_MIGRATION_20261022.md)**：完整加密断点分卷、模型固定版本下载、A100 显存受限时的启动步骤。被测模型仍为 Qwen2.5-7B 和 Llama-3.1-8B。
 - **[三 seed 扩展实验最新结果](reports/multiseed_20261007_065533_UTC/RESULTS.md)**：72/72 组完成，36,000 条逐题评测；包含全部完成组的 EM/F1、逐题分数和源文件哈希。
 - **[实验结果总表：数据集 × 方法](reports/rebuttal_20261001_053953_UTC/RESULTS.md)**：27/27 组完成，13,500 条逐题评测，包含 20%/50% 的 EM/F1。
 - **[Rebuttal 当前进展与结果](docs/rebuttal/STATUS.md)**：上传时的静态快照、完成情况及已知阻塞。

@@ -1,0 +1,25 @@
+{
+  "status": "complete",
+  "owner": {
+    "pid": 1159046,
+    "start_ticks": 263005033
+  },
+  "updated": 1791145838.5154576,
+  "job": {
+    "name": "main/thinkkv_selection_only/r50",
+    "purpose": "main",
+    "method": "thinkkv_selection_only",
+    "ratio": 0.5,
+    "cli_ratio": 0.5,
+    "samples": 0,
+    "max_steps": 50
+  },
+  "completed_jobs": 14,
+  "total_jobs": 14,
+  "worker_identity": null,
+  "recovery_identity": {
+    "pid": 1159060,
+    "start_ticks": 263005094
+  },
+  "lease_released": true
+}

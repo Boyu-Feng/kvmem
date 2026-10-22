@@ -1,0 +1,94 @@
+{
+  "status": "complete",
+  "updated": 1791273147.7869697,
+  "completed_conditions": 12,
+  "formal_completed": 6,
+  "formal_questions": 3000,
+  "phase50_barrier": true,
+  "conditions": {
+    "smoke/hotpotqa/r50": {
+      "completed_questions": 2,
+      "fingerprint_sha256": "335969c57a069a6f85dee59e0b1848ad467e6b6096151b057c7fb1fc8d9868b1",
+      "manifest_sha256": "41ab76ce11fe6cdb2fb60f5611c3a8d3b40e0afdfbc353722327f10de02a45c7",
+      "checkpoint_sha256": "456fd3aa5d241970d407ab6c653c4c14e36683a9d2e6da4c3ec4917ee0908df2",
+      "results_sha256": "ba1b4b347d967efcb696512b24cce5fc94cc345ccf11ea591b4eeeb74cc07185"
+    },
+    "smoke/2wiki/r50": {
+      "completed_questions": 2,
+      "fingerprint_sha256": "91c151fff9249c7d72ec30cfcacb7858256f3e12a10121799c5cd0a24960c189",
+      "manifest_sha256": "a779191ddeaf49a760572a74f4145c0c7b8d7190b114e8c907e01bf58e3a425c",
+      "checkpoint_sha256": "e6fa3c7ca58802d88ee6b55bfb431557725a2956714086e3efe7c63a513d1274",
+      "results_sha256": "a2ff0bfa9676884473b5b0181f9b208b2484a5e0b682914935fb76385ec59721"
+    },
+    "main/hotpotqa/r50": {
+      "completed_questions": 500,
+      "fingerprint_sha256": "132eaf19b61908e8ab8bb911bebe70ea08cfbaa2088af3d099ed88b5766e71f3",
+      "manifest_sha256": "21a0fd667ee82cfdda6cb89a7126fb8d74ab2fa97bf9637e42bd75bbc1f4a238",
+      "checkpoint_sha256": "0b1ab2be74dab4a67e18a7cc73ace61f4485d7d867010577ac6f58595ddf0a1d",
+      "results_sha256": "a53e2a46e3faff26df6de8b54a3ea1ab4b3f4fe9e5a1aab5e48b0e4382734098"
+    },
+    "smoke/musique/r50": {
+      "completed_questions": 2,
+      "fingerprint_sha256": "f6c3d401755a4240d79ae06209b4708febfb56118deb718b1be8e6cdc4427b04",
+      "manifest_sha256": "8fb1c73c1979a2c9d956f200e45de3bef91d92062942cc224b190b38d081e57f",
+      "checkpoint_sha256": "573cb2ab9ffe8d94c980b8c791d82a7a23d96e8483de63d416d6ddddbabb1455",
+      "results_sha256": "c509ac34f7a9008057d37feed23c61fea4cb054aa1fc6a7204a094214f357617"
+    },
+    "main/2wiki/r50": {
+      "completed_questions": 500,
+      "fingerprint_sha256": "912da0113cc7d54de6544d006f472a1e27098d386c45c8ce0549dca0b07a98bf",
+      "manifest_sha256": "6000dbff0523ba77d6f60fd4e035c1073b1fde9511d78348f0f60a4d7a99dbb7",
+      "checkpoint_sha256": "a60e68ccaadf6831a1ef91f1a61869c9894f86e63a708e1e34b52132df7945ff",
+      "results_sha256": "67445d120c8cf99bb73773a07131709c8320c4f3ff54081ae89698eaf6c79969"
+    },
+    "main/musique/r50": {
+      "completed_questions": 500,
+      "fingerprint_sha256": "446140a8f60b7e9a2997139be9b0b4d7557d1093de9acd5d649b250dd6971f6f",
+      "manifest_sha256": "c9a3e4bb1d6524ae8192552611d2784b337f6279d6994fb5f3b897e235dc4193",
+      "checkpoint_sha256": "7b1c92e761417780e8f25db37204309df034f3948c9994a15bee703bba34716a",
+      "results_sha256": "24b0676fdd47b001e73bc6aeedcdcbb0eda442a34a0e221539d548ad115b8a53"
+    },
+    "smoke/hotpotqa/r20": {
+      "completed_questions": 2,
+      "fingerprint_sha256": "7ccc16dd110eaef068713a03753724583e1541990f1fc58ae6ecae36fbe1ca8d",
+      "manifest_sha256": "ef64b8330717e769b51654bba4023b9af2b6eec4090808a464cadc077c342f5f",
+      "checkpoint_sha256": "aab5f5b6912aa23a8cb9e421d897898a103d746697d079dc35d975ad2d098bd5",
+      "results_sha256": "d0d06c10b5f595e4317aacb12b86cbdfca638aeca7e64b57433a740fa0252b9d"
+    },
+    "smoke/2wiki/r20": {
+      "completed_questions": 2,
+      "fingerprint_sha256": "70b67993e9c763e179a52a4b23580e2384339c7629aedd8fdd5fe889451c1fd3",
+      "manifest_sha256": "2db7faff1c2564ae7e9f65cfd02852913ac97177cf8de18ec98e4ffba84a8b39",
+      "checkpoint_sha256": "246450e4bfd648b6e10473c140d8c8a1e952f8f61b16d04ed6a621eaa8ed57a4",
+      "results_sha256": "b4f99ab5feb2865661e506ebce65b0d9fa8eaece75158af61f1488bbbacc3568"
+    },
+    "main/hotpotqa/r20": {
+      "completed_questions": 500,
+      "fingerprint_sha256": "008b6b6f7619c214fa85828518491e3b8e6d4af682e2396a35ef20caf48398c0",
+      "manifest_sha256": "e554ee7f889a77a4fa02ec8c5b522d5fcf76982e3b03b0b54ce5530f075b3d9f",
+      "checkpoint_sha256": "e5ca900174904d335a8415ff942571229459b290281a0d6ba283b02c551d4dc1",
+      "results_sha256": "fded38491ab3664ef0529bddb6161baceba3e78ce1727ce70e05e9b78053e0d2"
+    },
+    "smoke/musique/r20": {
+      "completed_questions": 2,
+      "fingerprint_sha256": "9ede9360ea117e63ba1ea5f9a2273bdb3a5a4d7638436879154c315172af3588",
+      "manifest_sha256": "9a5de30cdc8f4c7ddbd613d86470977338413048b31954ab8c6687edd58ebfc1",
+      "checkpoint_sha256": "12ad9f96d1ec8ac6ddeb3f97f7dc28d0af06b9367be781cefc9b5bca36a8c29a",
+      "results_sha256": "501280aa4f9d99aacf10a46f0f8ca24b191e16b22a646ccaad685bc168cf83d3"
+    },
+    "main/2wiki/r20": {
+      "completed_questions": 500,
+      "fingerprint_sha256": "7186ffb181599c772bc8004322754c6b4b6ee3bbb36d3f34a7be47082a36f439",
+      "manifest_sha256": "60ded301096ad3ec6dca5b1ee7d956c18edf5ba52aca839354d32378772d8133",
+      "checkpoint_sha256": "c9fa53ea95093b7b6198e990d114c71ab5f86d74d64ea98d608435db5e470542",
+      "results_sha256": "fc43ee7a28f73e0b9ef2d2ce0d81ef4113426b6be5a7d5c94180fd6c35f3d616"
+    },
+    "main/musique/r20": {
+      "completed_questions": 500,
+      "fingerprint_sha256": "e48bc945a2585faa43fa18096d455c9e567a36dddba3e2ab6bef7d3505db2252",
+      "manifest_sha256": "370613449fad86d75a03ab11f1733bf97ebcaf5849174e5452145be27cba000c",
+      "checkpoint_sha256": "c6d3523cd46bd742a016338d3bbcaf4cb68a709ab59b5eb65603b569993d2650",
+      "results_sha256": "c55dc67003d80656cb0dfc223fbef1cdb0d6ef1d5b981d244d16455aae070679"
+    }
+  }
+}

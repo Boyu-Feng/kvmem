@@ -1,0 +1,255 @@
+{
+  "schema": "webbench_migration_models_v1",
+  "created_utc": "2026-10-22T12:55:47.971202+00:00",
+  "scope": "Frozen WebBench actor and BrowseComp judge models; existing model files and ready manifests are unchanged.",
+  "authentication": "Target server supplies HF_TOKEN, HUGGING_FACE_HUB_TOKEN, HF_TOKEN_PATH, or the active Hugging Face cache token. No source token is copied.",
+  "support_files_policy": "Model config and tokenizer files plus original ready JSON are supplied by the encrypted migration archives. --download downloads only missing weight shards.",
+  "weight_bytes_note": "weight_bytes is the actual shard file byte total. Qwen2.5-7B original ready weight_bytes reports tensor bytes without safetensors headers and is preserved separately.",
+  "hash_provenance": "Qwen2.5-7B weight hashes computed from local frozen shards for this migration; Llama3.1-8B and Qwen3-32B hashes retained from original ready inventories. All source files must pass the verification tool before publication.",
+  "models": [
+    {
+      "id": "qwen25_7b",
+      "repo": "Qwen/Qwen2.5-7B-Instruct",
+      "revision": "a09a35458c702b33eeacc393d103063234e8bc28",
+      "path": "/mnt/checkpoints/bruli/fengboyu/kvmem_rebuttal_20260929/assets/models/Qwen2.5-7B-Instruct",
+      "ready_path": "/mnt/checkpoints/bruli/fengboyu/kvmem_rebuttal_20260929/assets/7b_ready.json",
+      "ready_sha256": "e15344883f41e57bb8ff6eb6f0073d6ad240dfc5fe7e1bb77d6e5efc0cf32375",
+      "requires_hf_token": false,
+      "weight_bytes": 15231271888,
+      "original_ready_weight_bytes": 15231233024,
+      "files": {
+        "config.json": {
+          "bytes": 663,
+          "sha256": "7463bb0ea78315365e6c6b74de4e73bbcc8359dfb0c5a737584e077d42c0b03c",
+          "kind": "support"
+        },
+        "generation_config.json": {
+          "bytes": 243,
+          "sha256": "3a8f9087e486054c8a4a08dae2e5a3ba62e23da212b5b8c08bc42cb983c3459f",
+          "kind": "support"
+        },
+        "model-00001-of-00004.safetensors": {
+          "bytes": 3945441440,
+          "sha256": "a1333e6293854747c481288ea83b348226af178dd565c49b6f9495ba1966aba7",
+          "kind": "weights"
+        },
+        "model-00002-of-00004.safetensors": {
+          "bytes": 3864726352,
+          "sha256": "f5d25a2772cb825164a2a2c0fb6d51a87e282abf21e4dd75bc5cfb3cd0ea6185",
+          "kind": "weights"
+        },
+        "model-00003-of-00004.safetensors": {
+          "bytes": 3864726424,
+          "sha256": "8efdec4c1bc12317ae1a38dc42b595ce777738a64deea3fcb8a0a91381bcdfd5",
+          "kind": "weights"
+        },
+        "model-00004-of-00004.safetensors": {
+          "bytes": 3556377672,
+          "sha256": "1a72d403cdf0c1ec3cb7f289f17b394a01e64394c2e9b3c0f94dbce3faf879bd",
+          "kind": "weights"
+        },
+        "model.safetensors.index.json": {
+          "bytes": 27752,
+          "sha256": "624bf7c47cd12468fdc16e38a47cf4f19e0415b859a223ba3c027eed2f0e1028",
+          "kind": "support"
+        },
+        "tokenizer.json": {
+          "bytes": 7031645,
+          "sha256": "c0382117ea329cdf097041132f6d735924b697924d6f6fc3945713e96ce87539",
+          "kind": "support"
+        },
+        "tokenizer_config.json": {
+          "bytes": 7305,
+          "sha256": "5b5d4f65d0acd3b2d56a35b56d374a36cbc1c8fa5cf3b3febbbfabf22f359583",
+          "kind": "support"
+        },
+        "vocab.json": {
+          "bytes": 2776833,
+          "sha256": "ca10d7e9fb3ed18575dd1e277a2579c16d108e32f27439684afa0e10b1440910",
+          "kind": "support"
+        }
+      }
+    },
+    {
+      "id": "llama31_8b",
+      "repo": "meta-llama/Meta-Llama-3.1-8B-Instruct",
+      "revision": "0e9e39f249a16976918f6564b8830bc894c89659",
+      "path": "/mnt/checkpoints/bruli/fengboyu/kvmem_rebuttal_20260929/ablation_assets/models/Meta-Llama-3.1-8B-Instruct",
+      "ready_path": "/mnt/checkpoints/bruli/fengboyu/kvmem_rebuttal_20260929/ablation_assets/llama31_8b_shared_ready.json",
+      "ready_sha256": "8d6976c8a7ed6f09c83b005c5fd27978c24593fb877d2aea96ac70b9e8a754a9",
+      "requires_hf_token": true,
+      "weight_bytes": 16060556376,
+      "original_ready_weight_bytes": 16060556376,
+      "files": {
+        "config.json": {
+          "bytes": 855,
+          "sha256": "29e4c210b0d6ac178b16b2a255a568bdb23b581e50ca1ef6a6d071dd85704e6e",
+          "kind": "support"
+        },
+        "generation_config.json": {
+          "bytes": 184,
+          "sha256": "189fb0c0d7fd8a527db217c0a60a0e013f0394cd8800f9697a666a9e75e5f7fd",
+          "kind": "support"
+        },
+        "model-00001-of-00004.safetensors": {
+          "bytes": 4976698672,
+          "sha256": "2b1879f356aed350030bb40eb45ad362c89d9891096f79a3ab323d3ba5607668",
+          "kind": "weights"
+        },
+        "model-00002-of-00004.safetensors": {
+          "bytes": 4999802720,
+          "sha256": "09d433f650646834a83c580877bd60c6d1f88f7755305c12576b5c7058f9af15",
+          "kind": "weights"
+        },
+        "model-00003-of-00004.safetensors": {
+          "bytes": 4915916176,
+          "sha256": "fc1cdddd6bfa91128d6e94ee73d0ce62bfcdb7af29e978ddcab30c66ae9ea7fa",
+          "kind": "weights"
+        },
+        "model-00004-of-00004.safetensors": {
+          "bytes": 1168138808,
+          "sha256": "92ecfe1a2414458b4821ac8c13cf8cb70aed66b5eea8dc5ad9eeb4ff309d6d7b",
+          "kind": "weights"
+        },
+        "model.safetensors.index.json": {
+          "bytes": 23950,
+          "sha256": "146776fce3f6db1103aa6f249e65ee5544c5923ce6f971b092eee79aa6e5d37b",
+          "kind": "support"
+        },
+        "tokenizer.json": {
+          "bytes": 9085657,
+          "sha256": "79e3e522635f3171300913bb421464a87de6222182a0570b9b2ccba2a964b2b4",
+          "kind": "support"
+        },
+        "tokenizer_config.json": {
+          "bytes": 55351,
+          "sha256": "177c7b61e616fecb84c17ce0591acb92c6c4d60e9ac5ababfb940ff23bbcd424",
+          "kind": "support"
+        }
+      }
+    },
+    {
+      "id": "qwen3_32b_judge",
+      "repo": "Qwen/Qwen3-32B",
+      "revision": "9216db5781bf21249d130ec9da846c4624c16137",
+      "path": "/mnt/checkpoints/bruli/fengboyu/kvmem_webbench_20261021/assets/judge/Qwen3-32B",
+      "ready_path": "/mnt/checkpoints/bruli/fengboyu/kvmem_webbench_20261021/assets/judge/model_ready.json",
+      "ready_sha256": "75d3f7b69f3c67d9411ee20bca37f42371114cc00bee03567578e284aae29f1b",
+      "requires_hf_token": false,
+      "weight_bytes": 65524328560,
+      "original_ready_weight_bytes": 65524328560,
+      "files": {
+        "config.json": {
+          "bytes": 728,
+          "sha256": "97e295b63283935788fac5e4f8860862a56d4089538cafc93f0431f2ebe483bb",
+          "kind": "support"
+        },
+        "generation_config.json": {
+          "bytes": 239,
+          "sha256": "2325da0f15bb848e018c5ae071b7943332e9f871d6b60e2ed22ca97d4cb993d2",
+          "kind": "support"
+        },
+        "model-00001-of-00017.safetensors": {
+          "bytes": 3957109648,
+          "sha256": "52562b2ff97b61764260273e71bf5b4cf8a66f569399398f26dec0300fcf1316",
+          "kind": "weights"
+        },
+        "model-00002-of-00017.safetensors": {
+          "bytes": 3900791760,
+          "sha256": "e26764b2c6878e3fb7198895fa833ec62838d84a19665e6abfbae43c6daf02b3",
+          "kind": "weights"
+        },
+        "model-00003-of-00017.safetensors": {
+          "bytes": 3900791760,
+          "sha256": "6c5ba7bed9c52bc121e75cbe8a7be46936d0006cc80f42a6d5886ed40b4c2a62",
+          "kind": "weights"
+        },
+        "model-00004-of-00017.safetensors": {
+          "bytes": 3900791800,
+          "sha256": "f736f6ac4d8c30866107fb1185a05b3c3cfce9717720082f466fa44e691bcec8",
+          "kind": "weights"
+        },
+        "model-00005-of-00017.safetensors": {
+          "bytes": 3900791800,
+          "sha256": "a52ed375c083209c54d42ac510afeb1fbb5af4f193be2dc7d103f665a0f212d3",
+          "kind": "weights"
+        },
+        "model-00006-of-00017.safetensors": {
+          "bytes": 3900791800,
+          "sha256": "37fae28990b0e4a70228549d040c0393e87bee3820d59e58e47844974d8dff5b",
+          "kind": "weights"
+        },
+        "model-00007-of-00017.safetensors": {
+          "bytes": 3900791800,
+          "sha256": "37776006aeaba29eca8bc73b2b963fe3477e1c2e3f6a27cb9527be75b905e1bf",
+          "kind": "weights"
+        },
+        "model-00008-of-00017.safetensors": {
+          "bytes": 3900791800,
+          "sha256": "73e74e9129674fe330948005075d70ab4fa0b92b68fb220c5a693f9cea553730",
+          "kind": "weights"
+        },
+        "model-00009-of-00017.safetensors": {
+          "bytes": 3900791800,
+          "sha256": "a044b3602a01bd8ea62ff51badf9cc038ab1d73d97399480e6a55b4c86fa7fa6",
+          "kind": "weights"
+        },
+        "model-00010-of-00017.safetensors": {
+          "bytes": 3900791800,
+          "sha256": "9966612ba7ecfc2cd2e592fb95224b86d743271ff88e172cc272a4b26382aa75",
+          "kind": "weights"
+        },
+        "model-00011-of-00017.safetensors": {
+          "bytes": 3900791800,
+          "sha256": "e2a058a0ac7d4b992b731c29221ecfb4b76b8a48d9004d0e8a62ba44f699845c",
+          "kind": "weights"
+        },
+        "model-00012-of-00017.safetensors": {
+          "bytes": 3900791800,
+          "sha256": "58a1aa89093fea07325f787072a468e3482a470ff4b7fe5ead5f749683907c40",
+          "kind": "weights"
+        },
+        "model-00013-of-00017.safetensors": {
+          "bytes": 3900791800,
+          "sha256": "35f3381bab31a23370c37d922290aeecdf603418336058fb86fe42d8f51ac40c",
+          "kind": "weights"
+        },
+        "model-00014-of-00017.safetensors": {
+          "bytes": 3900791800,
+          "sha256": "8713b062ddc178acf5917610b7f4b64eede833b2ea4aa37bd562dcf2f3a3339d",
+          "kind": "weights"
+        },
+        "model-00015-of-00017.safetensors": {
+          "bytes": 3900791800,
+          "sha256": "bec439d23931821a236d8f62fa79deecf5551bd25602278aa2ae0ce432b378cf",
+          "kind": "weights"
+        },
+        "model-00016-of-00017.safetensors": {
+          "bytes": 3900791800,
+          "sha256": "e569139fadd61fe7c8f9eb1c976d9a627cae48c57ddf228cfbd0593c59c64ff7",
+          "kind": "weights"
+        },
+        "model-00017-of-00017.safetensors": {
+          "bytes": 3055341992,
+          "sha256": "1f47c318fcd7797c0f85b4233cb754438b10e795b8bc874889090c416a94bd38",
+          "kind": "weights"
+        },
+        "model.safetensors.index.json": {
+          "bytes": 58330,
+          "sha256": "bed42c6c55274bc08a1f616bceb3bcb84b3f02cb6584c573bd18c6519291ecd0",
+          "kind": "support"
+        },
+        "tokenizer.json": {
+          "bytes": 11422654,
+          "sha256": "aeb13307a71acd8fe81861d94ad54ab689df773318809eed3cbe794b4492dae4",
+          "kind": "support"
+        },
+        "tokenizer_config.json": {
+          "bytes": 9732,
+          "sha256": "d5d09f07b48c3086c508b30d1c9114bd1189145b74e982a265350c923acd8101",
+          "kind": "support"
+        }
+      }
+    }
+  ]
+}

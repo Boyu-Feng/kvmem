@@ -1,0 +1,140 @@
+{
+  "schema": "kvmem_migration_bundle_v1",
+  "release_tag": "kvmem-migration-20261022",
+  "release_download_url": "https://github.com/Boyu-Feng/kvmem/releases/download/kvmem-migration-20261022",
+  "source_audit_sha256": "b018c6801a9065693c3a1522cebcafe4064763a5931acf05de924eaa1f55ea4d",
+  "handoff_sha256": "a9b6b31e08655926a6a4aa19d53d899e2dc86e06b061fdc6e208d0f36fe2364b",
+  "archives": [
+    {
+      "schema": "kvmem_migration_archive_v1",
+      "group": "webbench-state",
+      "captured_at_unix": 1792673397.539774,
+      "finished_at_unix": 1792673470.9074738,
+      "encrypted_with": "age X25519",
+      "recipient": "age1xppnryl3c4nja4pcvkus839cyypxnlcpnpgc9etmlpjxtrqpmp4q7np8u4",
+      "archive_sha256": "e4a862c3ce209bddb05d73ebf81c4a1da8baf8a66eb67da5a4a9e0a0a69058da",
+      "archive_bytes": 900322171,
+      "source_bytes": 19517096155,
+      "file_count": 11410,
+      "parts": [
+        {
+          "name": "webbench-state.tar.zst.age.part000",
+          "bytes": 900322171,
+          "sha256": "e4a862c3ce209bddb05d73ebf81c4a1da8baf8a66eb67da5a4a9e0a0a69058da"
+        }
+      ],
+      "inner_manifest": "mnt/checkpoints/bruli/fengboyu/kvmem_migration_20261022/payload/webbench-state.files.json",
+      "inner_manifest_sha256": "29a8ba110484b605f5e524d40f9f14d40b2547a1eac1daeaaa6e9f0d86b25f96",
+      "excluded_model_weights": "Download exact revisions with the supplied model manifest and verifier"
+    },
+    {
+      "schema": "kvmem_migration_archive_v1",
+      "group": "webbench-assets",
+      "captured_at_unix": 1792673414.8799543,
+      "finished_at_unix": 1792673496.1301022,
+      "encrypted_with": "age X25519",
+      "recipient": "age1xppnryl3c4nja4pcvkus839cyypxnlcpnpgc9etmlpjxtrqpmp4q7np8u4",
+      "archive_sha256": "2f64b719dd53b9faf67db3893c503d52a0fd70a9d9b451ab3b69c9d4dff1c823",
+      "archive_bytes": 6103005837,
+      "source_bytes": 10122708371,
+      "file_count": 1415,
+      "parts": [
+        {
+          "name": "webbench-assets.tar.zst.age.part000",
+          "bytes": 1073741824,
+          "sha256": "88bf6f162d423d472a6390edc9a26cf1ac7355144dbdfd4572a3179c4677d9e6"
+        },
+        {
+          "name": "webbench-assets.tar.zst.age.part001",
+          "bytes": 1073741824,
+          "sha256": "bcf5a33329e037d5a7ea4449a629c3481b9076f9e50a4979ec2a7f0445bf6436"
+        },
+        {
+          "name": "webbench-assets.tar.zst.age.part002",
+          "bytes": 1073741824,
+          "sha256": "a7af2017d73233fe812def823c25a4a5cc4944d567262a107de8b2173b94fc55"
+        },
+        {
+          "name": "webbench-assets.tar.zst.age.part003",
+          "bytes": 1073741824,
+          "sha256": "194566b482cdcc68a3460d54b1cdc46dd0a980276a6b3d99f84eb2432b78e559"
+        },
+        {
+          "name": "webbench-assets.tar.zst.age.part004",
+          "bytes": 1073741824,
+          "sha256": "bbc0d540c95624db802276cdd97c5bec2e48a1f96f06709eb5dcd5fb08dca520"
+        },
+        {
+          "name": "webbench-assets.tar.zst.age.part005",
+          "bytes": 734296717,
+          "sha256": "a86ca635bab016294f3f3fd6cfdb12349db60173ace1f00608062b843902603f"
+        }
+      ],
+      "inner_manifest": "mnt/checkpoints/bruli/fengboyu/kvmem_migration_20261022/payload/webbench-assets.files.json",
+      "inner_manifest_sha256": "406eec02317ef97c6efcbef94e3b3ae9edcb8255e0404b9ef8833341db4ddd2a",
+      "excluded_model_weights": "Download exact revisions with the supplied model manifest and verifier"
+    },
+    {
+      "schema": "kvmem_migration_archive_v1",
+      "group": "webbench-runtimes",
+      "captured_at_unix": 1792673414.8664076,
+      "finished_at_unix": 1792673922.6029904,
+      "encrypted_with": "age X25519",
+      "recipient": "age1xppnryl3c4nja4pcvkus839cyypxnlcpnpgc9etmlpjxtrqpmp4q7np8u4",
+      "archive_sha256": "bb7ab6e49b57686f1b30b174eacb54c61349e3e0b1c52301b55b9e1e51e10ccd",
+      "archive_bytes": 8790383357,
+      "source_bytes": 19726116856,
+      "file_count": 79153,
+      "parts": [
+        {
+          "name": "webbench-runtimes.tar.zst.age.part000",
+          "bytes": 1073741824,
+          "sha256": "0b9c61ca67e55cf52a1bb3d6bcf960e43882ea44f926b7b401bc14c922dd3d9e"
+        },
+        {
+          "name": "webbench-runtimes.tar.zst.age.part001",
+          "bytes": 1073741824,
+          "sha256": "405f6556ace7983f02f2a45ce3266dfc56c40cbe2f199852b0a081b6590404fe"
+        },
+        {
+          "name": "webbench-runtimes.tar.zst.age.part002",
+          "bytes": 1073741824,
+          "sha256": "ea6ffabf74932d5d31338900f689f569bc9725bc2cb010ed477d8ca1876ac7c4"
+        },
+        {
+          "name": "webbench-runtimes.tar.zst.age.part003",
+          "bytes": 1073741824,
+          "sha256": "abf79a03bdb061d904376908ddfc02c81fb8043fa3bcffe6e251ff732c267a43"
+        },
+        {
+          "name": "webbench-runtimes.tar.zst.age.part004",
+          "bytes": 1073741824,
+          "sha256": "0bec6989b3f9c09013684ba2a660ae5cc726dc661cb169168404fdda45528a19"
+        },
+        {
+          "name": "webbench-runtimes.tar.zst.age.part005",
+          "bytes": 1073741824,
+          "sha256": "edbd91ce7709fa69035292c8b57aa5c8a94e7d851674677bd8ebbe9513459fd9"
+        },
+        {
+          "name": "webbench-runtimes.tar.zst.age.part006",
+          "bytes": 1073741824,
+          "sha256": "4b255049d44b73ea55d4e9069211c92b25dd4f0443df6a2dfda586ec36aaf685"
+        },
+        {
+          "name": "webbench-runtimes.tar.zst.age.part007",
+          "bytes": 1073741824,
+          "sha256": "190bb2fee7bc2c4fea8736df363633c75620fa385c2f4b204e32fbb250d05ef6"
+        },
+        {
+          "name": "webbench-runtimes.tar.zst.age.part008",
+          "bytes": 200448765,
+          "sha256": "7bcdf07dba7bc252c49853e919cfc6986df82657668b21f631ea070cd466fcd4"
+        }
+      ],
+      "inner_manifest": "mnt/checkpoints/bruli/fengboyu/kvmem_migration_20261022/payload/webbench-runtimes.files.json",
+      "inner_manifest_sha256": "814d2876f07542955c7799b098a35995d0f91983859ac0f869d694daa3c8bd2b",
+      "excluded_model_weights": "Download exact revisions with the supplied model manifest and verifier"
+    }
+  ]
+}

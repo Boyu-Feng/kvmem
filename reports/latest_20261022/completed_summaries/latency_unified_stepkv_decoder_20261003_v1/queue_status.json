@@ -1,0 +1,132 @@
+{
+  "status": "complete",
+  "owner": {
+    "pid": 1096990,
+    "start_ticks": 262421034
+  },
+  "worker": null,
+  "recovery": {
+    "identity": {
+      "pid": 1096991,
+      "start_ticks": 262421048
+    },
+    "uid": 1011
+  },
+  "lease_released": true,
+  "updated": 1791111117.1831539,
+  "lease_acquired": true,
+  "resource_ready": false,
+  "completed_conditions": 24,
+  "handover_proof": {
+    "version": 1,
+    "status": "ready",
+    "gpu": 7,
+    "owner": {
+      "pid": 1096990,
+      "start_ticks": 262421034
+    },
+    "resume_on_lease_release": true,
+    "qa_pairs_during_lease": [
+      [
+        3,
+        4
+      ],
+      [
+        5,
+        6
+      ]
+    ],
+    "resume_pair": [
+      2,
+      7
+    ],
+    "scheduler": {
+      "process": {
+        "identity": {
+          "pid": 1092677,
+          "start_ticks": 262365074
+        },
+        "uid": 1011
+      },
+      "source_sha256": "d26f5b0d65161064d8a715dedaabe335171dc33f30e5e28b363b9485c08beb3b",
+      "priority_overlay": {
+        "sha256": "027866151850946d88151ef64aa2d4eb2cb19ac83d766a946f89f49e267fae41"
+      }
+    },
+    "paused_workers": [
+      {
+        "process": {
+          "identity": {
+            "pid": 1035044,
+            "start_ticks": 261639868
+          },
+          "uid": 1011
+        },
+        "gpus": [
+          2,
+          7
+        ],
+        "source_sha256": "35d2c4b9a907b71f5173c9bc468679e1675843b74196551fdad6002ea1d2825b",
+        "checkpoints": [
+          {
+            "sha256": "8efa367864183b044937559101147891cb1b4dbe9ae7c6b15aea4bc1b7ab9c09"
+          },
+          {
+            "sha256": "09eaafb7d16877fb7cbb7bebf0a7c3ea720af9ff1f1df6e858b64f4cbbaf258a"
+          },
+          {
+            "sha256": "89d3fe0e07958cc3fccf4cef18fae20b67eb8b5b46f0ca8c921eb400c88dabe9"
+          }
+        ],
+        "original_prefix_rows": 188,
+        "original_prefix_sha256": "09617e47e67ae5ec03fc102a0b9b0ba54fc342a650f5ab86d74f93c0c108de5a"
+      },
+      {
+        "process": {
+          "identity": {
+            "pid": 1035551,
+            "start_ticks": 261645396
+          },
+          "uid": 1011
+        },
+        "gpus": [
+          2,
+          7
+        ],
+        "source_sha256": "35d2c4b9a907b71f5173c9bc468679e1675843b74196551fdad6002ea1d2825b",
+        "checkpoints": [
+          {
+            "sha256": "af95adae25f0c8ded41fa8703c7c31446d729cdb2cc93592da2184e4fcf89a4f"
+          },
+          {
+            "sha256": "52e4c0a0f26a5799147dbbc09045a7439cef45ec0c3e1af13e163f952e1fcb52"
+          },
+          {
+            "sha256": "ec2d87882bf1f445070459ed4d2a8766ec0be9b4b00d8616925f0ec4a50dd17f"
+          }
+        ],
+        "original_prefix_rows": 189,
+        "original_prefix_sha256": "0c01811b9455cde816f5250224f27a1bd17863da4ff718fe22d097e22061c5a2"
+      }
+    ],
+    "original_controller": {
+      "pid": 1034096,
+      "start_ticks": 261617713
+    },
+    "original_controller_exited": true,
+    "updated": 1791026528.5107388
+  },
+  "job": {
+    "dataset": "musique",
+    "method": "thinkkv_unified",
+    "ratio": 0.5,
+    "name": "musique/thinkkv_unified/r50"
+  },
+  "bootstrap_info": {
+    "identity": {
+      "pid": 1969657,
+      "start_ticks": 270648342
+    },
+    "uid": 1011
+  }
+}
